@@ -12,9 +12,9 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 
 4. 将“Libraries”中的内容放到 文稿/Arduino/Libraries 下面
 
-5. 打开 Wingie2.ino
+5. 打开 Arduino 软件，点击菜单 项目->加载库->库管理器 搜索 MIDI Library, 找到 Francois Best 的库并安装
 
-6. 选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART），上传速度改成 460800，点击上传
+6. 打开 Wingie2.ino。选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART），上传速度改成 460800，点击上传
 
 ---
 
@@ -29,9 +29,9 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 
 4. Put the files in "Libraries" under Documents/Arduino/Libraries
 
-5. Open Wingie2.ino
+5. Open Arduino software, click menu Sketch->Include Library->Manage Libraries, search for MIDI Library, find the one by Francois Best and install
 
-6. Choose port (cu.usbserial-xxxxx or cu.SLAB_USBtoUART). Change the upload speed to 460800, hit upload
+6. Open Wingie2.ino. Choose port (cu.usbserial-xxxxx or cu.SLAB_USBtoUART). Change the upload speed to 460800, hit upload
 
 ---
 
