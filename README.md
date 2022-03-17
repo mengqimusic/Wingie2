@@ -1,5 +1,7 @@
 # Wingie2
 
+![Wingie2 Front Small](https://user-images.githubusercontent.com/4593629/158756306-aa6c1218-f6ec-44c0-8c54-b04b49531801.jpg)
+
 1. 下载 Arduino
 https://www.arduino.cc/en/software
 
@@ -15,6 +17,7 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 6. 选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART），上传速度改成 460800，点击上传
 
 ---
+
 
 1. Download Arduino
 https://www.arduino.cc/en/software
