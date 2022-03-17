@@ -10,7 +10,7 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 
 3. 在 Arduino 软件中，打开菜单 工具-开发版-开发板管理器，搜索 ESP32 并安装。安装完毕之后选择 ESP32 Dev Module
 
-4. 将“Libraries”中的内容解压到 文稿/Arduino/Libraries 下面
+4. 将“Libraries”中的内容放到 文稿/Arduino/Libraries 下面
 
 5. 打开 Wingie2.ino
 
