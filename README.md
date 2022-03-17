@@ -12,7 +12,7 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 
 5. 打开 Wingie2.ino
 
-6. 选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART），点击上传
+6. 选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART），上传速度改成 460800，点击上传
 
 ---
 
@@ -28,7 +28,7 @@ https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32
 
 5. Open Wingie2.ino
 
-6. Choose port (cu.usbserial-xxxxx or cu.SLAB_USBtoUART) and hit upload
+6. Choose port (cu.usbserial-xxxxx or cu.SLAB_USBtoUART). Change the upload speed to 460800, hit upload
 
 ---
 
