@@ -34,9 +34,9 @@ Put the files in "Libraries" under Documents/Arduino/Libraries
 
 ---
 
-5. 打开 Arduino 软件，点击菜单 项目->加载库->库管理器 搜索 MIDI Library, 找到 Francois Best 的库并安装
+5. 打开 Arduino 软件，点击菜单 项目->加载库->库管理器 搜索 MIDI, 找到 Francois Best 的库并安装
 
-Open Arduino software, click menu Sketch->Include Library->Manage Libraries, search for MIDI Library, find the one by Francois Best and install
+Open Arduino software, click menu Sketch->Include Library->Manage Libraries, search for MIDI, find the one by Francois Best and install
 
 ![c5](https://user-images.githubusercontent.com/4593629/158773259-5106c61e-e7c4-4058-86ce-c3d557acafad.jpg)
 ![c6](https://user-images.githubusercontent.com/4593629/158773832-44c7d6b6-0509-4fd3-877c-ded94093ca39.jpg)
