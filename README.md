@@ -6,9 +6,9 @@
 
 **How to build programming environment** (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
 
-[**中文**](https://github.com/mengqimusic/Wingie2/edit/main/README.md#中文)
+[**中文**](https://github.com/mengqimusic/Wingie2#中文)
 
-[**English**](https://github.com/mengqimusic/Wingie2/edit/main/README.md#english)
+[**English**](https://github.com/mengqimusic/Wingie2#english)
 
 ## 中文
 
@@ -36,8 +36,6 @@
 ## English
 
 1. Download Arduino https://www.arduino.cc/en/software
-
-
 
 2. Open the preferences and paste this web address in "Addtional Boards Manager URLs" https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
