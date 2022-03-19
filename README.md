@@ -24,9 +24,9 @@
 ![c3](https://user-images.githubusercontent.com/4593629/158773034-031a8ea6-4bb5-45df-b1db-b1e0d5831ea9.jpg)
 ![c4](https://user-images.githubusercontent.com/4593629/158773127-2696f499-18b2-4192-ad1d-3f975e0981c3.jpg)
 
-4. 将“Libraries”中的内容放到 文稿/Arduino/Libraries 下面
+4. 将 “Libraries” 中的内容放到 文稿/Arduino/Libraries 下面
 
-5. 打开 Arduino 软件，点击菜单 项目->加载库->库管理器 搜索 MIDI, 找到 Francois Best 的库并安装
+5. 打开 Arduino 软件，点击菜单 项目->加载库->库管理器。搜索并安装 Francois Best 的 MIDI Library 和 Adafruit AW9523 库
 
 ![c5](https://user-images.githubusercontent.com/4593629/158773259-5106c61e-e7c4-4058-86ce-c3d557acafad.jpg)
 ![c6](https://user-images.githubusercontent.com/4593629/158773832-44c7d6b6-0509-4fd3-877c-ded94093ca39.jpg)
@@ -49,7 +49,7 @@
 
 4. Put the files in "Libraries" under Documents/Arduino/Libraries
 
-5. Open Arduino software, click menu Sketch->Include Library->Manage Libraries, search for MIDI, find the one by Francois Best and install
+5. Open Arduino software, click menu Sketch->Include Library->Manage Libraries. Install MIDI Library by Francois Best and Adafruit AW9523 Library
 
 ![c5](https://user-images.githubusercontent.com/4593629/158773259-5106c61e-e7c4-4058-86ce-c3d557acafad.jpg)
 ![c6](https://user-images.githubusercontent.com/4593629/158773832-44c7d6b6-0509-4fd3-877c-ded94093ca39.jpg)
@@ -59,5 +59,3 @@
 ---
 
 http://mengqimusic.com
-
-*including a slightly modified library of mrmx's AW9523B library (source https://github.com/mrmx/AW9523B)
