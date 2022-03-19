@@ -59,3 +59,5 @@
 ---
 
 http://mengqimusic.com
+
+Including a part of the I2C Device Library http://i2cdevlib.com/
