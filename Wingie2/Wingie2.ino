@@ -5,7 +5,7 @@
 #include "driver/i2c.h"
 
 #include "AC101.h"
-#include <AW9523B.h>
+#include <Adafruit_AW9523.h>
 #include <Wire.h>
 #include "Wingie2.h"
 #include "WiFi.h"
@@ -34,13 +34,10 @@
 #define VOL 2
 #define slider_movement_detect 256
 
-#define AW9523_SDA 17
-#define AW9523_SCL 18
-
 Wingie2 dsp(44100, 32);
 AC101 ac;
-AW9523B aw0(AW9523_SDA, AW9523_SCL, 0, 0); // int8_t sda, int8_t scl, int8_t ad0, int8_t ad1
-AW9523B aw1(AW9523_SDA, AW9523_SCL, 1, 0);
+Adafruit_AW9523 aw0; // left channel
+Adafruit_AW9523 aw1; // right channel
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial2, MIDI);
 TaskHandle_t controlCore;
 
@@ -52,7 +49,6 @@ const int lOctPin[2] = {6, 5}; // on aw1
 const int rOctPin[2] = {13, 12}; // on aw1
 const int modePin[2] = {4, 7}; // on aw1
 const int sourcePin = 14; // on aw1
-uint16_t gpioStats[2];
 
 const int intn[2] = {23, 5};
 const int rstn[2] = {22, 19};
@@ -130,11 +126,4 @@ void muteControl(byte kb, byte voice, bool state) {
   else snprintf(buff, sizeof(buff), "/Wingie/right/mute_%d", voice);
   const std::string str = buff;
   dsp.setParamValue(str, state);
-}
-
-void i2c_write(uint8_t chip, uint8_t addr, uint8_t data) {
-  Wire.beginTransmission(chip);
-  Wire.write(addr);
-  Wire.write(data);
-  Wire.endTransmission();
 }

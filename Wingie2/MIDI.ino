@@ -79,7 +79,7 @@ void MIDISetParam(int kb, byte number, byte value) {
     int midiVal14Bit = (midiVal[kb][MIX][MSB] << 7) | midiVal[kb][MIX][LSB];
 
     float v = midiVal14Bit / 16383.;
-    Serial.println(v);
+    
     if (!kb) dsp.setParamValue("mix0", v);
     if (kb) dsp.setParamValue("mix1", v);
   }

@@ -12,42 +12,32 @@ void control( void * pvParameters ) {
 
   delay(5);
 
-
-  //
-  // AW9523B Init
-  //
   Serial.println("AW9523 : Connecting...");
 
-  aw0.begin();
-  aw1.begin();
+  if (!aw0.begin(0x58)) Serial.println("AW9523 0 : Connection Failed");
+  else Serial.println("AW9523 0 : Connected");
 
-  Serial.print("[aw0] ID: 0x");
-  Serial.println(aw0.readID(), HEX);
-  Serial.print("[aw1] ID: 0x");
-  Serial.println(aw1.readID(), HEX);
+  if (!aw1.begin(0x59)) Serial.println("AW9523 1 : Connection Failed");
+  else Serial.println("AW9523 1 : Connected");
 
-  aw0.setConfig(0, 0xFF); // input mode
-  aw0.setConfig(1, 0xFF);
-  aw1.setConfig(0, 0xFF);
-  aw1.setConfig(1, 0xFF);
+  aw0.reset();
+  aw1.reset();
 
-  aw0.setInterrupt(0, 0x00); // interrupt on
-  aw0.setInterrupt(1, 0x00);
-  aw1.setInterrupt(0, 0x00);
-  aw1.setInterrupt(1, 0x00);
+  for (int i = 0; i < 16; i++) { // setup aw9523
+    aw0.pinMode(i, INPUT);
+    aw0.enableInterrupt(i, true);
+    aw1.pinMode(i, INPUT);
+    aw1.enableInterrupt(i, true);
+  }
 
-  aw0.setGpioMode(0, 0xFF); // gpio mode
-  aw0.setGpioMode(1, 0xFF);
-  aw1.setGpioMode(0, 0xFF);
-  aw1.setGpioMode(1, 0xFF);
+  for (int i = 0; i < 16; i += 8) { // anti-stuck
+    bool tmp = aw0.digitalRead(i);
+    tmp = aw1.digitalRead(i);
+  }
 
   attachInterrupt(digitalPinToInterrupt(intn[0]), Pressed0, FALLING);
   attachInterrupt(digitalPinToInterrupt(intn[1]), Pressed1, FALLING);
 
-
-  //
-  // AC101 Init
-  //
   Serial.println("AC101 : Connecting...");
 
   while (not ac.begin()) {
@@ -65,14 +55,11 @@ void control( void * pvParameters ) {
   acWriteReg(OMIXER_SR, 0x0102); // 摆正左右通道 : 左 DAC -> 左输出 右 DAC -> 右输出
   acWriteReg(DAC_VOL_CTRL, DAC_VOL); // 左右通道输出音量 A0 = 0dB A4 = 3dB
 
-  source = !bitRead(gpioStats[1], sourcePin);
+  source = !aw1.digitalRead(sourcePin);
   acWriteReg(ADC_SRC, sources[source]);
 
   ac.DumpRegisters();
 
-  //
-  // Stuff Init
-  //
   dsp.setParamValue("resonator_input_gain", 0.25);
   dsp.setParamValue("resonator_output_gain", 0.25);
   dsp.setParamValue("mode0", Mode[0]);
@@ -87,29 +74,27 @@ void control( void * pvParameters ) {
     }
   }
 
-  for (int kb = 0; kb < 2; kb++) gpioRead(kb); // key-read
-
   int oct[2];
-  oct[0] = -!bitRead(gpioStats[1], lOctPin[0]) + !bitRead(gpioStats[1], lOctPin[1]);
-  oct[1] = -!bitRead(gpioStats[1], rOctPin[0]) + !bitRead(gpioStats[1], rOctPin[1]);
+  oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
+  oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
 
   //
   // Key Init State Read 用来面对，开机时有些键是被按着的情况
   //
   for (int i = 0; i < 16; i++) {
-    bool tmp = bitRead(gpioStats[0], i);
+    bool tmp = aw0.digitalRead(i);
     if (i < 8) key[0][7 - i] = tmp;
     else if (i < 12 && i > 7) key[0][11 - i + 8] = tmp;
     else key[1][i - 12] = tmp;
   }
 
   for (int i = 0; i < 4; i++) {
-    bool tmp = bitRead(gpioStats[1], i);;
+    bool tmp = aw1.digitalRead(i);
     key[1][3 - i + 4] = tmp;
   }
 
   for (int i = 8; i < 12; i++) {
-    bool tmp = bitRead(gpioStats[1], i);;
+    bool tmp = aw1.digitalRead(i);
     key[1][11 - i + 8] = tmp;
   }
 
@@ -117,8 +102,8 @@ void control( void * pvParameters ) {
     for (int i = 0; i < 12; i++) keyPrev[kb][i] = key[kb][i];
   }
 
-  modeButtonState[0] = bitRead(gpioStats[1], 4);
-  modeButtonState[1] = bitRead(gpioStats[1], 7);
+  modeButtonState[0] = aw1.digitalRead(4);
+  modeButtonState[1] = aw1.digitalRead(7);
 
   dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
   dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
@@ -154,11 +139,14 @@ void control( void * pvParameters ) {
     }
 
     //
-    // 9523 Anti-Stuck & GPIO Read
+    // 9523 Anti-Stuck
     //
     if (currentMillis - routineReadTimer > 500) {
       routineReadTimer = currentMillis;
-      for (int kb = 0; kb < 2; kb++) gpioRead(kb);
+      for (int i = 0; i < 16; i += 8) {
+        bool tmp = aw0.digitalRead(i);
+        tmp = aw1.digitalRead(i);
+      }
     }
 
 
@@ -167,8 +155,7 @@ void control( void * pvParameters ) {
     //
     for (int i = 0; i < 3; i++) {
       potValRealtime[i] = analogRead(potPin[i]);
-      int difference = abs(potValRealtime[i] - potValSampled[i]);
-      if (midiValValid[i]) if (difference > slider_movement_detect) midiValValid[i] = false;
+      if (midiValValid[i]) if (potValRealtime[i] - potValSampled[i] > slider_movement_detect) midiValValid[i] = false;
     }
 
     float Mix = potValRealtime[0] / 4095.;
@@ -190,7 +177,7 @@ void control( void * pvParameters ) {
       dsp.setParamValue("volume1", Volume);
     }
 
-    bool sourceSwitchPos = !bitRead(gpioStats[1], sourcePin);
+    bool sourceSwitchPos = !aw1.digitalRead(sourcePin);
 
 
     //
@@ -228,60 +215,13 @@ void control( void * pvParameters ) {
     //
     noInterrupts();
 
-    //
-    // GPIO Read
-    //
-    if (an[0]) {
-
-      gpioRead(0);
-
-      an[0] = 0;
-      keyChanged = true;
-
-      for (int i = 0; i < 16; i++) {
-        bool tmp = bitRead(gpioStats[0], i);
-
-        //      Serial.print(tmp);
-        //      Serial.print(" ");
-
-        if (i < 8) key[0][7 - i] = tmp;
-        else if (i < 12 && i > 7) key[0][11 - i + 8] = tmp;
-        else key[1][i - 12] = tmp;
-      }
-
-      //Serial.println();
-
-    }
-
-    if (an[1]) {
-
-      gpioRead(1);
-
-      an[1] = 0;
-      keyChanged = true;
-
-      for (int i = 0; i < 4; i++) {
-        bool tmp = bitRead(gpioStats[1], i);
-        key[1][3 - i + 4] = tmp;
-      }
-
-      for (int i = 8; i < 12; i++) {
-        bool tmp = bitRead(gpioStats[1], i);
-        key[1][11 - i + 8] = tmp;
-      }
-
-      modeButtonState[0] = bitRead(gpioStats[1], 4);
-      modeButtonState[1] = bitRead(gpioStats[1], 7);
-
-    }
-
 
     //
     // oct change
     //
     int oct[2];
-    oct[0] = -!bitRead(gpioStats[1], lOctPin[0]) + !bitRead(gpioStats[1], lOctPin[1]);
-    oct[1] = -!bitRead(gpioStats[1], rOctPin[0]) + !bitRead(gpioStats[1], rOctPin[1]);
+    oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
+    oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
 
     for (int i = 0; i < 2; i++) {
       if (octPrev[i] != oct[i]) {
@@ -344,6 +284,49 @@ void control( void * pvParameters ) {
 
     }
 
+
+    //
+    // Key Read
+    //
+    if (an[0]) {
+
+      an[0] = 0;
+      keyChanged = true;
+
+      for (int i = 0; i < 16; i++) {
+        bool tmp = aw0.digitalRead(i);
+
+        //      Serial.print(tmp);
+        //      Serial.print(" ");
+
+        if (i < 8) key[0][7 - i] = tmp;
+        else if (i < 12 && i > 7) key[0][11 - i + 8] = tmp;
+        else key[1][i - 12] = tmp;
+      }
+
+      //Serial.println();
+
+    }
+
+    if (an[1]) {
+
+      an[1] = 0;
+      keyChanged = true;
+
+      for (int i = 0; i < 4; i++) {
+        bool tmp = aw1.digitalRead(i);
+        key[1][3 - i + 4] = tmp;
+      }
+
+      for (int i = 8; i < 12; i++) {
+        bool tmp = aw1.digitalRead(i);
+        key[1][11 - i + 8] = tmp;
+      }
+
+      modeButtonState[0] = aw1.digitalRead(4);
+      modeButtonState[1] = aw1.digitalRead(7);
+
+    }
 
     // 用 state change 来触发动作，不在 ISR 中做动作，使连续的两次 false 只做一次动作，消弭 double trigger。
 
@@ -484,12 +467,4 @@ void control( void * pvParameters ) {
     }
   }
 
-}
-
-void gpioRead(int kb) {
-  gpioStats[kb] = 0;
-  for (int p = 0; p < 2; p++) {
-    if (!kb) gpioStats[kb] |= (aw0.readPort(p) << (p * 8));
-    else gpioStats[kb] |= (aw1.readPort(p) << (p * 8));
-  }
 }
