@@ -95,8 +95,8 @@ void MIDISetParam(int kb, byte number, byte value) {
 
     float v = (midiVal14Bit / 16383.) * 9.9 + 0.1;
     v = fscale(0.1, 10., 0.1, 10., v, -3.25);
-    if (!kb) dsp.setParamValue("/Wingie/left/decay", v);
-    if (kb) dsp.setParamValue("/Wingie/right/decay", v);
+    if (!kb && !startup) dsp.setParamValue("/Wingie/left/decay", v);
+    if (kb && !startup) dsp.setParamValue("/Wingie/right/decay", v);
   }
 
   if (number == VOL_CC or number == VOL_CC + 32) {

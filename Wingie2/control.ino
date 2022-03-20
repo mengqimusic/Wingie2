@@ -117,6 +117,9 @@ void control( void * pvParameters ) {
   dsp.setParamValue("/Wingie/right/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
   dsp.setParamValue("/Wingie/right/poly_note_2", 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
 
+  dsp.setParamValue("/Wingie/left/decay", 0.1); // 最小 Startup Decay 避免开机声音过大
+  dsp.setParamValue("/Wingie/right/decay", 0.1);
+
 
   for (;;) {
     interrupts();
@@ -155,7 +158,8 @@ void control( void * pvParameters ) {
     //
     for (int i = 0; i < 3; i++) {
       potValRealtime[i] = analogRead(potPin[i]);
-      if (midiValValid[i]) if (potValRealtime[i] - potValSampled[i] > slider_movement_detect) midiValValid[i] = false;
+      int difference = abs(potValRealtime[i] - potValSampled[i]);
+      if (midiValValid[i]) if (difference > slider_movement_detect) midiValValid[i] = false;
     }
 
     float Mix = potValRealtime[0] / 4095.;
@@ -166,7 +170,7 @@ void control( void * pvParameters ) {
 
     float Decay = (potValRealtime[1] / 4095.) * 9.9 + 0.1;
     Decay = fscale(0.1, 10., 0.1, 10., Decay, -3.25);
-    if (!midiValValid[DECAY]) {
+    if (!midiValValid[DECAY] && !startup) {
       dsp.setParamValue("/Wingie/left/decay", Decay);
       dsp.setParamValue("/Wingie/right/decay", Decay);
     }
