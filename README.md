@@ -8,6 +8,8 @@
 
 ## 编译过程 Compiling
 
+安装 [Faust](https://faustide.grame.fr/)  并将路径加入 PATH（osx）Install [Faust](https://faustide.grame.fr/)  and add it to PATH (osx) 
+
 在编写完 .dsp 文件之后，使用 `faust2esp32 -ac101 -lib <Your File Name>.dsp` 命令编译 Faust .dsp 文件，解压所生成的 zip 文件，并将内容移至你的 Arduino 代码文件夹下。可以通过建立批处理文档将此过程自动化，以节省时间。下面的例子是 OSX 上的做法。
 
 To compile Faust .dsp file, use the command `faust2esp32 -ac101 -lib <Your File Name>.dsp` then unzip the generated file and put them into your Arduino sketch folder. You can also automate this process by creating a batch processing file. Following is an example for OSX.
