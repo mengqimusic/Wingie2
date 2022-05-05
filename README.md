@@ -2,15 +2,40 @@
 
 ![Wingie2 Front Small](https://user-images.githubusercontent.com/4593629/158756306-aa6c1218-f6ec-44c0-8c54-b04b49531801.jpg)
 
-**如何建立编程环境**（适用于想更改或编写固件的人，如果只想重刷固件请见右侧 Releases）
+[**如何建立编程环境**](https://github.com/mengqimusic/Wingie2#中文)（适用于想更改或编写固件的人，如果只想重刷固件请见右侧 Releases）
 
-**How to build programming environment** (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
+[**How to build programming environment**](https://github.com/mengqimusic/Wingie2#english) (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
 
-[**中文**](https://github.com/mengqimusic/Wingie2#中文)
+## 编译过程 Compiling
 
-[**English**](https://github.com/mengqimusic/Wingie2#english)
+安装 [Faust](https://faustide.grame.fr/)  并将路径加入 PATH（osx）Install [Faust](https://faustide.grame.fr/)  and add it to PATH (osx) 
 
-## 中文
+在编写完 .dsp 文件之后，使用 `faust2esp32 -ac101 -lib <Your File Name>.dsp` 命令编译 Faust .dsp 文件，解压所生成的 zip 文件，并将内容移至你的 Arduino 代码文件夹下。可以通过建立批处理文档将此过程自动化，以节省时间。下面的例子是 OSX 上的做法。
+
+To compile Faust .dsp file, use the command `faust2esp32 -ac101 -lib <Your File Name>.dsp` then unzip the generated file and put them into your Arduino sketch folder. You can also automate this process by creating a batch processing file. Following is an example for OSX.
+
+
+```
+#!/bin/bash
+cd "$(dirname "$BASH_SOURCE")" || {
+    echo Error getting script directory >&2
+    exit 1
+}
+
+faust2esp32 -ac101 -lib <Your File Name>.dsp
+
+unzip -o <Your File Name>.zip
+
+mv -f ./<Your File Name>/*.* ./<Your Arduino Sketch Folder>
+```
+
+在 Windows 上，可创建相同功能的 .bat 文件。
+
+A .bat file of identical functions can be created for Windows.
+
+## 如何建立编程环境 How to build programming environment
+
+### 中文
 
 1. 下载 Arduino https://www.arduino.cc/en/software
 
@@ -33,7 +58,7 @@
 
 6. 打开 Wingie2.ino。选择端口（cu.usbserial-xxxxx 或者 cu.SLAB_USBtoUART）。点击菜单 工具->Upload Speed 改成 460800，点击上传
 
-## English
+### English
 
 1. Download Arduino https://www.arduino.cc/en/software
 
