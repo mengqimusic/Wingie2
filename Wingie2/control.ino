@@ -2,6 +2,10 @@ void control( void * pvParameters ) {
   Serial.print("control running on core ");
   Serial.println(xPortGetCoreID());
 
+  //
+  // Hardware Init Begin
+  //
+
   Wire.begin(17, 18);
 
   for (int i = 0; i < 2; i++) {
@@ -60,23 +64,153 @@ void control( void * pvParameters ) {
 
   ac.DumpRegisters();
 
-  dsp.setParamValue("resonator_input_gain", 0.25);
-  dsp.setParamValue("resonator_output_gain", 0.25);
-  dsp.setParamValue("mode0", Mode[0]);
-  dsp.setParamValue("mode1", Mode[1]);
+  //
+  // Hardware Init End
+  //
 
-  dsp.setParamValue("env_mode_change_decay", 0.025);
+  //
+  // Software Init Begin
+  //
 
-  for (int kb = 0; kb < 2; kb++) {
-    for (int i = 0; i < 2; i++) {
-      pinMode(ledPin[kb][i], OUTPUT);
-      digitalWrite(ledPin[kb][i], !bitRead(ledColor[Mode[kb]], i)); // 模式 LED 控制
+  // Preferences Section Begin
+
+  prefs.begin("counter");
+  unsigned int counter = prefs.getUInt("counter", 0);
+  counter++;
+  Serial.printf("这是此小羽第 %u 次启动。\n", counter);
+  prefs.putUInt("counter", counter);
+  prefs.end();
+
+  prefs.begin("settings", RO_MODE);
+
+  bool nvs_init = prefs.isKey("nvs_init");
+
+  if (!nvs_init) {
+    prefs.end();
+    prefs.begin("settings", RW_MODE);
+
+    prefs.putUChar("midi_ch_l", 1);
+    prefs.putUChar("midi_ch_r", 2);
+    prefs.putUChar("midi_ch_both", 3);
+    prefs.putFloat("a3_freq_offset", 0.);
+    prefs.putFloat("pre_clip_gain", 0.2475);
+    prefs.putFloat("post_clip_gain", 0.825);
+    prefs.putFloat("left_thresh", 0.4125);
+    prefs.putFloat("right_thresh", 0.4125);
+    prefs.putUChar("left_mode", 0);
+    prefs.putUChar("right_mode", 0);
+
+    for (int ch = 0; ch < 2; ch++) {
+      for (int cave = 0; cave < 3; cave++) {
+        for (int v = 0; v < 9; v++) {
+          char buff[100];
+
+          if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
+          else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
+          const char *addr = buff;
+          prefs.putUShort(addr, cm_freq_prev[ch][cave][v]);
+
+          if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
+          else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
+          addr = buff;
+          prefs.putBool(addr, cm_ms_prev[ch][cave][v]);
+        }
+      }
+    }
+    prefs.putBool("nvs_init", true);
+    prefs.end();
+    Serial.println("NVS initialized");
+    prefs.begin("settings", RO_MODE);
+  }
+
+  midi_ch_l = prefs.getUChar("midi_ch_l");
+  midi_ch_r = prefs.getUChar("midi_ch_r");
+  midi_ch_both = prefs.getUChar("midi_ch_both");
+  Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
+  float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
+  a3_freq = 440. + a3_freq_offset;
+  dsp.setParamValue("/Wingie/left/a3_freq", a3_freq);
+  dsp.setParamValue("/Wingie/right/a3_freq", a3_freq);
+  Serial.printf("a3_freq = %.2f\n", a3_freq);
+  pre_clip_gain = prefs.getFloat("pre_clip_gain", 0);
+  dsp.setParamValue("pre_clip_gain", pre_clip_gain);
+  Serial.printf("pre_clip_gain = %.4f\n", pre_clip_gain);
+  post_clip_gain = prefs.getFloat("post_clip_gain", 0);
+  dsp.setParamValue("post_clip_gain", post_clip_gain);
+  Serial.printf("post_clip_gain = %.4f\n", post_clip_gain);
+
+  left_thresh = prefs.getFloat("left_thresh", 0);
+  dsp.setParamValue("left_thresh", left_thresh);
+  Serial.printf("left_thresh = %.4f\n", left_thresh);
+
+  right_thresh = prefs.getFloat("right_thresh", 0);
+  dsp.setParamValue("right_thresh", right_thresh);
+  Serial.printf("right_thresh = %.4f\n", right_thresh);
+
+  for (int ch = 0; ch < 2; ch++) {
+    for (int cave = 0; cave < 3; cave++) {
+      char str_cm_f[100];
+      char str_cm_ms[100];
+      sprintf(str_cm_f, "ch %d cave %d frequency  =", cave, ch);
+      sprintf(str_cm_ms, "ch %d cave %d mute state =", cave, ch);
+      for (int v = 0; v < 9; v++) {
+        char buff[100];
+        char tmp[100];
+
+        if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
+        else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
+        const char *addr = buff;
+        cm_freq[ch][cave][v] = prefs.getUShort(addr);
+        cm_freq_prev[ch][cave][v] = cm_freq[ch][cave][v];
+        sprintf(tmp, " %5d", cm_freq[ch][cave][v]);
+        strcat(str_cm_f, tmp);
+
+        if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
+        else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
+        addr = buff;
+        cm_ms[ch][cave][v] = prefs.getBool(addr);
+        cm_ms_prev[ch][cave][v] = cm_ms[ch][cave][v];
+        sprintf(tmp, " %5d", cm_ms[ch][cave][v]);
+        strcat(str_cm_ms, tmp);
+      }
+      Serial.println(str_cm_f);
+      Serial.println(str_cm_ms);
     }
   }
 
-  int oct[2];
+  Mode[0] = prefs.getUChar("left_mode");
+  dsp.setParamValue("mode0", Mode[0]);
+  Serial.printf("left_mode = %d\n", Mode[0]);
+
+  Mode[1] = prefs.getUChar("right_mode");
+  dsp.setParamValue("mode1", Mode[1]);
+  Serial.printf("right_mode = %d\n", Mode[1]);
+
+  prefs.end();
+
+  // Preferences Section End
+
+  dsp.setParamValue("resonator_input_gain", 0.25);
+  dsp.setParamValue("env_mode_change_decay", 0.025);
+
+  for (int ch = 0; ch < 2; ch++) {
+    for (int i = 0; i < 2; i++) {
+      pinMode(ledPin[ch][i], OUTPUT);
+      digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+    }
+  }
+
   oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
   oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
+
+  for (int ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == CAVE_MODE) {
+      int cave = oct[ch] + 1;
+      for (int v = 0; v < 9; v++ ) {
+        cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+      }
+    }
+  }
 
   //
   // Key Init State Read 用来面对，开机时有些键是被按着的情况
@@ -98,8 +232,8 @@ void control( void * pvParameters ) {
     key[1][11 - i + 8] = tmp;
   }
 
-  for (int kb = 0; kb < 2; kb++) {
-    for (int i = 0; i < 12; i++) keyPrev[kb][i] = key[kb][i];
+  for (int ch = 0; ch < 2; ch++) {
+    for (int i = 0; i < 12; i++) keyPrev[ch][i] = key[ch][i];
   }
 
   modeButtonState[0] = aw1.digitalRead(4);
@@ -107,8 +241,6 @@ void control( void * pvParameters ) {
 
   dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
   dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
-  dsp.setParamValue("left_threshold", 0.4165);
-  dsp.setParamValue("right_threshold", 0.4165);
 
   dsp.setParamValue("/Wingie/left/poly_note_0", 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
   dsp.setParamValue("/Wingie/left/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
@@ -159,24 +291,24 @@ void control( void * pvParameters ) {
     for (int i = 0; i < 3; i++) {
       potValRealtime[i] = analogRead(potPin[i]);
       int difference = abs(potValRealtime[i] - potValSampled[i]);
-      if (midiValValid[i]) if (difference > slider_movement_detect) midiValValid[i] = false;
+      if (!realtime_value_valid[i]) if (difference > slider_movement_detect) realtime_value_valid[i] = true;
     }
 
     float Mix = potValRealtime[0] / 4095.;
-    if (!midiValValid[MIX]) {
+    if (realtime_value_valid[MIX]) {
       dsp.setParamValue("mix0", Mix);
       dsp.setParamValue("mix1", Mix);
     }
 
     float Decay = (potValRealtime[1] / 4095.) * 9.9 + 0.1;
     Decay = fscale(0.1, 10., 0.1, 10., Decay, -3.25);
-    if (!midiValValid[DECAY] && !startup) {
+    if (realtime_value_valid[DECAY] && !startup) {
       dsp.setParamValue("/Wingie/left/decay", Decay);
       dsp.setParamValue("/Wingie/right/decay", Decay);
     }
 
     float Volume = potValRealtime[2] / 4095.;
-    if (!midiValValid[VOL]) {
+    if (realtime_value_valid[VOL]) {
       dsp.setParamValue("volume0", Volume);
       dsp.setParamValue("volume1", Volume);
     }
@@ -223,20 +355,24 @@ void control( void * pvParameters ) {
     //
     // oct change
     //
-    int oct[2];
     oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
     oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
 
-    for (int i = 0; i < 2; i++) {
-      if (octPrev[i] != oct[i]) {
-        octPrev[i] = oct[i];
-        switch (i) {
-          case 0 :
-            dsp.setParamValue("note0", note[0] + BASE_NOTE + oct[0] * 12);
-            break;
-          case 1 :
-            dsp.setParamValue("note1", note[1] + BASE_NOTE + oct[1] * 12 + 12);
-            break;
+    for (int ch = 0; ch < 2; ch++) {
+      if (octPrev[ch] != oct[ch]) {
+        octPrev[ch] = oct[ch];
+        if (!ch) dsp.setParamValue("note0", note[0] + BASE_NOTE + oct[0] * 12);
+        if (ch) dsp.setParamValue("note1", note[1] + BASE_NOTE + oct[1] * 12 + 12);
+      }
+
+      if (Mode[ch] == CAVE_MODE) {
+        int cave = oct[ch] + 1;
+        if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+        if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+        duck_env_triggered[ch] = true;
+        duck_env_init_timer[ch] = currentMillis;
+        for (int v = 0; v < 9; v++ ) {
+          cm_freq_set(ch, v, cm_freq[ch][cave][v]);
         }
       }
     }
@@ -244,46 +380,50 @@ void control( void * pvParameters ) {
     //
     // mode change
     //
-    for (int kb = 0; kb < 2; kb++) {
+    for (int ch = 0; ch < 2; ch++) {
 
-      if (modeChangingFromKeys[kb] || modeChangingFromMIDI[kb]) {
+      if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch]) {
 
-        if (modeChangingFromKeys[kb]) {
-          modeChangingFromKeys[kb] = false;
-          if (Mode[kb] < MODE_NUM) Mode[kb] += 1;
-          else Mode[kb] = 0;
+        if (modeChangingFromKeys[ch]) {
+          modeChangingFromKeys[ch] = false;
+          if (Mode[ch] < MODE_NUM) Mode[ch] += 1;
+          else Mode[ch] = 0;
         }
 
-        if (modeChangingFromMIDI[kb]) {
-          modeChangingFromMIDI[kb] = false;
+        if (modeChangingFromMIDI[ch]) {
+          modeChangingFromMIDI[ch] = false;
         }
 
-        modeChanged[kb] = true;
-
-        if (!kb) {
-          dsp.setParamValue("mode0", Mode[kb]);
+        if (!ch) {
+          dsp.setParamValue("mode0", Mode[ch]);
           dsp.setParamValue("/Wingie/left/mode_changed", 1);
+          dirty[8] = true;
         }
-        if (kb) {
-          dsp.setParamValue("mode1", Mode[kb]);
+        if (ch) {
+          dsp.setParamValue("mode1", Mode[ch]);
           dsp.setParamValue("/Wingie/right/mode_changed", 1);
+          dirty[9] = true;
         }
 
-        for (int i = 0; i < 2; i++) digitalWrite(ledPin[kb][i], !bitRead(ledColor[Mode[kb]], i)); // 模式 LED 控制
+        duck_env_triggered[ch] = true;
+        duck_env_init_timer[ch] = currentMillis;
 
-        if (Mode[kb] != REQ_MODE) {
-          for (int i = 0; i < 9; i++) {
-            muteStatus[kb][i] = false;
-            muteControl(kb, i, false);
+        for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+
+        if (Mode[ch] != CAVE_MODE) {
+          for (int v = 0; v < 9; v++) {
+            int cave = oct[ch] + 1;
+            cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+            cm_freq_set(ch, v, cm_freq[ch][cave][v]);
           }
         }
 
       }
 
-      if (modeChanged[kb] && currentMillis - modeChangedTimer[kb] > 20) {
-        modeChanged[kb] = false;
-        if (!kb) dsp.setParamValue("/Wingie/left/mode_changed", 0);
-        if (kb) dsp.setParamValue("/Wingie/right/mode_changed", 0);
+      if (duck_env_triggered[ch] && currentMillis - duck_env_init_timer[ch] > 20) {
+        duck_env_triggered[ch] = false;
+        if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 0);
+        if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 0);
       }
 
     }
@@ -340,16 +480,16 @@ void control( void * pvParameters ) {
     if (keyChanged) {
       keyChanged = false;
 
-      for (int kb = 0; kb < 2; kb++) {
+      for (int ch = 0; ch < 2; ch++) {
 
         //
         // mode change
         //
-        if (!modeButtonState[kb]) modeButtonPressed[kb] = true;
-        else if (modeButtonState[kb]) {
-          if (modeButtonPressed[kb] && !threshChanged[kb]) modeChangingFromKeys[kb] = true;
-          threshChanged[kb] = false;
-          modeButtonPressed[kb] = false;
+        if (!modeButtonState[ch]) modeButtonPressed[ch] = true;
+        else if (modeButtonState[ch]) {
+          if (modeButtonPressed[ch] && !threshChanged[ch] && !stuff_saved) modeChangingFromKeys[ch] = true;
+          threshChanged[ch] = false;
+          modeButtonPressed[ch] = false;
         }
 
 
@@ -357,92 +497,153 @@ void control( void * pvParameters ) {
         // note change
         //
         for (int i = 0; i < 12; i++) {
-          bool tmp = key[kb][i];
-          bitWrite(allKeys[kb], i, !tmp);
+          bool tmp = key[ch][i];
+          bitWrite(allKeys[ch], i, !tmp);
 
-          if (key[kb][i] != keyPrev[kb][i]) {
-            if (!key[kb][i]) {
+          if (key[ch][i] != keyPrev[ch][i]) {
+            if (!key[ch][i]) {
 
-              if (modeButtonPressed[kb]) { // Change threshold
-                threshChanged[kb] = true;
-                float thresh = 0.0833 * i + 0.0833;
-                if (!kb) {
-                  dsp.setParamValue("left_threshold", thresh);
-                };
-                if (kb) {
-                  dsp.setParamValue("right_threshold", thresh);
-                };
+              if (modeButtonPressed[0]) { // Change threshold
+                threshChanged[0] = true;
+                if (!ch) {
+                  left_thresh = 0.0825 * i + 0.0825;
+                  dsp.setParamValue("left_thresh", left_thresh);
+                  dirty[4] = true;
+                }
+                if (ch) {
+                  right_thresh = 0.0825 * i + 0.0825;
+                  dsp.setParamValue("right_thresh", right_thresh);
+                  dirty[5] = true;
+                }
               }
+
+              else if (modeButtonPressed[1]) { // Change gain
+                threshChanged[1] = true;
+                if (!ch) {
+                  pre_clip_gain = 0.0825 * i + 0.0825;
+                  dsp.setParamValue("pre_clip_gain", pre_clip_gain);
+                  dirty[6] = true;
+                }
+                if (ch) {
+                  post_clip_gain = 0.055 * i + 0.385;
+                  dsp.setParamValue("post_clip_gain", post_clip_gain);
+                  dirty[7] = true;
+                }
+              }
+
               else {
-                //if (!kb) dsp.setParamValue("/Wingie/left/mode_changed", 1);
-                //if (kb) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+                //if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+                //if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
 
-                if (firstPress[kb]) {
-                  firstPress[kb] = false;
+                if (firstPress[ch]) {
+                  firstPress[ch] = false;
 
-                  if (Mode[kb] != POLY_MODE && Mode[kb] != REQ_MODE) {
-                    note[kb] = i;
-                    seq[kb][0] = i;
-                    seqLen[kb] = 0;
-                    playHeadPos[kb] = 0;
-                    writeHeadPos[kb] = 0;
-                    if (!kb) dsp.setParamValue("note0", note[kb] + BASE_NOTE + oct[kb] * 12);
-                    if (kb) dsp.setParamValue("note1", note[kb] + BASE_NOTE + oct[kb] * 12 + 12);
+                  if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
+                    note[ch] = i;
+                    seq[ch][0] = i;
+                    seqLen[ch] = 0;
+                    playHeadPos[ch] = 0;
+                    writeHeadPos[ch] = 0;
+                    if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
+                    if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
                   }
                 }
                 else { // Not First Press
-                  if (Mode[kb] != POLY_MODE && Mode[kb] != REQ_MODE) {
-                    note[kb] = i;
-                    writeHeadPos[kb] += 1;
-                    seqLen[kb] += 1;
-                    seq[kb][writeHeadPos[kb]] = i;
-                    if (!kb) dsp.setParamValue("note0", note[kb] + BASE_NOTE + oct[kb] * 12);
-                    if (kb) dsp.setParamValue("note1", note[kb] + BASE_NOTE + oct[kb] * 12 + 12);
+                  if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
+                    note[ch] = i;
+                    writeHeadPos[ch] += 1;
+                    seqLen[ch] += 1;
+                    seq[ch][writeHeadPos[ch]] = i;
+                    if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
+                    if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
                   }
                 }
 
-                if (Mode[kb] == REQ_MODE) {
+                if (Mode[ch] == CAVE_MODE) {
+                  int cave = oct[ch] + 1;
                   if (i < 4 || i > 6) {
-                    int key;
-                    if (i > 6) key = i - 3;
-                    else key = i;
-                    muteStatus[kb][key] = !muteStatus[kb][key];
-                    muteControl(kb, key, muteStatus[kb][key]);
+                    int v;
+                    if (i > 6) v = i - 3;
+                    else v = i;
+                    if (!(!key[ch][4] || !key[ch][5])) {
+                      cm_ms[ch][cave][v] = !cm_ms[ch][cave][v];
+                      cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                    }
+                  }
+                  if (i == 6) {
+                    for (int v = 0 ; v < 9; v++) {
+                      cm_ms[ch][cave][v] = false;
+                      cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                    }
                   }
                 }
 
-                if (Mode[kb] == POLY_MODE) {
-                  if (currentPoly[kb] == 0) {
-                    currentPoly[kb] = 1;
-                    if (!kb) dsp.setParamValue("/Wingie/left/poly_note_0", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (kb) dsp.setParamValue("/Wingie/right/poly_note_0", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_R);
+                if (Mode[ch] == POLY_MODE) {
+                  if (currentPoly[ch] == 0) {
+                    currentPoly[ch] = 1;
+                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
+                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
                   }
-                  else if (currentPoly[kb] == 1) {
-                    currentPoly[kb] = 2;
-                    if (!kb) dsp.setParamValue("/Wingie/left/poly_note_1", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (kb) dsp.setParamValue("/Wingie/right/poly_note_1", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_R);
+                  else if (currentPoly[ch] == 1) {
+                    currentPoly[ch] = 2;
+                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
+                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
                   }
-                  else if (currentPoly[kb] == 2) {
-                    currentPoly[kb] = 0;
-                    if (!kb) dsp.setParamValue("/Wingie/left/poly_note_2", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (kb) dsp.setParamValue("/Wingie/right/poly_note_2", i + BASE_NOTE + oct[kb] * 12 + POLY_MODE_NOTE_ADD_R);
+                  else if (currentPoly[ch] == 2) {
+                    currentPoly[ch] = 0;
+                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
+                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
                   }
                 }
 
-              } // !modeButtonPressed[kb]
+              } // !modeButtonPressed[ch]
             } // Key Press Action End
 
             else { // Key Release Action Start
-              if (!allKeys[kb]) firstPress[kb] = true;
-              //if (!kb) dsp.setParamValue("/Wingie/left/mode_changed", 0);
-              //if (kb) dsp.setParamValue("/Wingie/right/mode_changed", 0);
+              if (!allKeys[ch]) firstPress[ch] = true;
+              //if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 0);
+              //if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 0);
             } // Key Release Action End
 
           }
-          keyPrev[kb][i] = key[kb][i];
+          keyPrev[ch][i] = key[ch][i];
         }
       }
     }
+
+    //
+    // cave mode adjusting
+    //
+    for (int ch = 0; ch < 2; ch++) {
+      int cave = oct[ch] + 1;
+
+      if (Mode[ch] == CAVE_MODE) {
+
+        if (!key[ch][4] or !key[ch][5]) {
+          int adj[2];
+          adj[ch] = -!key[ch][4] + !key[ch][5];
+
+
+          for (int v = 0; v < 9; v++) {
+
+            int k;
+            if (v > 3) k = v + 3;
+            else k = v;
+
+            if (!key[ch][k]) {
+
+              adj[ch] = adj[ch] * fscale(50, 16000, 1, 20, cm_freq[ch][cave][v], -0.85); // 指数增长下降
+
+              cm_freq[ch][cave][v] += adj[ch];
+              cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], CAVE_LOWEST_FREQ);
+              cm_freq[ch][cave][v] = min(cm_freq[ch][cave][v], CAVE_HIGHEST_FREQ);
+              cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+            }
+          }
+        }
+      }
+    }
+
 
     //
     // Tap Sequencer
@@ -450,25 +651,74 @@ void control( void * pvParameters ) {
     trig[0] = dsp.getParamValue("/Wingie/left_trig");
     trig[1] = dsp.getParamValue("/Wingie/right_trig");
 
-    for (int kb = 0; kb < 2; kb++) {
-      if (seqLen[kb]) {
-        if (trig[kb] && !trigged[kb]) {
-          trigged[kb] = true;
-          if (playHeadPos[kb] < seqLen[kb]) playHeadPos[kb] += 1;
-          else playHeadPos[kb] = 0;
-          note[kb] = seq[kb][playHeadPos[kb]];
-          if (!kb) dsp.setParamValue("note0", note[kb] + BASE_NOTE + oct[kb] * 12);
-          if (kb) dsp.setParamValue("note1", note[kb] + BASE_NOTE + oct[kb] * 12 + 12);
-          if (!kb) dsp.setParamValue("/Wingie/left/mode_changed", 1);
-          if (kb) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+    for (int ch = 0; ch < 2; ch++) {
+      if (seqLen[ch]) {
+        if (trig[ch] && !trigged[ch]) {
+          trigged[ch] = true;
+          if (playHeadPos[ch] < seqLen[ch]) playHeadPos[ch] += 1;
+          else playHeadPos[ch] = 0;
+          note[ch] = seq[ch][playHeadPos[ch]];
+          if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
+          if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
+          if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+          if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
         }
       }
-      if (!trig[kb] && trigged[kb]) {
-        trigged[kb] = false;
-        if (!kb) dsp.setParamValue("/Wingie/left/mode_changed", 0);
-        if (kb) dsp.setParamValue("/Wingie/right/mode_changed", 0);
+      if (!trig[ch] && trigged[ch]) {
+        trigged[ch] = false;
+        if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 0);
+        if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 0);
       }
     }
+
+    //
+    // save routine
+    //
+    if (modeButtonPressed[0] && modeButtonPressed[1] && !save_routine_flag && !stuff_saved) {
+      save_routine_flag = true;
+      save_routine_timer = currentMillis;
+      led_flash_timer = currentMillis;
+      led_flash_color = 0;
+    }
+
+    if (!modeButtonPressed[0] && !modeButtonPressed[1]) {
+      save_routine_flag = false;
+      stuff_saved = false;
+    }
+
+    if (save_routine_flag) {
+      if (currentMillis - led_flash_timer > LED_FLASH_INTERVAL) {
+        led_flash_timer = currentMillis;
+        for (int ch = 0; ch < 2; ch++) {
+          for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(led_flash_color, i));
+        }
+        if (led_flash_color < 3) led_flash_color += 1;
+        else led_flash_color = 0;
+      }
+      if (currentMillis - save_routine_timer > SAVE_DELAY) {
+        led_blink = 5;
+        led_flash_timer = currentMillis;
+        save_routine_flag = false;
+        stuff_saved = true;
+        save_stuff();
+      }
+    }
+
+    if (led_blink) {
+      if (currentMillis - led_flash_timer > 125) {
+        led_flash_timer = currentMillis;
+        for (int ch = 0; ch < 2; ch++) {
+          for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], led_blink % 2);
+        }
+        led_blink -= 1;
+        if (!led_blink) {
+          for (int ch = 0; ch < 2; ch++) {
+            for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+          }
+        }
+      }
+    }
+
   }
 
 }
