@@ -67,19 +67,19 @@ A .bat file of identical functions can be created for Windows.
 ![c1](https://user-images.githubusercontent.com/4593629/158773019-20344ef1-9385-4675-83df-5215cc4624f3.jpg)
 ![c2](https://user-images.githubusercontent.com/4593629/158773026-535a0e4e-a833-4929-b494-8c8754f4ec60.jpg)
 
-3. In Arduino software, open the menu Tools-Development Board-Board Manager, search for ESP32 and install
+3. In Arduino software, open the menu Tools-Development Board-Board Manager, search for ESP32 and install (use version 2.0.4 -- this project does not work properly yet with version 2.0.5)
 
 ![c3](https://user-images.githubusercontent.com/4593629/158773034-031a8ea6-4bb5-45df-b1db-b1e0d5831ea9.jpg)
 ![c4](https://user-images.githubusercontent.com/4593629/158773127-2696f499-18b2-4192-ad1d-3f975e0981c3.jpg)
 
-4. Put the files in "Libraries" under Documents/Arduino/Libraries
+4. Copy the files in the "Libraries" directory of the project to Documents/Arduino/Libraries
 
 5. Open Arduino software, click menu Sketch->Include Library->Manage Libraries. Install MIDI Library by Francois Best and Adafruit AW9523 Library
 
 ![c5](https://user-images.githubusercontent.com/4593629/158773259-5106c61e-e7c4-4058-86ce-c3d557acafad.jpg)
 ![c6](https://user-images.githubusercontent.com/4593629/158773832-44c7d6b6-0509-4fd3-877c-ded94093ca39.jpg)
 
-6. Open Wingie2.ino. Choose port (cu.usbserial-xxxxx or cu.SLAB_USBtoUART). click menu Tools->Upload Speed, change it to 460800, hit upload
+6. Open Wingie2.ino. Choose port (on macOS, is should be named cu.usbserial-xxxxx or cu.SLAB_USBtoUART; on Windows, it will probably be named COMxxx). click menu Tools->Upload Speed, change it to 51200, hit upload
 
 ---
 
