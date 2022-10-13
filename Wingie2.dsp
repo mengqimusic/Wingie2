@@ -27,7 +27,13 @@ bar_factor = 0.44444;
 
 a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
 
+// Kraig Grady "centaur" tuning
+centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
+
 mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+
+// convert MIDI note to quantized frequency
+mtoq(note, tuning) = mtof(note) : qu.quantizeSmoothed(a3_freq, tuning);
 
 volume0 = hslider("volume0", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
 volume1 = hslider("volume1", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
@@ -44,6 +50,7 @@ note0 = hslider("note0", 36, 12, 127, 1);
 note1 = hslider("note1", 36, 12, 96, 1);
 mode0 = hslider("mode0", 0, 0, 4, 1);
 mode1 = hslider("mode1", 0, 0, 4, 1);
+notex = hslider("notex", 36, 12, 127, 1);
 
 env_mode_change = 1 - en.ar(0.002, env_mode_change_decay, button("mode_changed"));
 env_mute(t) = 1 - en.asr(0.25, 1., 0.25, t);
@@ -72,8 +79,10 @@ note_ratio(note) = pow(2., note / 12);
 
 f(note, n, s) = 
                 poly(n),
-                int_ratios(mtof(note), n),
-                bar_ratios(mtof(note), n),
+                // int_ratios(mtof(note), n),
+                int_ratios(mtoq(note, centaur), n),
+                // bar_ratios(mtof(note), n),
+                bar_ratios(mtoq(note, centaur), n),
                 //odd_ratios(ba.midikey2hz(note), n),
                 //cymbal_808(n) * note_ratio(note - 48),
                 cave(n)
