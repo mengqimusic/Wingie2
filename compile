@@ -1,9 +1,0 @@
-#!/bin/bash
-cd "$(dirname "$BASH_SOURCE")" || {
-    echo Error getting script directory >&2
-    exit 1
-}
-
-faust2esp32 -ac101 -lib -flist Wingie2.dsp
-unzip -o Wingie2.zip
-cp -f ./Wingie2/*.* /mnt/c/Users/daves/Documents/Arduino/Wingie2/
