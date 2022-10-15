@@ -27,10 +27,10 @@ bar_factor = 0.44444;
 
 a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
 
+mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+
 // Kraig Grady "centaur" tuning
 centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
-
-mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 
 // convert MIDI note to quantized frequency
 mtoq(note, tuning) = mtof(note) : qu.quantizeSmoothed(a3_freq, tuning);
