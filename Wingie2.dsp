@@ -29,11 +29,20 @@ a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
 
 mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 
-// Kraig Grady "centaur" tuning
+//---- alternate tuning support -----
+// Kraig Grady, "centaur" tuning
 centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
+// La Monte Young, Well Tuned Piano
+lmy_wtp = (1, 567/512, 9/8, 147/128, 21/16, 1323/1024, 189/128, 3/2, 49/32, 7/4, 441/256, 63/32);
 
 // convert MIDI note to quantized frequency
-mtoq(note, tuning) = mtof(note) : qu.quantizeSmoothed(a3_freq, tuning);
+// assumes tuning has 12 degrees (11 ratios + assumed octave)!
+mtoq(note, tuning) = f with {
+    n = note % 12;                                // scale degree (0-11)
+    c = note - n;                                 // C note in given octave
+    f = mtof(c) * (tuning : ba.selectn(12, n));   // multiply C frequency by ratio per degree
+};
+//---- alternate tuning support -----
 
 volume0 = hslider("volume0", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
 volume1 = hslider("volume1", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
