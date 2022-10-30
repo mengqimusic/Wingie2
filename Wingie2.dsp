@@ -34,15 +34,30 @@ mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
 // La Monte Young, Well Tuned Piano
 lmy_wtp = (1, 567/512, 9/8, 147/128, 21/16, 1323/1024, 189/128, 3/2, 49/32, 7/4, 441/256, 63/32);
+// Interleaved 1-3-5-7 hexanies
+dual_hexany = (1, 16/15, 7/6, 56/45, 5/4, 4/3, 35/24, 14/9, 5/3, 16/9, 7/4, 28/15);
+// Meru C
+meta_slendro = (1, 65/64, 9/8, 37/32, 151/128, 5/4, 21/16, 43/32, 3/2, 49/32, 7/4, 57/32);
 
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
 mtoq(note, tuning) = f with {
+    // f = ba.midikey2hz(note) : qu.quantizeSmoothed(440, scale);
     n = note % 12;                                // scale degree (0-11)
     c = note - n;                                 // C note in given octave
     f = mtof(c) * (tuning : ba.selectn(12, n));   // multiply C frequency by ratio per degree
 };
 //---- alternate tuning support -----
+
+//----- harmonic sets -----
+harm_fib   = (1, 2, 3, 5, 8, 13, 21, 34, 55);
+harm_prime = (1, 2, 3, 5, 7, 11, 13, 17, 19);
+
+harm_ratios(freq, n, set) = f with {
+  h = set : ba.selectn(nHarmonics, n);
+  f = freq * h;
+};
+//----- harmonic sets -----
 
 volume0 = hslider("volume0", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
 volume1 = hslider("volume1", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
@@ -59,7 +74,6 @@ note0 = hslider("note0", 36, 12, 127, 1);
 note1 = hslider("note1", 36, 12, 96, 1);
 mode0 = hslider("mode0", 0, 0, 4, 1);
 mode1 = hslider("mode1", 0, 0, 4, 1);
-notex = hslider("notex", 36, 12, 127, 1);
 
 env_mode_change = 1 - en.ar(0.002, env_mode_change_decay, button("mode_changed"));
 env_mute(t) = 1 - en.asr(0.25, 1., 0.25, t);
@@ -68,6 +82,8 @@ bar_ratios(freq, n) = freq * bar_factor * pow((n + 1) + 0.5, 2);
 int_ratios(freq, n) = freq * (n + 1);
 //odd_ratios(freq, n) = freq * (2 * n + 1);
 //cymbal_808(n) = 130.812792, 193.957204, 235.501256, 333.053319, 344.076511, 392.438376, 509.742979, 581.871611, 706.503769, 999.16, 1032.222378, 1529.218338: ba.selectn(12, n); // chromatic
+fib_ratios(freq, n) = harm_ratios(freq, n, harm_fib);
+prime_ratios(freq, n) = harm_ratios(freq, n, harm_prime);
 req(n) = 62, 115, 218, 411, 777, 1500, 2800, 5200, 11000 : ba.selectn(nHarmonics, n);
 
 cave(n) = par(i, nHarmonics, vslider("cave_freq_%i", req(i), 50, 16000, 1)) : ba.selectn(nHarmonics, n);
@@ -80,6 +96,14 @@ with
     c = vslider("poly_note_2", 36, 24, 96, 1) : mtof;
 };
 
+poly_quantized(n, tuning) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
+with
+{
+    a = mtoq(vslider("poly_note_0", 36, 24, 96, 1), tuning);
+    b = mtoq(vslider("poly_note_1", 36, 24, 96, 1), tuning);
+    c = mtoq(vslider("poly_note_2", 36, 24, 96, 1), tuning);
+};
+
 //bianzhong(n) = 212.3, 424.6, 530.8, 636.9, 1061.6, 1167.7, 2017.0, 2335.5, 2653.9, 3693 : ba.selectn(10, n);
 //cymbal_808(n) = 205.3, 304.4, 369.6, 522.7, 540, 615.9, 800, 913.2, 1108.8, 1568.1 : ba.selectn(10, n); // original
 //circular_membrane_ratios(n) = 1, 1.59, 2.14, 2.30, 2.65, 2.92, 3.16, 3.50, 3.60, 3.65 : ba.selectn(10, n);
@@ -87,25 +111,33 @@ with
 note_ratio(note) = pow(2., note / 12);
 
 f(note, n, s) = 
-                poly(n),
+                // poly(n),
+                poly_quantized(n, centaur),
+
                 // int_ratios(mtof(note), n),
-                int_ratios(mtoq(note, centaur), n),
+                // int_ratios(mtoq(note, centaur), n),
+                fib_ratios(mtoq(note, centaur), n),
+
                 // bar_ratios(mtof(note), n),
                 bar_ratios(mtoq(note, centaur), n),
                 //odd_ratios(ba.midikey2hz(note), n),
                 //cymbal_808(n) * note_ratio(note - 48),
+
                 cave(n)
+
                 : ba.selectn(4, s);
 
 scale(x, in_low, in_high, out_low, out_high, e) = (out_low + (out_high - out_low) * ((x - in_low) / (in_high - in_low)) ^ e);
 
-r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c))
+r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c)) * amp_scale
   with
 {
   a = min(f(note, index, source), 16000);
   //decay_factor = scale(a, 8, 16000, 1, 0, 0.4);
   b = (env_mode_change * decay) + 0.05;
   c = env_mute(button("mute_%index")) * (ba.if(a == 16000, 0, 1) : si.smoo);
+  amp_scale = 1;                // default harmonic amplitude
+  // amp_scale = 1 / (index + 1);  // harmonic amplitude @ 1/n
 };
 
 process = _,_
