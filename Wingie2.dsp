@@ -25,6 +25,10 @@ env_mode_change_decay = hslider("env_mode_change_decay", 0.05, 0, 1, 0.01);
 //hp_cutoff = hslider("hp_cutoff", 85, 35, 500, 0.1);
 bar_factor = 0.44444;
 
+use_alt_tuning = button("use_alt_tuning");
+use_alt_harmonic_scaling = 1; // button("use_alt_harmonic_scaling");
+use_alt_harmonics = 0; //button("use_alt_harmonics");
+
 a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
 
 mtof(note) = a3_freq * pow(2., (note - 69) / 12);
@@ -34,10 +38,12 @@ mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
 // La Monte Young, Well Tuned Piano
 lmy_wtp = (1, 567/512, 9/8, 147/128, 21/16, 1323/1024, 189/128, 3/2, 49/32, 7/4, 441/256, 63/32);
-// Interleaved 1-3-5-7 hexanies
+// // Interleaved 1-3-5-7 hexanies
 dual_hexany = (1, 16/15, 7/6, 56/45, 5/4, 4/3, 35/24, 14/9, 5/3, 16/9, 7/4, 28/15);
-// Meru C
+// // Meru C
 meta_slendro = (1, 65/64, 9/8, 37/32, 151/128, 5/4, 21/16, 43/32, 3/2, 49/32, 7/4, 57/32);
+// // Marwa extended
+marwa_extended = (1, 21/20, 9/8, 7/6, 5/4, 21/16, 7/5, 147/100, 5/3, 7/4, 15/8, 49/25);
 
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
@@ -49,7 +55,8 @@ mtoq(note, tuning) = f with {
 };
 //---- alternate tuning support -----
 
-//----- harmonic sets -----
+//----- harmonics sets -----
+harm_int   = (1, 2, 3, 4, 5, 6, 7, 8, 9);
 harm_fib   = (1, 2, 3, 5, 8, 13, 21, 34, 55);
 harm_prime = (1, 2, 3, 5, 7, 11, 13, 17, 19);
 
@@ -57,7 +64,7 @@ harm_ratios(freq, n, set) = f with {
   h = set : ba.selectn(nHarmonics, n);
   f = freq * h;
 };
-//----- harmonic sets -----
+//----- harmonics sets -----
 
 volume0 = hslider("volume0", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
 volume1 = hslider("volume1", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
@@ -108,36 +115,37 @@ with
 //cymbal_808(n) = 205.3, 304.4, 369.6, 522.7, 540, 615.9, 800, 913.2, 1108.8, 1568.1 : ba.selectn(10, n); // original
 //circular_membrane_ratios(n) = 1, 1.59, 2.14, 2.30, 2.65, 2.92, 3.16, 3.50, 3.60, 3.65 : ba.selectn(10, n);
 
-note_ratio(note) = pow(2., note / 12);
+// note_ratio(note) = pow(2., note / 12);
+
+get_freq(note, tuning) =
+  mtof(note),
+  mtoq(note, tuning)
+  : ba.selectn(2, use_alt_tuning);
+
+get_harmonics(note, n, tuning) =
+  int_ratios(get_freq(note, tuning), n),
+  prime_ratios(get_freq(note, tuning), n)
+  : ba.selectn(2, use_alt_harmonics);
 
 f(note, n, s) = 
-                // poly(n),
-                poly_quantized(n, centaur),
-
-                // int_ratios(mtof(note), n),
-                // int_ratios(mtoq(note, centaur), n),
-                fib_ratios(mtoq(note, centaur), n),
-
-                // bar_ratios(mtof(note), n),
-                bar_ratios(mtoq(note, centaur), n),
-                //odd_ratios(ba.midikey2hz(note), n),
-                //cymbal_808(n) * note_ratio(note - 48),
-
-                cave(n)
-
-                : ba.selectn(4, s);
+    poly(n),
+    get_harmonics(note, n, centaur),
+    bar_ratios(mtof(note), n),
+    //odd_ratios(ba.midikey2hz(note), n),
+    //cymbal_808(n) * note_ratio(note - 48),
+    cave(n)
+  : ba.selectn(4, s);
 
 scale(x, in_low, in_high, out_low, out_high, e) = (out_low + (out_high - out_low) * ((x - in_low) / (in_high - in_low)) ^ e);
 
-r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c)) * amp_scale
+r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c)) * harm_scale
   with
 {
   a = min(f(note, index, source), 16000);
   //decay_factor = scale(a, 8, 16000, 1, 0, 0.4);
   b = (env_mode_change * decay) + 0.05;
   c = env_mute(button("mute_%index")) * (ba.if(a == 16000, 0, 1) : si.smoo);
-  amp_scale = 1;                // default harmonic amplitude
-  // amp_scale = 1 / (index + 1);  // harmonic amplitude @ 1/n
+  harm_scale = 1, 1/(index+1) : ba.selectn(2, use_alt_harmonic_scaling);
 };
 
 process = _,_
@@ -153,5 +161,4 @@ process = _,_
                     : _ * vol_wet0 * post_clip_gain, _ * vol_wet1 * post_clip_gain, _ * vol_dry0, _ * vol_dry1
                 //:> co.limiter_1176_R4_mono, co.limiter_1176_R4_mono
                 //:> aa.cubic1, aa.cubic1
-                        :> (_ * output_gain), (_ * output_gain)
-                            ;
+                        :> (_ * output_gain), (_ * output_gain);

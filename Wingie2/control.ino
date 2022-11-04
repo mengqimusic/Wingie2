@@ -239,6 +239,20 @@ void control( void * pvParameters ) {
   modeButtonState[0] = aw1.digitalRead(4);
   modeButtonState[1] = aw1.digitalRead(7);
 
+  if (!modeButtonState[0]) {
+    dsp.setParamValue("use_alt_tuning", 1);
+  } else {
+    dsp.setParamValue("use_alt_tuning", 0);
+  }
+
+  if (!modeButtonState[1]) {
+    dsp.setParamValue("use_alt_harmonics", 1);
+    // dsp.setParamValue("use_alt_harmonic_scaling", 1);
+  } else {
+    dsp.setParamValue("use_alt_harmonics", 0);
+    // dsp.setParamValue("use_alt_harmonic_scaling", 0);
+  }
+
   dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
   dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
 
@@ -248,10 +262,6 @@ void control( void * pvParameters ) {
   dsp.setParamValue("/Wingie/right/poly_note_0", 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
   dsp.setParamValue("/Wingie/right/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
   dsp.setParamValue("/Wingie/right/poly_note_2", 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
-
-  dsp.setParamValue("/Wingie/left/decay", 0.1); // 最小 Startup Decay 避免开机声音过大
-  dsp.setParamValue("/Wingie/right/decay", 0.1);
-
 
   for (;;) {
     interrupts();
