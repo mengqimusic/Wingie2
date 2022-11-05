@@ -25,9 +25,9 @@ env_mode_change_decay = hslider("env_mode_change_decay", 0.05, 0, 1, 0.01);
 //hp_cutoff = hslider("hp_cutoff", 85, 35, 500, 0.1);
 bar_factor = 0.44444;
 
-use_alt_tuning = button("use_alt_tuning");
-use_alt_harmonic_scaling = 1; // button("use_alt_harmonic_scaling");
-use_alt_harmonics = 0; //button("use_alt_harmonics");
+use_alt_tuning = button("../../use_alt_tuning");
+use_alt_harmonic_scaling = button("../../use_alt_harmonic_scaling");
+use_alt_harmonics = button("../../use_alt_harmonics"); //button("use_alt_harmonics");
 
 a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
 
@@ -38,17 +38,17 @@ mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
 // La Monte Young, Well Tuned Piano
 lmy_wtp = (1, 567/512, 9/8, 147/128, 21/16, 1323/1024, 189/128, 3/2, 49/32, 7/4, 441/256, 63/32);
-// // Interleaved 1-3-5-7 hexanies
+// Interleaved 1-3-5-7 hexanies
 dual_hexany = (1, 16/15, 7/6, 56/45, 5/4, 4/3, 35/24, 14/9, 5/3, 16/9, 7/4, 28/15);
-// // Meru C
+// Meru C
 meta_slendro = (1, 65/64, 9/8, 37/32, 151/128, 5/4, 21/16, 43/32, 3/2, 49/32, 7/4, 57/32);
-// // Marwa extended
+// Marwa extended
 marwa_extended = (1, 21/20, 9/8, 7/6, 5/4, 21/16, 7/5, 147/100, 5/3, 7/4, 15/8, 49/25);
 
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
 mtoq(note, tuning) = f with {
-    // f = ba.midikey2hz(note) : qu.quantizeSmoothed(440, scale);
+    // f = mtof(note) : qu.quantizeSmoothed(440, tuning);
     n = note % 12;                                // scale degree (0-11)
     c = note - n;                                 // C note in given octave
     f = mtof(c) * (tuning : ba.selectn(12, n));   // multiply C frequency by ratio per degree
@@ -56,7 +56,6 @@ mtoq(note, tuning) = f with {
 //---- alternate tuning support -----
 
 //----- harmonics sets -----
-harm_int   = (1, 2, 3, 4, 5, 6, 7, 8, 9);
 harm_fib   = (1, 2, 3, 5, 8, 13, 21, 34, 55);
 harm_prime = (1, 2, 3, 5, 7, 11, 13, 17, 19);
 
@@ -127,10 +126,23 @@ get_harmonics(note, n, tuning) =
   prime_ratios(get_freq(note, tuning), n)
   : ba.selectn(2, use_alt_harmonics);
 
+get_poly(n, tuning) =
+  poly(n),
+  poly_quantized(n, tuning)
+  : ba.selectn(2, use_alt_tuning);
+
+get_bar(note, n, tuning) =
+  bar_ratios(mtof(note), n),
+  bar_ratios(mtoq(note, centaur), n)
+  : ba.selectn(2, use_alt_tuning);
+
 f(note, n, s) = 
-    poly(n),
+    // poly(n),
+    get_poly(n, centaur),
     get_harmonics(note, n, centaur),
-    bar_ratios(mtof(note), n),
+    // bar_ratios(mtof(note), n),
+    // bar_ratios(mtoq(note, centaur), n),
+    get_bar(note, n, centaur),
     //odd_ratios(ba.midikey2hz(note), n),
     //cymbal_808(n) * note_ratio(note - 48),
     cave(n)
