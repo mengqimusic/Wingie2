@@ -129,8 +129,7 @@ void control( void * pvParameters ) {
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
   float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
   a3_freq = 440. + a3_freq_offset;
-  dsp.setParamValue("/Wingie/left/a3_freq", a3_freq);
-  dsp.setParamValue("/Wingie/right/a3_freq", a3_freq);
+  dsp.setParamValue("a3_freq", a3_freq);
   Serial.printf("a3_freq = %.2f\n", a3_freq);
   pre_clip_gain = prefs.getFloat("pre_clip_gain", 0);
   dsp.setParamValue("pre_clip_gain", pre_clip_gain);

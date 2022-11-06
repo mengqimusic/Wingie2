@@ -47,7 +47,7 @@ declare version "0.2";
 // program execution.
 //-----------------------------------------------------------------------------
 // SR = min(192000.0, max(1.0, fconstant(int fSamplingFreq, <math.h>)));
-SR = 44100;
+SR = 48000;
 
 //---------------------------------`(pl.)BS`---------------------------------------
 // Current block-size. Can change during the execution.

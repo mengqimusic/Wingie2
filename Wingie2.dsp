@@ -27,11 +27,16 @@ bar_factor = 0.44444;
 
 use_alt_tuning = button("../../use_alt_tuning");
 use_alt_harmonic_scaling = button("../../use_alt_harmonic_scaling");
-use_alt_harmonics = button("../../use_alt_harmonics"); //button("use_alt_harmonics");
+use_alt_harmonics = button("../../use_alt_harmonics");
 
-a3_freq = hslider("a3_freq", 440, 300, 600, 0.01);
+a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);
 
-mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+// standard (unoptimized) version
+// mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+
+// optimized version, but disregards a3_freq and just uses 440
+_mtof(note) = 440 * pow(2., (note - 69) / 12);
+mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
 
 //---- alternate tuning support -----
 // Kraig Grady, "centaur" tuning
@@ -45,10 +50,11 @@ meta_slendro = (1, 65/64, 9/8, 37/32, 151/128, 5/4, 21/16, 43/32, 3/2, 49/32, 7/
 // Marwa extended
 marwa_extended = (1, 21/20, 9/8, 7/6, 5/4, 21/16, 7/5, 147/100, 5/3, 7/4, 15/8, 49/25);
 
+current_tuning = centaur;
+
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
 mtoq(note, tuning) = f with {
-    // f = mtof(note) : qu.quantizeSmoothed(440, tuning);
     n = note % 12;                                // scale degree (0-11)
     c = note - n;                                 // C note in given octave
     f = mtof(c) * (tuning : ba.selectn(12, n));   // multiply C frequency by ratio per degree
@@ -133,16 +139,14 @@ get_poly(n, tuning) =
 
 get_bar(note, n, tuning) =
   bar_ratios(mtof(note), n),
-  bar_ratios(mtoq(note, centaur), n)
+  bar_ratios(mtoq(note, tuning), n)
   : ba.selectn(2, use_alt_tuning);
 
 f(note, n, s) = 
     // poly(n),
-    get_poly(n, centaur),
-    get_harmonics(note, n, centaur),
-    // bar_ratios(mtof(note), n),
-    // bar_ratios(mtoq(note, centaur), n),
-    get_bar(note, n, centaur),
+    get_poly(n, current_tuning),
+    get_harmonics(note, n, current_tuning),
+    get_bar(note, n, current_tuning),
     //odd_ratios(ba.midikey2hz(note), n),
     //cymbal_808(n) * note_ratio(note - 48),
     cave(n)
