@@ -129,8 +129,7 @@ void control( void * pvParameters ) {
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
   float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
   a3_freq = 440. + a3_freq_offset;
-  dsp.setParamValue("/Wingie/left/a3_freq", a3_freq);
-  dsp.setParamValue("/Wingie/right/a3_freq", a3_freq);
+  dsp.setParamValue("a3_freq", a3_freq);
   Serial.printf("a3_freq = %.2f\n", a3_freq);
   pre_clip_gain = prefs.getFloat("pre_clip_gain", 0);
   dsp.setParamValue("pre_clip_gain", pre_clip_gain);
@@ -239,6 +238,20 @@ void control( void * pvParameters ) {
   modeButtonState[0] = aw1.digitalRead(4);
   modeButtonState[1] = aw1.digitalRead(7);
 
+  if (!modeButtonState[0]) {
+    dsp.setParamValue("use_alt_tuning", 1);
+  } else {
+    dsp.setParamValue("use_alt_tuning", 0);
+  }
+
+  if (!modeButtonState[1]) {
+    dsp.setParamValue("use_alt_harmonics", 1);
+    dsp.setParamValue("use_alt_harmonic_scaling", 1);
+  } else {
+    dsp.setParamValue("use_alt_harmonics", 0);
+    dsp.setParamValue("use_alt_harmonic_scaling", 0);
+  }
+
   dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
   dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
 
@@ -251,8 +264,7 @@ void control( void * pvParameters ) {
 
   dsp.setParamValue("/Wingie/left/decay", 0.1); // 最小 Startup Decay 避免开机声音过大
   dsp.setParamValue("/Wingie/right/decay", 0.1);
-
-
+  
   for (;;) {
     interrupts();
     currentMillis = millis();

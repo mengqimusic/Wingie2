@@ -94,8 +94,7 @@ void handleControlChange (byte channel, byte number, byte value) {
         float freq_offset = midi_value_14bit / 100. - 81.92;
 
         a3_freq = 440. + freq_offset;
-        dsp.setParamValue("/Wingie/left/a3_freq", a3_freq);
-        dsp.setParamValue("/Wingie/right/a3_freq", a3_freq);
+        dsp.setParamValue("a3_freq", a3_freq);
         dirty[3] = true;
       }
     }
