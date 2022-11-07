@@ -1,10 +1,11 @@
 declare name        "Wingie";
-declare version     "3.0";
+declare version     "3.1";
 declare author      "Meng Qi";
+declare author      "Dave Seidel";
 declare license     "BSD";
 declare copyright   "(c)Meng Qi 2020";
 declare date        "2020-09-30";
-declare editDate    "2022-04-26";
+declare editDate    "2022-11-27";
 
 //-----------------------------------------------
 // Wingie

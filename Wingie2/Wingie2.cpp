@@ -1,11 +1,11 @@
 // Options:
 #define A1S_BOARD true
 /* ------------------------------------------------------------
-author: "Meng Qi"
+author: "Meng Qi", "Dave Seidel"
 copyright: "(c)Meng Qi 2020"
 license: "BSD"
 name: "Wingie"
-version: "3.0"
+version: "3.1"
 Code generated with Faust 2.53.1 (https://faust.grame.fr)
 Compilation options: -a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0
 ------------------------------------------------------------ */
@@ -12071,12 +12071,13 @@ class mydsp : public dsp {
 		m->declare("analyzers.lib/name", "Faust Analyzer Library");
 		m->declare("analyzers.lib/version", "0.2");
 		m->declare("author", "Meng Qi");
+		m->declare("contributor", "Dave Seidel");
 		m->declare("basics.lib/name", "Faust Basic Element Library");
 		m->declare("basics.lib/version", "0.8");
 		m->declare("compile_options", "-a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0");
 		m->declare("copyright", "(c)Meng Qi 2020");
 		m->declare("date", "2020-09-30");
-		m->declare("editDate", "2022-04-26");
+		m->declare("editDate", "2022-11-27");
 		m->declare("envelopes.lib/ar:author", "Yann Orlarey, Stéphane Letz");
 		m->declare("envelopes.lib/asr:author", "Yann Orlarey, Stéphane Letz");
 		m->declare("envelopes.lib/author", "GRAME");
@@ -12131,7 +12132,7 @@ class mydsp : public dsp {
 		m->declare("platform.lib/version", "0.2");
 		m->declare("signals.lib/name", "Faust Signal Routing Library");
 		m->declare("signals.lib/version", "0.3");
-		m->declare("version", "3.0");
+		m->declare("version", "3.1");
 	}
 
 	virtual int getNumInputs() {
