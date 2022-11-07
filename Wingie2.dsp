@@ -32,11 +32,11 @@ use_alt_harmonics = button("../../use_alt_harmonics");
 a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);
 
 // standard (unoptimized) version
-// mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 
 // optimized version, but disregards a3_freq and just uses 440
-_mtof(note) = 440 * pow(2., (note - 69) / 12);
-mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
+// _mtof(note) = 440 * pow(2., (note - 69) / 12);
+// mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
 
 //---- alternate tuning support -----
 // Kraig Grady, "centaur" tuning
@@ -143,8 +143,8 @@ get_bar(note, n, tuning) =
   : ba.selectn(2, use_alt_tuning);
 
 f(note, n, s) = 
-    // poly(n),
-    get_poly(n, current_tuning),
+    poly(n),
+    // get_poly(n, current_tuning),
     get_harmonics(note, n, current_tuning),
     get_bar(note, n, current_tuning),
     //odd_ratios(ba.midikey2hz(note), n),
