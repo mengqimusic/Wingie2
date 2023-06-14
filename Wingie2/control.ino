@@ -99,6 +99,8 @@ void control( void * pvParameters ) {
     prefs.putFloat("right_thresh", 0.4125);
     prefs.putUChar("left_mode", 0);
     prefs.putUChar("right_mode", 0);
+    prefs.putUChar("use_alt_tuning", 0);
+    prefs.putChar("alt_tuning_idx", -1);
 
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
@@ -185,6 +187,11 @@ void control( void * pvParameters ) {
   dsp.setParamValue("mode1", Mode[1]);
   Serial.printf("right_mode = %d\n", Mode[1]);
 
+  use_alt_tuning = prefs.getUChar("use_alt_tuning", 0);
+  dsp.setParamValue("use_alt_tuning", use_alt_tuning);
+  alt_tuning_index = prefs.getChar("alt_tuning_idx", -1);
+  Serial.printf("use_alt_tuning = %d, alt_tuning_index = %d\n", use_alt_tuning, alt_tuning_index);
+
   prefs.end();
 
   // Preferences Section End
@@ -235,22 +242,44 @@ void control( void * pvParameters ) {
     for (int i = 0; i < 12; i++) keyPrev[ch][i] = key[ch][i];
   }
 
+  // handle mode button holds for alternate tuning settings or preferenc clearing
+  //    - left button held: enable alternnate tuning and select scale bases on slider positions (base 2)
+  //    - right button heldc: disablle alternate tuning and revert to standard tuning
+  //    - both buttons held: clear prefs and restart clean
+
   modeButtonState[0] = aw1.digitalRead(4);
   modeButtonState[1] = aw1.digitalRead(7);
 
-  if (!modeButtonState[0]) {
-    dsp.setParamValue("use_alt_tuning", 1);
-  } else {
-    dsp.setParamValue("use_alt_tuning", 0);
+  if (!modeButtonState[0] && !modeButtonState[1]) {
+    // both buttons
+    Serial.printf("Clearing prefs!\n");
+    prefs.begin("settings", RW_MODE);
+    prefs.clear();
+    prefs.end();
+    Serial.printf("Restarting device...\n");
+    ESP.restart();
+  } else if (!modeButtonState[0]) {
+    // left button only
+    Serial.printf("Enabling/resetting alt tuning\n");
+    if (use_alt_tuning == 0) {
+      dsp.setParamValue("use_alt_tuning", 1);
+      use_alt_tuning = 1;
+    }
+    alt_tuning_index = get_int_from_sliders();
+    alt_tuning_set(alt_tuning_index);
+  } else if (!modeButtonState[1]) {
+    // right button only
+    // if already on, turn off and save
+    if (use_alt_tuning != 0) {
+      Serial.printf("Disabling alt tuning\n");
+      dsp.setParamValue("use_alt_tuning", 0);
+      use_alt_tuning = 0;
+      alt_tuning_index = -1;
+      alt_tuning_set(alt_tuning_index);
+    }
   }
 
-  if (!modeButtonState[1]) {
-    dsp.setParamValue("use_alt_harmonics", 1);
-    dsp.setParamValue("use_alt_harmonic_scaling", 1);
-  } else {
-    dsp.setParamValue("use_alt_harmonics", 0);
-    dsp.setParamValue("use_alt_harmonic_scaling", 0);
-  }
+  Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");
 
   dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
   dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
