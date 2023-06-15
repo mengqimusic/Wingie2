@@ -242,9 +242,9 @@ void control( void * pvParameters ) {
     for (int i = 0; i < 12; i++) keyPrev[ch][i] = key[ch][i];
   }
 
-  // handle mode button holds for alternate tuning settings or preferenc clearing
-  //    - left button held: enable alternnate tuning and select scale bases on slider positions (base 2)
-  //    - right button heldc: disablle alternate tuning and revert to standard tuning
+  // handle mode button holds for alternate tuning settings or preference clearing
+  //    - left button held: enable alternate tuning and select scale bases on slider positions (base 2)
+  //    - right button held: disable alternate tuning and revert to standard tuning
   //    - both buttons held: clear prefs and restart clean
 
   modeButtonState[0] = aw1.digitalRead(4);
