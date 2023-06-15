@@ -256,8 +256,8 @@ void cm_freq_set(byte kb, byte voice, int freq) {
   dsp.setParamValue(str, freq);
 }
 
-// tuning param >= 0 is index into ration set
-// tuning param < 0 means set rations to 0
+// tuning param >= 0 is index into ratio set
+// tuning param < 0 means set ratios to 0
 void alt_tuning_set(int tuning) {
   char buff[80];
   std::string str;
@@ -276,7 +276,7 @@ void alt_tuning_set(int tuning) {
       ratio = alt_tunings[tuning][i];
     }
     dsp.setParamValue(str, ratio);
-    // Serial.printf("%s = %f\n", buff, ratio);
+    // Serial.printf("%s = %f -> %f\n", str, ratio, dsp.getParamValue(str));
   }
 }
 

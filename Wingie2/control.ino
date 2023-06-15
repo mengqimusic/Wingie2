@@ -266,7 +266,6 @@ void control( void * pvParameters ) {
       use_alt_tuning = 1;
     }
     alt_tuning_index = get_int_from_sliders();
-    alt_tuning_set(alt_tuning_index);
   } else if (!modeButtonState[1]) {
     // right button only
     // if already on, turn off and save
@@ -277,6 +276,10 @@ void control( void * pvParameters ) {
       alt_tuning_index = -1;
       alt_tuning_set(alt_tuning_index);
     }
+  }
+
+  if (use_alt_tuning != 0 && alt_tuning_index != -1) {
+    alt_tuning_set(alt_tuning_index);
   }
 
   Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");

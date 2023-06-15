@@ -6,8 +6,8 @@ copyright: "(c)Meng Qi 2020"
 license: "BSD"
 name: "Wingie"
 version: "3.0"
-Code generated with Faust 2.54.9 (https://faust.grame.fr)
-Compilation options: -a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0
+Code generated with Faust 2.59.6 (https://faust.grame.fr)
+Compilation options: -a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -ct 1 -es 1 -mcd 16 -single -ftz 0
 ------------------------------------------------------------ */
 
 #ifndef  __mydsp_H__
@@ -104,7 +104,13 @@ Compilation options: -a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -es 
 #ifndef __export__
 #define __export__
 
-#define FAUSTVERSION "2.54.9"
+// Version as a global string
+#define FAUSTVERSION "2.59.6"
+
+// Version as separated [major,minor,patch] values
+#define FAUSTMAJORVERSION 2
+#define FAUSTMINORVERSION 59
+#define FAUSTPATCHVERSION 6
 
 // Use FAUST_API for code that is part of the external API but is also compiled in faust and libfaust
 // Use LIBFAUST_API for code that is compiled in faust and libfaust
@@ -172,6 +178,7 @@ struct FAUST_API Meta {
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 
 #ifndef FAUSTFLOAT
@@ -363,17 +370,37 @@ class FAUST_API dsp_factory {
     
     public:
     
+        /* Return factory name */
         virtual std::string getName() = 0;
+    
+        /* Return factory SHA key */
         virtual std::string getSHAKey() = 0;
+    
+        /* Return factory expanded DSP code */
         virtual std::string getDSPCode() = 0;
+    
+        /* Return factory compile options */
         virtual std::string getCompileOptions() = 0;
+    
+        /* Get the Faust DSP factory list of library dependancies */
         virtual std::vector<std::string> getLibraryList() = 0;
+    
+        /* Get the list of all used includes */
         virtual std::vector<std::string> getIncludePathnames() = 0;
+    
+        /* Get warning messages list for a given compilation */
         virtual std::vector<std::string> getWarningMessages() = 0;
     
+        /* Create a new DSP instance, to be deleted with C++ 'delete' */
         virtual dsp* createDSPInstance() = 0;
     
+        /* Static tables initialization, possibly implemened in sub-classes*/
+        virtual void classInit(int sample_rate) {};
+    
+        /* Set a custom memory manager to be used when creating instances */
         virtual void setMemoryManager(dsp_memory_manager* manager) = 0;
+    
+        /* Return the currently set custom memory manager */
         virtual dsp_memory_manager* getMemoryManager() = 0;
     
 };
@@ -693,8 +720,9 @@ class FAUST_API PathBuilder {
             std::map<std::string, std::string> unique2full;  // all full paths transformed but made unique with a prefix
             char num_buffer[16];
             int pnum = 0;
-        
+            
             for (const auto& s : fFullPaths) {
+                // Using sprintf since Teensy does not have the std::to_string function
                 sprintf(num_buffer, "%d", pnum++);
                 std::string u = "/P" + std::string(num_buffer) + str2ID(remove0x00(s));
                 uniquePaths.push_back(u);
@@ -2498,7 +2526,7 @@ class SoundfileReader {
             int total_length = 0;
             
             // Compute total length and channels max of all files
-            for (int i = 0; i < int(path_name_list.size()); i++) {
+            for (size_t i = 0; i < path_name_list.size(); i++) {
                 int chan, length;
                 if (path_name_list[i] == "__empty_sound__") {
                     length = BUFFER_SIZE;
@@ -2520,7 +2548,7 @@ class SoundfileReader {
             int offset = 0;
             
             // Read all files
-            for (int i = 0; i < int(path_name_list.size()); i++) {
+            for (size_t i = 0; i < path_name_list.size(); i++) {
                 if (path_name_list[i] == "__empty_sound__") {
                     soundfile->emptyFile(i, offset);
                 } else {
@@ -2529,7 +2557,7 @@ class SoundfileReader {
             }
             
             // Complete with empty parts
-            for (int i = int(path_name_list.size()); i < MAX_SOUNDFILE_PARTS; i++) {
+            for (size_t i = path_name_list.size(); i < MAX_SOUNDFILE_PARTS; i++) {
                 soundfile->emptyFile(i, offset);
             }
             
@@ -2603,7 +2631,7 @@ struct JuceReader : public SoundfileReader {
     
     bool checkFile(const std::string& path_name) override
     {
-        juce::File file(path_name);
+        juce::File file = juce::File::getCurrentWorkingDirectory().getChildFile(path_name);
         if (file.existsAsFile()) {
             return true;
         } else {
@@ -2614,14 +2642,14 @@ struct JuceReader : public SoundfileReader {
     
     void getParamsFile(const std::string& path_name, int& channels, int& length) override
     {
-        std::unique_ptr<juce::AudioFormatReader> formatReader (fFormatManager.createReaderFor (juce::File (path_name)));
+        std::unique_ptr<juce::AudioFormatReader> formatReader (fFormatManager.createReaderFor (juce::File::getCurrentWorkingDirectory().getChildFile(path_name)));
         channels = int(formatReader->numChannels);
         length = int(formatReader->lengthInSamples);
     }
     
     void readFile(Soundfile* soundfile, const std::string& path_name, int part, int& offset, int max_chan) override
     {
-        std::unique_ptr<juce::AudioFormatReader> formatReader (fFormatManager.createReaderFor (juce::File (path_name)));
+        std::unique_ptr<juce::AudioFormatReader> formatReader (fFormatManager.createReaderFor (juce::File::getCurrentWorkingDirectory().getChildFile(path_name)));
         
         soundfile->fLength[part] = int(formatReader->lengthInSamples);
         soundfile->fSR[part] = int(formatReader->sampleRate);
@@ -3578,7 +3606,7 @@ static LibsndfileReader gReader;
 #endif
 
 // To be used by DSP code if no SoundUI is used
-static std::vector<std::string> path_name_list;
+static std::vector<std::string> gPathNameList;
 static Soundfile* defaultsound = nullptr;
 
 class SoundUI : public SoundUIInterface
@@ -3615,7 +3643,7 @@ class SoundUI : public SoundUIInterface
                 : std::shared_ptr<SoundfileReader>(std::shared_ptr<SoundfileReader>{}, &gReader);
             fSoundReader->setSampleRate(sample_rate);
             fIsDouble = is_double;
-            if (!defaultsound) defaultsound = gReader.createSoundfile(path_name_list, MAX_CHAN, is_double);
+            if (!defaultsound) defaultsound = gReader.createSoundfile(gPathNameList, MAX_CHAN, is_double);
         }
     
         /**
@@ -3637,7 +3665,7 @@ class SoundUI : public SoundUIInterface
                 : std::shared_ptr<SoundfileReader>(std::shared_ptr<SoundfileReader>{}, &gReader);
             fSoundReader->setSampleRate(sample_rate);
             fIsDouble = is_double;
-            if (!defaultsound) defaultsound = gReader.createSoundfile(path_name_list, MAX_CHAN, is_double);
+            if (!defaultsound) defaultsound = gReader.createSoundfile(gPathNameList, MAX_CHAN, is_double);
         }
     
         virtual ~SoundUI()
@@ -3911,7 +3939,6 @@ class FAUST_API Interpolator {
             double operator()(double x) { return (x<fLo) ? fLo : (x>fHi) ? fHi : x; }
         };
 
-
         Range fRange;
         double fCoef;
         double fOffset;
@@ -4071,13 +4098,14 @@ class FAUST_API LinearValueConverter2 : public UpdatableValueConverter {
 class FAUST_API LogValueConverter : public LinearValueConverter {
 
     public:
-
+    
+        // We use DBL_EPSILON which is bigger than DBL_MIN (safer)
         LogValueConverter(double umin, double umax, double fmin, double fmax) :
-            LinearValueConverter(umin, umax, std::log(std::max<double>(DBL_MIN, fmin)), std::log(std::max<double>(DBL_MIN, fmax)))
+            LinearValueConverter(umin, umax, std::log(std::max<double>(DBL_EPSILON, fmin)), std::log(std::max<double>(DBL_EPSILON, fmax)))
         {}
 
         virtual double ui2faust(double x) { return std::exp(LinearValueConverter::ui2faust(x)); }
-        virtual double faust2ui(double x) { return LinearValueConverter::faust2ui(std::log(std::max<double>(x, DBL_MIN))); }
+        virtual double faust2ui(double x) { return LinearValueConverter::faust2ui(std::log(std::max<double>(DBL_EPSILON, x))); }
 
 };
 
@@ -5589,9 +5617,45 @@ static void deleteClist(clist* cl)
  * which are finally created in the JSON(...) method.
  ******************************************************************************/
 
-typedef std::vector<std::tuple<std::string, int, int, int, int, int>> MemoryLayoutType;
+// Instruction complexity statistics
+struct InstComplexity {
+    
+    int fLoad = 0;
+    int fStore = 0;
+    int fBinop = 0;
+    int fMathop = 0;
+    int fNumbers = 0;
+    int fDeclare = 0;
+    int fCast = 0;
+    int fSelect = 0;
+    int fLoop = 0;
+    
+    std::map<std::string, int> fFunctionSymbolTable;
+    std::map<std::string, int> fBinopSymbolTable;
+   
+    InstComplexity operator+(const InstComplexity& icomp)
+    {
+        fLoad += icomp.fLoad;
+        fStore += icomp.fStore;
+        fBinop += icomp.fBinop;
+        fMathop += icomp.fMathop;
+        fNumbers += icomp.fNumbers;
+        fDeclare += icomp.fDeclare;
+        fCast += icomp.fCast;
+        fSelect += icomp.fSelect;
+        fLoop += icomp.fLoop;
+        return *this;
+    }
+};
+
+// DSP or field name, type, size, size-in-bytes, reads, writes
+typedef std::tuple<std::string, std::string, int, int, int, int> MemoryLayoutItem;
+typedef std::vector<MemoryLayoutItem> MemoryLayoutType;
 typedef std::map<std::string, int> PathTableType;
 
+/*
+    Build a JSON description of the DSP.
+ */
 template <typename REAL>
 class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL> {
 
@@ -5613,6 +5677,7 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
         int fDSPSize;                   // In bytes
         PathTableType fPathTable;
         MemoryLayoutType fMemoryLayout;
+        InstComplexity fIComp;
         bool fExtended;
     
         char fCloseUIPar;
@@ -5680,24 +5745,25 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
                   const std::vector<std::string>& include_pathnames,
                   int size,
                   const PathTableType& path_table,
-                  MemoryLayoutType memory_layout)
+                  MemoryLayoutType memory_layout,
+                  InstComplexity inst_comp)
         {
-            init(name, filename, inputs, outputs, sr_index, sha_key, dsp_code, version, compile_options, library_list, include_pathnames, size, path_table, memory_layout);
+            init(name, filename, inputs, outputs, sr_index, sha_key, dsp_code, version, compile_options, library_list, include_pathnames, size, path_table, memory_layout, inst_comp);
         }
 
         JSONUIReal(const std::string& name, const std::string& filename, int inputs, int outputs)
         {
-            init(name, filename, inputs, outputs, -1, "", "", "", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType());
+            init(name, filename, inputs, outputs, -1, "", "", "", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType(), InstComplexity());
         }
 
         JSONUIReal(int inputs, int outputs)
         {
-            init("", "", inputs, outputs, -1, "", "","", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType());
+            init("", "", inputs, outputs, -1, "", "","", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType(), InstComplexity());
         }
         
         JSONUIReal()
         {
-            init("", "", -1, -1, -1, "", "", "", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType());
+            init("", "", -1, -1, -1, "", "", "", "", std::vector<std::string>(), std::vector<std::string>(), -1, PathTableType(), MemoryLayoutType(), InstComplexity());
         }
  
         virtual ~JSONUIReal() {}
@@ -5722,6 +5788,7 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
                   int size,
                   const PathTableType& path_table,
                   MemoryLayoutType memory_layout,
+                  InstComplexity inst_comp,
                   bool extended = false)
         {
             fTab = 1;
@@ -5730,6 +5797,8 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
                 fUI << std::setprecision(std::numeric_limits<REAL>::max_digits10);
                 fMeta << std::setprecision(std::numeric_limits<REAL>::max_digits10);
             }
+        
+            fIComp = inst_comp;
             
             // Start Meta generation
             fMeta.str("");
@@ -5760,7 +5829,7 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
    
         // -- widget's layouts
     
-        virtual void openGenericGroup(const char* label, const char* name)
+        virtual void openGenericBox(const char* label, const char* name)
         {
             pushLabel(label);
             fUI << fCloseUIPar;
@@ -5776,17 +5845,17 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
 
         virtual void openTabBox(const char* label)
         {
-            openGenericGroup(label, "tgroup");
+            openGenericBox(label, "tgroup");
         }
     
         virtual void openHorizontalBox(const char* label)
         {
-            openGenericGroup(label, "hgroup");
+            openGenericBox(label, "hgroup");
         }
     
         virtual void openVerticalBox(const char* label)
         {
-            openGenericGroup(label, "vgroup");
+            openGenericBox(label, "vgroup");
         }
     
         virtual void closeBox()
@@ -5844,7 +5913,7 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
             addGenericButton(label, "checkbox");
         }
 
-        virtual void addGenericEntry(const char* label, const char* name, REAL init, REAL min, REAL max, REAL step)
+        virtual void addGenericRange(const char* label, const char* name, REAL init, REAL min, REAL max, REAL step)
         {
             std::string path = buildPath(label);
             fFullPaths.push_back(path);
@@ -5878,17 +5947,17 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
     
         virtual void addVerticalSlider(const char* label, REAL* zone, REAL init, REAL min, REAL max, REAL step)
         {
-            addGenericEntry(label, "vslider", init, min, max, step);
+            addGenericRange(label, "vslider", init, min, max, step);
         }
     
         virtual void addHorizontalSlider(const char* label, REAL* zone, REAL init, REAL min, REAL max, REAL step)
         {
-            addGenericEntry(label, "hslider", init, min, max, step);
+            addGenericRange(label, "hslider", init, min, max, step);
         }
     
         virtual void addNumEntry(const char* label, REAL* zone, REAL init, REAL min, REAL max, REAL step)
         {
-            addGenericEntry(label, "nentry", init, min, max, step);
+            addGenericRange(label, "nentry", init, min, max, step);
         }
 
         // -- passive widgets
@@ -6007,16 +6076,67 @@ class FAUST_API JSONUIReal : public PathBuilder, public Meta, public UIReal<REAL
                     tab(fTab, JSON);
                     JSON << "\"memory_layout\": [";
                     for (size_t i = 0; i < fMemoryLayout.size(); i++) {
-                        // DSP or field name, type, size, sizeBytes, reads, writes
-                        std::tuple<std::string, int, int, int, int, int> item = fMemoryLayout[i];
+                        // DSP or field name, type, size, size-in-bytes, reads, writes
+                        MemoryLayoutItem item = fMemoryLayout[i];
                         tab(fTab + 1, JSON);
-                        JSON << "{\"size\": " << std::get<3>(item) << ", ";
-                        JSON << "\"reads\": " << std::get<4>(item) << ", ";
-                        JSON << "\"writes\": " << std::get<5>(item) << "}";
+                        JSON << "{ \"name\": \"" << std::get<0>(item) << "\", ";
+                        JSON << "\"type\": \"" << std::get<1>(item) << "\", ";
+                        JSON << "\"size\": " << std::get<2>(item) << ", ";
+                        JSON << "\"size_bytes\": " << std::get<3>(item) << ", ";
+                        JSON << "\"read\": " << std::get<4>(item) << ", ";
+                        JSON << "\"write\": " << std::get<5>(item) << " }";
                         if (i < (fMemoryLayout.size() - 1)) JSON << ",";
                     }
                     tab(fTab, JSON);
                     JSON << "],";
+                    
+                    // Compute statistics
+                    tab(fTab, JSON);
+                    JSON << "\"compute_cost\": [{";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"load\": " << fIComp.fLoad << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"store\": " << fIComp.fStore << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"declare\": " << fIComp.fDeclare << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"number\": " << fIComp.fNumbers << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"cast\": " << fIComp.fCast << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"select\": " << fIComp.fSelect << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"loop\": " << fIComp.fLoop << ", ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"binop\": [{ ";
+                    JSON << "\"total\": " << fIComp.fBinop;
+                    int size1 = fIComp.fBinopSymbolTable.size();
+                    if (size1 > 0) {
+                        JSON << ", ";
+                        for (const auto& it : fIComp.fBinopSymbolTable) {
+                            JSON << "\"" << it.first << "\": " << it.second;
+                            JSON << ((--size1 == 0) ? " }" : ", ");
+                        }
+                    } else {
+                        JSON << " }";
+                    }
+                    JSON << "], ";
+                    tab(fTab + 1, JSON);
+                    JSON << "\"mathop\": [{ ";
+                    JSON << "\"total\": " << fIComp.fMathop;
+                    int size2 = (int)fIComp.fFunctionSymbolTable.size();
+                    if (size2 > 0) {
+                        JSON << ", ";
+                        for (const auto& it : fIComp.fFunctionSymbolTable) {
+                            JSON << "\"" << it.first << "\": " << it.second;
+                            JSON << ((--size2 == 0) ? " }" : ", ");
+                        }
+                    } else {
+                        JSON << " }";
+                    }
+                    JSON << "]";
+                    tab(fTab, JSON);
+                    JSON << "}],";
                 }
                 if (fDSPSize != -1) { tab(fTab, JSON); JSON << "\"size\": " << fDSPSize << ","; }
                 if (fSHAKey != "") { tab(fTab, JSON); JSON << "\"sha_key\": \"" << fSHAKey << "\","; }
@@ -6073,14 +6193,16 @@ struct FAUST_API JSONUI : public JSONUIReal<FAUSTFLOAT>, public UI {
            const std::vector<std::string>& include_pathnames,
            int size,
            const PathTableType& path_table,
-           MemoryLayoutType memory_layout):
+           MemoryLayoutType memory_layout,
+           InstComplexity inst_comp):
     JSONUIReal<FAUSTFLOAT>(name, filename,
                           inputs, outputs,
                           sr_index,
                           sha_key, dsp_code,
                           version, compile_options,
                           library_list, include_pathnames,
-                          size, path_table, memory_layout)
+                          size, path_table,
+                          memory_layout, inst_comp)
     {}
     
     JSONUI(const std::string& name, const std::string& filename, int inputs, int outputs):
@@ -6639,6 +6761,8 @@ class midi_handler : public midi, public midi_interface {
   
 };
 
+#define ucast(v) static_cast<unsigned char>(v)
+
 #endif // __midi__
 /**************************  END  midi.h **************************/
 
@@ -6948,13 +7072,14 @@ class uiMidiChanPress : public uiMidiTimedItem, public uiConverter {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter->faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->chanPress(chan, fConverter->faust2ui(v));
+                    fMidiOut->chanPress(chan, conv);
                 }
             } else {
-                fMidiOut->chanPress(fChan - 1, fConverter->faust2ui(v));
+                fMidiOut->chanPress(fChan - 1, conv);
             }
         }
     
@@ -7000,13 +7125,14 @@ class uiMidiCtrlChange : public uiMidiTimedItem, public uiConverter {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter->faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->ctrlChange(chan, fCtrl, fConverter->faust2ui(v));
+                    fMidiOut->ctrlChange(chan, fCtrl, conv);
                 }
             } else {
-                fMidiOut->ctrlChange(fChan - 1, fCtrl, fConverter->faust2ui(v));
+                fMidiOut->ctrlChange(fChan - 1, fCtrl, conv);
             }
         }
         
@@ -7025,6 +7151,7 @@ class uiMidiCtrlChange : public uiMidiTimedItem, public uiConverter {
         }
 };
 
+// Use a two segments linear converter
 class uiMidiPitchWheel : public uiMidiTimedItem {
 
     private:
@@ -7053,13 +7180,14 @@ class uiMidiPitchWheel : public uiMidiTimedItem {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter.faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->pitchWheel(chan, fConverter.faust2ui(v));
+                    fMidiOut->pitchWheel(chan, conv);
                 }
             } else {
-                fMidiOut->pitchWheel(fChan - 1, fConverter.faust2ui(v));
+                fMidiOut->pitchWheel(fChan - 1, conv);
             }
         }
         
@@ -7111,13 +7239,14 @@ class uiMidiKeyOn : public uiMidiTimedItem, public uiConverter {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter->faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->keyOn(chan, fKeyOn, fConverter->faust2ui(v));
+                    fMidiOut->keyOn(chan, fKeyOn, conv);
                 }
             } else {
-                fMidiOut->keyOn(fChan - 1, fKeyOn, fConverter->faust2ui(v));
+                fMidiOut->keyOn(fChan - 1, fKeyOn, conv);
             }
         }
         
@@ -7163,13 +7292,14 @@ class uiMidiKeyOff : public uiMidiTimedItem, public uiConverter {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter->faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->keyOn(chan, fKeyOff, fConverter->faust2ui(v));
+                    fMidiOut->keyOff(chan, fKeyOff, conv);
                 }
             } else {
-                fMidiOut->keyOn(fChan - 1, fKeyOff, fConverter->faust2ui(v));
+                fMidiOut->keyOff(fChan - 1, fKeyOff, conv);
             }
         }
         
@@ -7215,13 +7345,14 @@ class uiMidiKeyPress : public uiMidiTimedItem, public uiConverter {
         {
             FAUSTFLOAT v = *fZone;
             fCache = v;
+            int conv = std::round(fConverter->faust2ui(v));
             if (fChan == 0) {
                 // Send on [0..15] channels on the MIDI layer
                 for (int chan = 0; chan < 16; chan++) {
-                    fMidiOut->keyOn(chan, fKey, fConverter->faust2ui(v));
+                    fMidiOut->keyPress(chan, fKey, conv);
                 }
             } else {
-                fMidiOut->keyOn(fChan - 1, fKey, fConverter->faust2ui(v));
+                fMidiOut->keyPress(fChan - 1, fKey, conv);
             }
         }
         
@@ -8413,9 +8544,9 @@ static dsp* createDSPRecursiver(dsp* dsp1, dsp* dsp2,
 }
 
 static dsp* createDSPCrossfader(dsp* dsp1, dsp* dsp2,
-                                 std::string& error,
-                                 Layout layout = Layout::kTabGroup,
-                                 const std::string& label = "Crossfade")
+                                std::string& error,
+                                Layout layout = Layout::kTabGroup,
+                                const std::string& label = "Crossfade")
 {
     if (dsp1->getNumInputs() != dsp2->getNumInputs()) {
         std::stringstream error_aux;
@@ -10160,6 +10291,9 @@ static void buildManagerGlue(MemoryManagerGlue* glue, dsp_memory_manager* manage
 #ifdef _WIN32
 #include <windows.h>
 #define snprintf _snprintf
+#define STRDUP _strdup
+#else
+#define STRDUP strdup
 #endif
 
 //------------------------------------------------------------------------------------------
@@ -10437,7 +10571,7 @@ struct FAUST_API JSONUIDecoderReal : public JSONUIDecoderBase {
         // MANDATORY: to be sure floats or double are correctly parsed
         char* tmp_local = setlocale(LC_ALL, nullptr);
         if (tmp_local != NULL) {
-            tmp_local = strdup(tmp_local);
+            tmp_local = STRDUP(tmp_local);
         }
         setlocale(LC_ALL, "C");
         
@@ -10518,7 +10652,7 @@ struct FAUST_API JSONUIDecoderReal : public JSONUIDecoderBase {
         // MANDATORY: to be sure floats or double are correctly parsed
         char* tmp_local = setlocale(LC_ALL, nullptr);
         if (tmp_local != NULL) {
-            tmp_local = strdup(tmp_local);
+            tmp_local = STRDUP(tmp_local);
         }
         setlocale(LC_ALL, "C");
         
@@ -10588,7 +10722,7 @@ struct FAUST_API JSONUIDecoderReal : public JSONUIDecoderBase {
         // MANDATORY: to be sure floats or double are correctly parsed
         char* tmp_local = setlocale(LC_ALL, nullptr);
         if (tmp_local != NULL) {
-            tmp_local = strdup(tmp_local);
+            tmp_local = STRDUP(tmp_local);
         }
         setlocale(LC_ALL, "C");
         
@@ -12112,15 +12246,17 @@ class mydsp : public dsp {
 	int fSampleRate;
 	
  public:
-	
+	mydsp() {}
+
 	void metadata(Meta* m) { 
 		m->declare("analyzers.lib/name", "Faust Analyzer Library");
 		m->declare("analyzers.lib/version", "0.2");
 		m->declare("author", "Meng Qi");
 		m->declare("basics.lib/name", "Faust Basic Element Library");
 		m->declare("basics.lib/tabulate:author", "Stephane Letz");
-		m->declare("basics.lib/version", "0.9");
-		m->declare("compile_options", "-a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -es 1 -mcd 16 -single -ftz 0");
+		m->declare("basics.lib/tabulateNd", "Copyright (C) 2023 Bart Brouns <bart@magnetophon.nl>");
+		m->declare("basics.lib/version", "0.10");
+		m->declare("compile_options", "-a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -ct 1 -es 1 -mcd 16 -single -ftz 0");
 		m->declare("copyright", "(c)Meng Qi 2020");
 		m->declare("date", "2020-09-30");
 		m->declare("editDate", "2022-04-26");
@@ -12168,9 +12304,9 @@ class mydsp : public dsp {
 		m->declare("maths.lib/copyright", "GRAME");
 		m->declare("maths.lib/license", "LGPL with exception");
 		m->declare("maths.lib/name", "Faust Math Library");
-		m->declare("maths.lib/version", "2.5");
+		m->declare("maths.lib/version", "2.6");
 		m->declare("misceffects.lib/name", "Misc Effects Library");
-		m->declare("misceffects.lib/version", "2.0");
+		m->declare("misceffects.lib/version", "2.1");
 		m->declare("name", "Wingie");
 		m->declare("physmodels.lib/name", "Faust Physical Models Library");
 		m->declare("physmodels.lib/version", "0.1");
@@ -12740,10 +12876,10 @@ class mydsp : public dsp {
 		float fSlow10 = float(fHslider6);
 		int iSlow11 = fSlow10 >= 2.0f;
 		int iSlow12 = fSlow10 >= 1.0f;
-		float fSlow13 = ftbl0mydspSIG0[int(float(fVslider0))];
+		float fSlow13 = ftbl0mydspSIG0[int(float(fVslider0) + 0.5f)];
 		int iSlow14 = float(fButton3) >= 1.0f;
 		float fSlow15 = float(fHslider7);
-		float fSlow16 = ftbl0mydspSIG0[int(fSlow15)];
+		float fSlow16 = ftbl0mydspSIG0[int(fSlow15 + 0.5f)];
 		float fSlow17 = std::fmod(fSlow15, 12.0f);
 		float fSlow18 = float(fHslider8);
 		float fSlow19 = float(fHslider9);
@@ -12757,7 +12893,7 @@ class mydsp : public dsp {
 		float fSlow27 = float(fHslider17);
 		float fSlow28 = float(fHslider18);
 		float fSlow29 = float(fHslider19);
-		float fSlow30 = ((fSlow17 >= 6.0f) ? ((fSlow17 >= 9.0f) ? ((fSlow17 >= 11.0f) ? fSlow29 : ((fSlow17 >= 1e+01f) ? fSlow28 : fSlow27)) : ((fSlow17 >= 8.0f) ? fSlow26 : ((fSlow17 >= 7.0f) ? fSlow25 : fSlow24))) : ((fSlow17 >= 3.0f) ? ((fSlow17 >= 5.0f) ? fSlow23 : ((fSlow17 >= 4.0f) ? fSlow22 : fSlow21)) : ((fSlow17 >= 2.0f) ? fSlow20 : ((fSlow17 >= 1.0f) ? fSlow19 : fSlow18)))) * ftbl0mydspSIG0[int(fSlow15 - fSlow17)];
+		float fSlow30 = ((fSlow17 >= 6.0f) ? ((fSlow17 >= 9.0f) ? ((fSlow17 >= 11.0f) ? fSlow29 : ((fSlow17 >= 1e+01f) ? fSlow28 : fSlow27)) : ((fSlow17 >= 8.0f) ? fSlow26 : ((fSlow17 >= 7.0f) ? fSlow25 : fSlow24))) : ((fSlow17 >= 3.0f) ? ((fSlow17 >= 5.0f) ? fSlow23 : ((fSlow17 >= 4.0f) ? fSlow22 : fSlow21)) : ((fSlow17 >= 2.0f) ? fSlow20 : ((fSlow17 >= 1.0f) ? fSlow19 : fSlow18)))) * ftbl0mydspSIG0[int(fSlow15 + (0.5f - fSlow17))];
 		float fSlow31 = ((iSlow14) ? fSlow30 : fSlow16);
 		int iSlow32 = fSlow10 >= 3.0f;
 		float fSlow33 = std::min<float>(((iSlow11) ? ((iSlow32) ? float(fVslider1) : ((iSlow14) ? 40.11071f * fSlow30 : 40.11071f * fSlow16)) : ((iSlow12) ? 9.0f * fSlow31 : 3.0f * fSlow13)), 1.6e+04f);
@@ -12776,7 +12912,7 @@ class mydsp : public dsp {
 		float fSlow46 = 0.00091875f * float(((fSlow44 == 1.6e+04f) ? 0 : 1));
 		float fSlow47 = float(fButton6);
 		int iSlow48 = fSlow47 == 0.0f;
-		float fSlow49 = ftbl0mydspSIG0[int(float(fVslider4))];
+		float fSlow49 = ftbl0mydspSIG0[int(float(fVslider4) + 0.5f)];
 		float fSlow50 = std::min<float>(((iSlow11) ? ((iSlow32) ? float(fVslider5) : ((iSlow14) ? 18.77759f * fSlow30 : 18.77759f * fSlow16)) : ((iSlow12) ? 6.0f * fSlow31 : 3.0f * fSlow49)), 1.6e+04f);
 		float fSlow51 = std::cos(0.00013089969f * fSlow50);
 		float fSlow52 = 0.00091875f * float(((fSlow50 == 1.6e+04f) ? 0 : 1));
@@ -12792,7 +12928,7 @@ class mydsp : public dsp {
 		float fSlow62 = 0.00091875f * float(((fSlow60 == 1.6e+04f) ? 0 : 1));
 		float fSlow63 = float(fButton9);
 		int iSlow64 = fSlow63 == 0.0f;
-		float fSlow65 = ftbl0mydspSIG0[int(float(fVslider8))];
+		float fSlow65 = ftbl0mydspSIG0[int(float(fVslider8) + 0.5f)];
 		float fSlow66 = std::min<float>(((iSlow11) ? ((iSlow32) ? float(fVslider9) : ((iSlow14) ? 5.44439f * fSlow30 : 5.44439f * fSlow16)) : ((iSlow12) ? 3.0f * fSlow31 : 3.0f * fSlow65)), 1.6e+04f);
 		float fSlow67 = std::cos(0.00013089969f * fSlow66);
 		float fSlow68 = 0.00091875f * float(((fSlow66 == 1.6e+04f) ? 0 : 1));
@@ -12819,11 +12955,11 @@ class mydsp : public dsp {
 		float fSlow89 = float(fHslider28);
 		int iSlow90 = fSlow89 >= 2.0f;
 		int iSlow91 = fSlow89 >= 1.0f;
-		float fSlow92 = ftbl0mydspSIG0[int(float(fVslider12))];
+		float fSlow92 = ftbl0mydspSIG0[int(float(fVslider12) + 0.5f)];
 		float fSlow93 = float(fHslider29);
-		float fSlow94 = ftbl0mydspSIG0[int(fSlow93)];
+		float fSlow94 = ftbl0mydspSIG0[int(fSlow93 + 0.5f)];
 		float fSlow95 = std::fmod(fSlow93, 12.0f);
-		float fSlow96 = ((fSlow95 >= 6.0f) ? ((fSlow95 >= 9.0f) ? ((fSlow95 >= 11.0f) ? fSlow29 : ((fSlow95 >= 1e+01f) ? fSlow28 : fSlow27)) : ((fSlow95 >= 8.0f) ? fSlow26 : ((fSlow95 >= 7.0f) ? fSlow25 : fSlow24))) : ((fSlow95 >= 3.0f) ? ((fSlow95 >= 5.0f) ? fSlow23 : ((fSlow95 >= 4.0f) ? fSlow22 : fSlow21)) : ((fSlow95 >= 2.0f) ? fSlow20 : ((fSlow95 >= 1.0f) ? fSlow19 : fSlow18)))) * ftbl0mydspSIG0[int(fSlow93 - fSlow95)];
+		float fSlow96 = ((fSlow95 >= 6.0f) ? ((fSlow95 >= 9.0f) ? ((fSlow95 >= 11.0f) ? fSlow29 : ((fSlow95 >= 1e+01f) ? fSlow28 : fSlow27)) : ((fSlow95 >= 8.0f) ? fSlow26 : ((fSlow95 >= 7.0f) ? fSlow25 : fSlow24))) : ((fSlow95 >= 3.0f) ? ((fSlow95 >= 5.0f) ? fSlow23 : ((fSlow95 >= 4.0f) ? fSlow22 : fSlow21)) : ((fSlow95 >= 2.0f) ? fSlow20 : ((fSlow95 >= 1.0f) ? fSlow19 : fSlow18)))) * ftbl0mydspSIG0[int(fSlow93 + (0.5f - fSlow95))];
 		float fSlow97 = ((iSlow14) ? fSlow96 : fSlow94);
 		int iSlow98 = fSlow89 >= 3.0f;
 		float fSlow99 = std::min<float>(((iSlow90) ? ((iSlow98) ? float(fVslider13) : ((iSlow14) ? 40.11071f * fSlow96 : 40.11071f * fSlow94)) : ((iSlow91) ? 9.0f * fSlow97 : 3.0f * fSlow92)), 1.6e+04f);
@@ -12841,7 +12977,7 @@ class mydsp : public dsp {
 		float fSlow111 = 0.00091875f * float(((fSlow109 == 1.6e+04f) ? 0 : 1));
 		float fSlow112 = float(fButton16);
 		int iSlow113 = fSlow112 == 0.0f;
-		float fSlow114 = ftbl0mydspSIG0[int(float(fVslider16))];
+		float fSlow114 = ftbl0mydspSIG0[int(float(fVslider16) + 0.5f)];
 		float fSlow115 = std::min<float>(((iSlow90) ? ((iSlow98) ? float(fVslider17) : ((iSlow14) ? 18.77759f * fSlow96 : 18.77759f * fSlow94)) : ((iSlow91) ? 6.0f * fSlow97 : 3.0f * fSlow114)), 1.6e+04f);
 		float fSlow116 = std::cos(0.00013089969f * fSlow115);
 		float fSlow117 = 0.00091875f * float(((fSlow115 == 1.6e+04f) ? 0 : 1));
@@ -12857,7 +12993,7 @@ class mydsp : public dsp {
 		float fSlow127 = 0.00091875f * float(((fSlow125 == 1.6e+04f) ? 0 : 1));
 		float fSlow128 = float(fButton19);
 		int iSlow129 = fSlow128 == 0.0f;
-		float fSlow130 = ftbl0mydspSIG0[int(float(fVslider20))];
+		float fSlow130 = ftbl0mydspSIG0[int(float(fVslider20) + 0.5f)];
 		float fSlow131 = std::min<float>(((iSlow90) ? ((iSlow98) ? float(fVslider21) : ((iSlow14) ? 5.44439f * fSlow96 : 5.44439f * fSlow94)) : ((iSlow91) ? 3.0f * fSlow97 : 3.0f * fSlow130)), 1.6e+04f);
 		float fSlow132 = std::cos(0.00013089969f * fSlow131);
 		float fSlow133 = 0.00091875f * float(((fSlow131 == 1.6e+04f) ? 0 : 1));
