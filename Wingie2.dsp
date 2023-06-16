@@ -28,32 +28,47 @@ bar_factor = 0.44444;
 use_alt_tuning = button("../../use_alt_tuning");
 use_alt_harmonics = button("../../use_alt_harmonics");
 
-alt_tuning_ratio_0 =  hslider("../../alt_tuning_ratio_0",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_1 =  hslider("../../alt_tuning_ratio_1",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_2 =  hslider("../../alt_tuning_ratio_2",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_3 =  hslider("../../alt_tuning_ratio_3",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_4 =  hslider("../../alt_tuning_ratio_4",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_5 =  hslider("../../alt_tuning_ratio_5",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_6 =  hslider("../../alt_tuning_ratio_6",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_7 =  hslider("../../alt_tuning_ratio_7",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_8 =  hslider("../../alt_tuning_ratio_8",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_9 =  hslider("../../alt_tuning_ratio_9",  1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_10 = hslider("../../alt_tuning_ratio_10", 1.0, 1.0, 2.0, 0.001);
-alt_tuning_ratio_11 = hslider("../../alt_tuning_ratio_11", 1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_0 =  hslider("../../alt_tuning_ratio_0",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_1 =  hslider("../../alt_tuning_ratio_1",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_2 =  hslider("../../alt_tuning_ratio_2",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_3 =  hslider("../../alt_tuning_ratio_3",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_4 =  hslider("../../alt_tuning_ratio_4",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_5 =  hslider("../../alt_tuning_ratio_5",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_6 =  hslider("../../alt_tuning_ratio_6",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_7 =  hslider("../../alt_tuning_ratio_7",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_8 =  hslider("../../alt_tuning_ratio_8",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_9 =  hslider("../../alt_tuning_ratio_9",  1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_10 = hslider("../../alt_tuning_ratio_10", 1.0, 1.0, 2.0, 0.001);
+// alt_tuning_ratio_11 = hslider("../../alt_tuning_ratio_11", 1.0, 1.0, 2.0, 0.001);
+
+// alt_tuning_ratios = (
+//   alt_tuning_ratio_0, 
+//   alt_tuning_ratio_1, 
+//   alt_tuning_ratio_2, 
+//   alt_tuning_ratio_3, 
+//   alt_tuning_ratio_4, 
+//   alt_tuning_ratio_5, 
+//   alt_tuning_ratio_6, 
+//   alt_tuning_ratio_7, 
+//   alt_tuning_ratio_8, 
+//   alt_tuning_ratio_9, 
+//   alt_tuning_ratio_10,
+//   alt_tuning_ratio_11
+// );
 
 alt_tuning_ratios = (
-  alt_tuning_ratio_0, 
-  alt_tuning_ratio_1, 
-  alt_tuning_ratio_2, 
-  alt_tuning_ratio_3, 
-  alt_tuning_ratio_4, 
-  alt_tuning_ratio_5, 
-  alt_tuning_ratio_6, 
-  alt_tuning_ratio_7, 
-  alt_tuning_ratio_8, 
-  alt_tuning_ratio_9, 
-  alt_tuning_ratio_10,
-  alt_tuning_ratio_11
+  hslider("../../alt_tuning_ratio_0",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_1",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_2",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_3",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_4",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_5",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_6",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_7",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_8",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_9",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_10", 1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_11", 1.0, 1.0, 2.0, 0.001)
 );
 
 a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);

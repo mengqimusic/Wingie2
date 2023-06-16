@@ -165,7 +165,7 @@ float alt_tunings[8][12] = {
   { 1., 16./15., 9./8., 6./5., 5./4., 4./3., 64./45., 3./2.,  8./5., 5./3., 16./9., 15./8. },
   { 1., 16./15., 9./8., 6./5., 5./4., 4./3., 64./45., 3./2.,  8./5., 5./3., 7./4.,  15./8. },
   // 3: Margo Schulter Zeta Centauri
-  { 1., 13./12., 9./8., 7./6., 11./9, 4./3., 13./9., 3./2., 14./9., 13./8., 7./4., 11./6., 2. },
+  { 1., 13./12., 9./8., 7./6., 11./9, 4./3., 13./9., 3./2., 14./9., 13./8., 7./4., 11./6. },
   // 4: La Monte Young, Well Tuned Piano
   { 1., 567./512., 9./8., 147./128., 21./16., 1323./1024., 189./128., 3./2., 49./32., 7./4., 441./256., 63./32. },
   // 5: Interleaved 1-3-5-7 hexanies
@@ -278,6 +278,10 @@ void alt_tuning_set(int tuning) {
     dsp.setParamValue(str, ratio);
     // Serial.printf("%s = %f -> %f\n", str, ratio, dsp.getParamValue(str));
   }
+}
+
+void set_caves_for_alt_tuning(int tuning) {
+  
 }
 
 // treat sliders as binary digits in base 2
