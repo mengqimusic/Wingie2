@@ -46,7 +46,7 @@ alt_tuning_ratios = (
 a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);
 
 // standard (unoptimized) version
-// mtof(note) = a3_freq * pow(2., (note - 69) / 12);
+mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 
 // The reason there are three version of each of these sets of functions is that it is
 // the only way I could find to to use alternate tunings in poly mode without excessive 
@@ -56,16 +56,18 @@ a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);
 // and poly_quantized().
 
 // optimized version, but disregards a3_freq and just uses 440
-_mtof(note) = 440 * pow(2., (note - 69) / 12);
-mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
+// _mtof(note) = 440 * pow(2., (note - 69) / 12);
+// mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
 
 // used for poly mode
-_mtof2(note) = _mtof(note) * 2;
-mtof2(note) = ba.tabulate(0, _mtof2, 128, 0, 127, note).val;
+// _mtof2(note) = _mtof(note) * 2;
+// mtof2(note) = ba.tabulate(0, _mtof2, 128, 0, 127, note).val;
+mtof2(note) = mtof(note) * 2;
 
 // used for poly mode
-_mtof3(note) = _mtof(note) * 3;
-mtof3(note) = ba.tabulate(0, _mtof3, 128, 0, 127, note).val;
+// _mtof3(note) = _mtof(note) * 3;
+// mtof3(note) = ba.tabulate(0, _mtof3, 128, 0, 127, note).val;
+mtof3(note) = mtof(note) * 3;
 
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
