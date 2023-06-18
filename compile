@@ -6,9 +6,8 @@ cd "$(dirname "$BASH_SOURCE")" || {
 }
 
 rm -rf ./Wingie2-svg/
-faust -lang fir Wingie2.dsp >fir.txt
+# faust -lang fir Wingie2.dsp >fir.txt
 faust2esp32 -ac101 -lib -flist -svg -I ./Libraries/ Wingie2.dsp
-# faust2esp32 -ac101 -lib -flist -svg Wingie2.dsp
 rc=$?
 if [ $rc -ne 0 ]; then
     exit 1

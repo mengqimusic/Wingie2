@@ -27,50 +27,71 @@ env_mode_change_decay = hslider("env_mode_change_decay", 0.05, 0, 1, 0.01);
 bar_factor = 0.44444;
 
 use_alt_tuning = button("../../use_alt_tuning");
-use_alt_harmonic_scaling = button("../../use_alt_harmonic_scaling");
 use_alt_harmonics = button("../../use_alt_harmonics");
+
+alt_tuning_ratios = (
+  hslider("../../alt_tuning_ratio_0",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_1",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_2",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_3",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_4",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_5",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_6",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_7",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_8",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_9",  1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_10", 1.0, 1.0, 2.0, 0.001),
+  hslider("../../alt_tuning_ratio_11", 1.0, 1.0, 2.0, 0.001)
+);
 
 a3_freq = hslider("../../a3_freq", 440, 300, 600, 0.01);
 
 // standard (unoptimized) version
 mtof(note) = a3_freq * pow(2., (note - 69) / 12);
 
+// The reason there are three version of each of these sets of functions is that it is
+// the only way I could find to to use alternate tunings in poly mode without excessive 
+// computation that gets the device into a boot loop due to the DSP task taking too long 
+// to reset the task watchdog in time. This could possibly be regarded as a hand-crafted 
+// "partial redundancy" optimization, if I understand that term correctly. Compare poly()
+// and poly_quantized().
+
 // optimized version, but disregards a3_freq and just uses 440
 // _mtof(note) = 440 * pow(2., (note - 69) / 12);
 // mtof(note) = ba.tabulate(0, _mtof, 128, 0, 127, note).val;
 
-//---- alternate tuning support -----
-// Kraig Grady, "centaur" tuning
-centaur = (1, 21/20, 9/8, 7/6, 5/4, 4/3, 7/5, 3/2, 14/9, 5/3, 7/4, 15/8);
-// La Monte Young, Well Tuned Piano
-lmy_wtp = (1, 567/512, 9/8, 147/128, 21/16, 1323/1024, 189/128, 3/2, 49/32, 7/4, 441/256, 63/32);
-// Interleaved 1-3-5-7 hexanies
-dual_hexany = (1, 16/15, 7/6, 56/45, 5/4, 4/3, 35/24, 14/9, 5/3, 16/9, 7/4, 28/15);
-// Meru C
-meta_slendro = (1, 65/64, 9/8, 37/32, 151/128, 5/4, 21/16, 43/32, 3/2, 49/32, 7/4, 57/32);
-// Marwa extended
-marwa_extended = (1, 21/20, 9/8, 7/6, 5/4, 21/16, 7/5, 147/100, 5/3, 7/4, 15/8, 49/25);
+// used for poly mode
+// _mtof2(note) = _mtof(note) * 2;
+// mtof2(note) = ba.tabulate(0, _mtof2, 128, 0, 127, note).val;
+mtof2(note) = mtof(note) * 2;
 
-current_tuning = centaur;
+// used for poly mode
+// _mtof3(note) = _mtof(note) * 3;
+// mtof3(note) = ba.tabulate(0, _mtof3, 128, 0, 127, note).val;
+mtof3(note) = mtof(note) * 3;
 
 // convert MIDI note to quantized frequency
 // assumes tuning has 12 degrees (11 ratios + assumed octave)!
-mtoq(note, tuning) = f with {
-    n = note % 12;                                // scale degree (0-11)
-    c = note - n;                                 // C note in given octave
-    f = mtof(c) * (tuning : ba.selectn(12, n));   // multiply C frequency by ratio per degree
+mtoq(note) = f with {
+    n = note % 12;                                          // scale degree (0-11)
+    c = note - n;                                           // C note in given octave
+    f = mtof(c) * (alt_tuning_ratios : ba.selectn(12, n));  // multiply C frequency by ratio per degree
+};
+
+// used for poly mode
+mtoq2(note) = f with {
+    n = note % 12;                                          // scale degree (0-11)
+    c = note - n;                                           // C note in given octave
+    f = mtof2(c) * (alt_tuning_ratios : ba.selectn(12, n)); // multiply C frequency by ratio per degree
+};
+
+// used for poly mode
+mtoq3(note) = f with {
+    n = note % 12;                                          // scale degree (0-11)
+    c = note - n;                                           // C note in given octave
+    f = mtof3(c) * (alt_tuning_ratios : ba.selectn(12, n));  // multiply C frequency by ratio per degree
 };
 //---- alternate tuning support -----
-
-//----- harmonics sets -----
-harm_fib   = (1, 2, 3, 5, 8, 13, 21, 34, 55);
-harm_prime = (1, 2, 3, 5, 7, 11, 13, 17, 19);
-
-harm_ratios(freq, n, set) = f with {
-  h = set : ba.selectn(nHarmonics, n);
-  f = freq * h;
-};
-//----- harmonics sets -----
 
 volume0 = hslider("volume0", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
 volume1 = hslider("volume1", 0.25, 0, 1, 0.01) : ba.lin2LogGain : si.smoo;
@@ -95,26 +116,38 @@ bar_ratios(freq, n) = freq * bar_factor * pow((n + 1) + 0.5, 2);
 int_ratios(freq, n) = freq * (n + 1);
 //odd_ratios(freq, n) = freq * (2 * n + 1);
 //cymbal_808(n) = 130.812792, 193.957204, 235.501256, 333.053319, 344.076511, 392.438376, 509.742979, 581.871611, 706.503769, 999.16, 1032.222378, 1529.218338: ba.selectn(12, n); // chromatic
-fib_ratios(freq, n) = harm_ratios(freq, n, harm_fib);
-prime_ratios(freq, n) = harm_ratios(freq, n, harm_prime);
-req(n) = 62, 115, 218, 411, 777, 1500, 2800, 5200, 11000 : ba.selectn(nHarmonics, n);
 
+req(n) = 62, 115, 218, 411, 777, 1500, 2800, 5200, 11000 : ba.selectn(nHarmonics, n);
 cave(n) = par(i, nHarmonics, vslider("cave_freq_%i", req(i), 50, 16000, 1)) : ba.selectn(nHarmonics, n);
 
+pn0 = vslider("poly_note_0", 36, 24, 96, 1);
+pn1 = vslider("poly_note_1", 36, 24, 96, 1);
+pn2 = vslider("poly_note_2", 36, 24, 96, 1);
+
+// standard tuning poly mode
 poly(n) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
 with
 {
-    a = vslider("poly_note_0", 36, 24, 96, 1) : mtof;
-    b = vslider("poly_note_1", 36, 24, 96, 1) : mtof;
-    c = vslider("poly_note_2", 36, 24, 96, 1) : mtof;
+    a = pn0 : mtof;
+    b = pn1 : mtof;
+    c = pn2 : mtof;
 };
 
-poly_quantized(n, tuning) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
+// alt tuning poly mode
+poly_quantized(n, tuning) = a1, a2, a3, b1, b2, b3, c1, c2, c3 : ba.selectn(nHarmonics, n)
 with
 {
-    a = mtoq(vslider("poly_note_0", 36, 24, 96, 1), tuning);
-    b = mtoq(vslider("poly_note_1", 36, 24, 96, 1), tuning);
-    c = mtoq(vslider("poly_note_2", 36, 24, 96, 1), tuning);
+    a1 = pn0 : mtoq;
+    a2 = pn0 : mtoq2;
+    a3 = pn0 : mtoq3;
+
+    b1 = pn1 : mtoq;
+    b2 = pn1 : mtoq2;
+    b3 = pn1 : mtoq3;
+
+    c1 = pn2 : mtoq;
+    c2 = pn2 : mtoq2;
+    c3 = pn2 : mtoq3;
 };
 
 //bianzhong(n) = 212.3, 424.6, 530.8, 636.9, 1061.6, 1167.7, 2017.0, 2335.5, 2653.9, 3693 : ba.selectn(10, n);
@@ -123,46 +156,31 @@ with
 
 // note_ratio(note) = pow(2., note / 12);
 
-get_freq(note, tuning) =
-  mtof(note),
-  mtoq(note, tuning)
-  : ba.selectn(2, use_alt_tuning);
+poly(n) = poly(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
 
-get_harmonics(note, n, tuning) =
-  int_ratios(get_freq(note, tuning), n),
-  prime_ratios(get_freq(note, tuning), n)
-  : ba.selectn(2, use_alt_harmonics);
+note_freq(note) = mtof(note), mtoq(note) : ba.selectn(2, use_alt_tuning);
+strings(note, n) = int_ratios(note_freq(note), n);
 
-get_poly(n, tuning) =
-  poly(n),
-  poly_quantized(n, tuning)
-  : ba.selectn(2, use_alt_tuning);
-
-get_bar(note, n, tuning) =
-  bar_ratios(mtof(note), n),
-  bar_ratios(mtoq(note, tuning), n)
-  : ba.selectn(2, use_alt_tuning);
+bars(note, n, tuning) = bar_ratios(mtof(note), n), bar_ratios(mtoq(note), n) : ba.selectn(2, use_alt_tuning);
 
 f(note, n, s) = 
     poly(n),
-    // get_poly(n, current_tuning),
-    get_harmonics(note, n, current_tuning),
-    get_bar(note, n, current_tuning),
+    strings(note, n),
+    bars(note, n),
     //odd_ratios(ba.midikey2hz(note), n),
     //cymbal_808(n) * note_ratio(note - 48),
     cave(n)
   : ba.selectn(4, s);
 
-scale(x, in_low, in_high, out_low, out_high, e) = (out_low + (out_high - out_low) * ((x - in_low) / (in_high - in_low)) ^ e);
+// scale(x, in_low, in_high, out_low, out_high, e) = (out_low + (out_high - out_low) * ((x - in_low) / (in_high - in_low)) ^ e);
 
-r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c)) * harm_scale
-  with
+r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c))
+with
 {
   a = min(f(note, index, source), 16000);
   //decay_factor = scale(a, 8, 16000, 1, 0, 0.4);
   b = (env_mode_change * decay) + 0.05;
   c = env_mute(button("mute_%index")) * (ba.if(a == 16000, 0, 1) : si.smoo);
-  harm_scale = 1, 1/(index+1) : ba.selectn(2, use_alt_harmonic_scaling);
 };
 
 process = _,_

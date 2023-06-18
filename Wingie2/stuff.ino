@@ -2,6 +2,7 @@ void save_stuff() {
   //
   // save settings
   //
+  Serial.printf("Saving prefs\n");
   prefs.begin("settings", RW_MODE);
 
   for (int ch = 0; ch < 2; ch++) {
@@ -73,6 +74,13 @@ void save_stuff() {
   if (dirty[9]) {
     dirty[9] = false;
     if (prefs.putUChar("right_mode", Mode[1])) Serial.printf("right_mode is saved, value is %d.\n", Mode[1]);
+  }
+
+  if (prefs.putUChar("use_alt_tuning", use_alt_tuning)) {
+    Serial.printf("use_alt_tuning is saved, value is %d.\n", use_alt_tuning);
+  }
+  if (prefs.putChar("alt_tuning_idx", alt_tuning_index)) {
+    Serial.printf("alt_tuning_index is saved, value is %d.\n", alt_tuning_index);
   }
 
   prefs.end();
