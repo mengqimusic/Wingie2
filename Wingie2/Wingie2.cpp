@@ -5,7 +5,7 @@ author: "Meng Qi", "Dave Seidel"
 copyright: "(c)Meng Qi 2020"
 license: "BSD"
 name: "Wingie"
-version: "3.0"
+version: "3.1"
 Code generated with Faust 2.59.6 (https://faust.grame.fr)
 Compilation options: -a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -ct 1 -es 1 -mcd 16 -single -ftz 0
 ------------------------------------------------------------ */
@@ -12063,7 +12063,6 @@ class mydsp : public dsp {
 	float fVec4[2];
 	float fRec10[2];
 	float fRec7[3];
-	FAUSTFLOAT fButton5;
 	float fRec11[2];
 	FAUSTFLOAT fButton4;
 	float fVec5[2];
@@ -12999,7 +12998,7 @@ class mydsp : public dsp {
 			float fTemp6 = std::pow(0.001f, 2.0833333e-05f / (fRec9[0] * (1.0f - std::max<float>(0.0f, std::min<float>(0.010416667f * fTemp5, fSlow8 * (96.0f - fTemp5) + 1.0f))) + 0.05f));
 			float fTemp7 = mydsp_faustpower2_f(fTemp6);
 			float fTemp8 = 0.0f - 2.0f * fTemp6;
-			float fTemp9 = fSlow26 * fRec4[0] * fTemp4 * fTemp1;
+			float fTemp9 = fSlow37 * fRec4[0] * fTemp4 * fTemp1;
 			fVec4[0] = fTemp9;
 			fRec10[0] = 0.57735026f * fRec10[1] + 0.21132487f * (fTemp9 + fVec4[1]);
 			fRec7[0] = fRec10[0] - (fTemp8 * fRec7[1] * fSlow36 + fTemp7 * fRec7[2]);
@@ -13065,7 +13064,7 @@ class mydsp : public dsp {
 			float fTemp15 = std::pow(0.001f, 2.0833333e-05f / (fRec52[0] * (1.0f - std::max<float>(0.0f, std::min<float>(0.010416667f * fTemp14, fSlow89 * (96.0f - fTemp14) + 1.0f))) + 0.05f));
 			float fTemp16 = mydsp_faustpower2_f(fTemp15);
 			float fTemp17 = 0.0f - 2.0f * fTemp15;
-			float fTemp18 = fSlow26 * fRec47[0] * fTemp13 * fTemp1;
+			float fTemp18 = fSlow37 * fRec47[0] * fTemp13 * fTemp1;
 			fVec16[0] = fTemp18;
 			fRec53[0] = 0.57735026f * fRec53[1] + 0.21132487f * (fTemp18 + fVec16[1]);
 			fRec50[0] = fRec53[0] - (fTemp17 * fRec50[1] * fSlow103 + fTemp16 * fRec50[2]);
