@@ -28,9 +28,9 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
  | up | up | down | Meta Slendro |
  | up | up | up | Marwa extended |
 
- [For nerds: this method treats the sliders as base two digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
+ [For nerds: this method treats the sliders as base-2 digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
 
- To disable alternate tuning at startup, hold down the **right Mode button**. The device will then start using standard tuning
+ To disable alternate tuning at startup, hold down the **right Mode button**. The device will then start using standard tuning.
 
  ## Enabling/Disabling Alternate Tuning using MIDI
 
