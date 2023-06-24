@@ -5,7 +5,7 @@ declare author      "Dave Seidel";
 declare license     "BSD";
 declare copyright   "(c)Meng Qi 2020";
 declare date        "2020-09-30";
-declare editDate    "2022-11-27";
+declare editDate    "2023-06-23";
 
 //-----------------------------------------------
 // Wingie
@@ -26,8 +26,8 @@ env_mode_change_decay = hslider("env_mode_change_decay", 0.05, 0, 1, 0.01);
 //hp_cutoff = hslider("hp_cutoff", 85, 35, 500, 0.1);
 bar_factor = 0.44444;
 
+//---- alternate tuning support -----
 use_alt_tuning = button("../../use_alt_tuning");
-use_alt_harmonics = button("../../use_alt_harmonics");
 
 alt_tuning_ratios = (
   hslider("../../alt_tuning_ratio_0",  1.0, 1.0, 2.0, 0.001),

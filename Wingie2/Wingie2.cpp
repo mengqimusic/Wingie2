@@ -12225,7 +12225,7 @@ class mydsp : public dsp {
 		m->declare("compile_options", "-a /usr/local/share/faust/esp32/esp32.cpp -lang cpp -i -ct 1 -es 1 -mcd 16 -single -ftz 0");
 		m->declare("copyright", "(c)Meng Qi 2020");
 		m->declare("date", "2020-09-30");
-		m->declare("editDate", "2022-11-27");
+		m->declare("editDate", "2023-06-23");
 		m->declare("envelopes.lib/ar:author", "Yann Orlarey, Stéphane Letz");
 		m->declare("envelopes.lib/asr:author", "Yann Orlarey, Stéphane Letz");
 		m->declare("envelopes.lib/author", "GRAME");
