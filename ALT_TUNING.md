@@ -1,6 +1,6 @@
 # Alternate Tuning Support
 
-By default, Wingie2 uses standard western tuning (equal temperament). As of version 3.1, eight additional tunings are available. These are the available tunings:
+By default, Wingie2 uses standard western tuning (equal temperament). As of version 3.1, eight additional tunings are available. These are the currently available tunings (other tunings are possible, but require a source code change and a new firmware buid):
 
  * Centaur (Kraig Grady)
  * Harp of New Albion (Terry Riley)
