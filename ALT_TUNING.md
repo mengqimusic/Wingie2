@@ -2,20 +2,20 @@
 
 By default, Wingie2 uses standard western tuning (equal temperament). As of version 3.1, eight additional tunings are available. These are the available tunings:
 
- * Centaur
- * Harp of New Albion
+ * Centaur (Kraig Grady)
+ * Harp of New Albion (Terry Riley)
  * Modified Harp of New Albion (septimal 7th)
- * Zeta Centauri
- * Well Tuned Piano
+ * Zeta Centauri (Margot Schulter)
+ * Well Tuned Piano (La Monte Young)
  * interleaved 1-3-5-7 hexanies
- * Meta Slendero (Meru C)
+ * Meta Slendro (Meru C, per Grady & Wilson)
  * Marwa extended
 
- Alternate tuning is enabled in two ways: by holding down the left mode button when starting the device; or using MIDI. The advantage of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
+ Alternate tuning is enabled in two ways: by holding down the **left Mode button** when starting the device; or using MIDI. The advantage of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
 
  ## Enabling/Disabling Alternate Tuning at Startup
 
- Hold down the **left mode button** before plugging in the USB cable.The positions of the sliders will determine which alternate tuning will be used, as follows:
+ Hold down the **left Mode button** before plugging in the USB cable.The positions of the sliders will determine which alternate tuning will be used, as follows:
 
  | Left slider | Middle slider| right slider| tuning |
  |---|---|---|---|
@@ -30,7 +30,7 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
  [For nerds: this method treats the sliders as base two digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
 
- To disable alternate tuning at startup, hold down the **right mode button**. The device will then start using standard tuning
+ To disable alternate tuning at startup, hold down the **right Mode button**. The device will then start using standard tuning
 
  ## Enabling/Disabling Alternate Tuning using MIDI
 
@@ -48,4 +48,4 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
 ## Saving the tuning setting
 
-The current tuning configuration is saved along with other settings when you hold down both mode buttons simultaneously, has described in the manual. On restart, your tuning configuration will be restored.
+The current tuning configuration is saved along with other settings when you hold down both Mode buttons simultaneously, has described in the manual. On restart, your tuning configuration will be restored.
