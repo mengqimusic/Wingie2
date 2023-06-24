@@ -13,6 +13,8 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
  Alternate tuning is enabled in two ways: by holding down the **left Mode button** when starting the device; or using MIDI. The advantage of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
 
+ Alternate tuning honors the Global Tuning (A3) setting.
+
  ## Enabling/Disabling Alternate Tuning at Startup
 
  Hold down the **left Mode button** before plugging in the USB cable.The positions of the sliders will determine which alternate tuning will be used, as follows:
