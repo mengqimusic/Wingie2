@@ -1,0 +1,17 @@
+#!/bin/bash
+
+cd "$(dirname "$BASH_SOURCE")" || {
+    echo Error getting script directory >&2
+    exit 1
+}
+
+rm -rf ./Wingie2-svg/
+# faust -lang fir Wingie2.dsp >fir.txt
+faust2esp32 -ac101 -lib -flist -svg -I ./Libraries/ Wingie2.dsp
+rc=$?
+if [ $rc -ne 0 ]; then
+    exit 1
+else
+    unzip -o Wingie2.zip
+    cp -frv ./Wingie2/*.* /mnt/c/Users/daves/Documents/Arduino/Wingie2/
+fi

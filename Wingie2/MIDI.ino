@@ -45,12 +45,32 @@ void MIDISetPitch(int ch, int mode, int pitch) {
 
 void handleControlChange (byte channel, byte number, byte value) {
 
+  // Serial.printf("MIDI CC - channel:%hhu, cc:%hhu, value:%hhu\n", channel, number, value);
+
   if (channel == midi_ch_l) MIDISetParam(0, number, value);
   if (channel == midi_ch_r) MIDISetParam(1, number, value);
 
   if (channel == midi_ch_both) {
     MIDISetParam(0, number, value);
     MIDISetParam(1, number, value);
+  }
+
+  if (channel == CC_MIDI_CH_TUNING && number == CC_TUNING) {
+    int t = 0;
+    if (value == 0) {
+      use_alt_tuning = 0;
+      alt_tuning_index = -1;
+      alt_tuning_set(-1);
+      dsp.setParamValue("use_alt_tuning", 0);
+      Serial.println("MIDI: Alt tuning disabled");
+    } else if (value < 9) {
+      t = value - 1;
+      use_alt_tuning = 1;
+      dsp.setParamValue("use_alt_tuning", 1);
+      alt_tuning_index = t;
+      alt_tuning_set(alt_tuning_index);
+      Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
+    }
   }
 
   if (channel == 14 or channel == 15) { // Cave Frequency Settings
@@ -94,8 +114,7 @@ void handleControlChange (byte channel, byte number, byte value) {
         float freq_offset = midi_value_14bit / 100. - 81.92;
 
         a3_freq = 440. + freq_offset;
-        dsp.setParamValue("/Wingie/left/a3_freq", a3_freq);
-        dsp.setParamValue("/Wingie/right/a3_freq", a3_freq);
+        dsp.setParamValue("a3_freq", a3_freq);
         dirty[3] = true;
       }
     }
