@@ -4,12 +4,12 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
  * Centaur (Kraig Grady)
  * Harp of New Albion (Terry Riley)
- * Modified Harp of New Albion (septimal 7th)
- * Zeta Centauri (Margot Schulter)
+ * Carlos Harmonic (Wendy Carlos)
  * Well Tuned Piano (La Monte Young)
- * interleaved 1-3-5-7 hexanies
- * Meta Slendro (Meru C, per Grady & Wilson)
- * Marwa extended
+ * Meta Slendro (Grady/Wilson)
+ * bihexany (Gene Ward Smith)
+ * hexachordal dodecaphonic (Paul Erlich) 
+ * Augmented[12] (Mike Smith, Paul Erlich)
 
  Alternate tuning is enabled in two ways: by holding down the **left Mode button** when starting the device; or using MIDI. The advantage of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
 
@@ -22,13 +22,13 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
  | Left slider | Middle slider| right slider| tuning |
  |---|---|---|---|
  | down | down | down | Centaur |
- | down | down | up| New Albion |
- | down | up | down | New Albion (mod) |
- | down | up | up | Zeta Centauri |
- | up | down | down| Well Tuned Piano |
- | up | down | up | interleaved hexanies |
- | up | up | down | Meta Slendro |
- | up | up | up | Marwa extended |
+ | down | down | up| Harp of New Albion |
+ | down | up | down | Carlos Harmonic |
+ | down | up | up | Well Tuned Piano |
+ | up | down | down| Meta Slendro |
+ | up | down | up | bihexany |
+ | up | up | down | hexachordal dodecaphonic |
+ | up | up | up | Augmented[12] |
 
  [For nerds: this method treats the sliders as base-2 digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
 
@@ -39,14 +39,14 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
  | channel| CC| value| tuning|
  | --- | ---| --- | --- |
  | 13 | 23 | 0 | Disable alternate tuning (return to standard tuning) |
- |-|-|1| Centaur|
- |-|-|2| New Albion|
- |-|-|3| New Albion (mod) |
- |-|-|4| Zeta Centauri|
- |-|-|5| Well Tuned Piano|
- |-|-|6| interleaved hexanies|
- |-|-|7| Meta Slendro|
- |-|-|8| Marwa extended|
+ |-|-|1| Centaur |
+ |-|-|2| Harp of New Albion |
+ |-|-|3| Carlos Harmonic |
+ |-|-|4| Well Tuned Piano |
+ |-|-|5| Meta Slendro |
+ |-|-|6| bihexany |
+ |-|-|7| hexachordal dodecaphonic |
+ |-|-|8| Augmented[12] |
 
 ## Saving the tuning setting
 
