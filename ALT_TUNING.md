@@ -13,6 +13,8 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
  Alternate tuning is enabled in two ways: by holding down the **left Mode button** when starting the device; or using MIDI. The advantage of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
 
+ Alternate tuning also affect Caves mode, see below for details.
+
  Alternate tuning honors the Global Tuning (A3) setting.
 
  ## Enabling/Disabling Alternate Tuning at Startup
@@ -47,6 +49,22 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
  |-|-|6| bihexany |
  |-|-|7| hexachordal dodecaphonic |
  |-|-|8| Augmented[12] |
+
+
+ ## Caves in Alternatre Tuning
+
+ When you enable alternate tuning, the caves are also tuned to match the tuning you selected.
+ 
+ In order to accomodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:
+
+    C, D, E, F#, G#, A#, C', D', E'
+
+The left channel left channel uses the odd-numbered scale tones, also covering one and one-third octaves:
+
+    C#, D#, F, G, A, B, A#, C#', D#', F'
+
+The three-position toggles switch between three octaves, similar to Poly, String and Bar modes. However, the left and right caves are always in the same octave, so that all scale pitches are covered across the two sides.
+
 
 ## Saving the tuning setting
 

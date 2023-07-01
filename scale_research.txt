@@ -1,0 +1,55 @@
+John O'Sullivan
+Top contributor
+I recommend my favorite 12 note tuning: Eagle 53 (AKA The Duodene in 53TET).
+Go to this page to hear a demo of what it sounds like...
+https://www.johnsmusic7.com/swan.html
+
+//
+
+Paul Erlich
+Admin
+Top contributor
+I recommend firstly the hexachordal dodecatonic scale from my 22 paper that many musicians such as Joel Taylor have found useful. If you start with C, the layout on the conventional keyboard is intuitive, but I would typically use C#, G#, or other notes as the tonic instead. From C, though, it's
+(0)
+1.0 109.0909 218.1818 327.2727 436.363 491.9192 600.0000 709.0909 818.1818 927.2727 1036.3636 1145.4545
+1, 1.065041, 1.134313, 1.208089, 1.286664, 1.328624, 1.414214, 1.506196, 1.60416, 1.708496, 1.819619, 1.937969
+
+//
+
+Paul Erlich
+Admin
+Top contributor
+Mike Smith I guess you need to specify a subset of 15 for Dave Seidel . How about Augmented[12]?
+(0)
+1 160 240 320 400 560 640 720 800 960 1040 1120
+1, 1.096825, 1.148698, 1.203025, 1.259921, 1.381913, 1.447269, 1.515717, 1.587401, 1.741101, 1.823445, 1.909683
+
+//
+
+Joe Nathan
+First of all, great project! I'm very passionate about the availability of microtonal techniques on hardware grooveboxes, synths etc.
+My first recommendation would be the "12-harmonics" tuning usually attributed to Wendy Carlos, although I believe Ben Johnston's use of this tuning in Suite for Microtonal Piano (1978) predates Carlos' use of it on Beauty in the Beast (1986): harmonics 16, 17, 18, 19, 20, 21, 22, 24, 26, 27, 28, 30, also describable as 1/1, 17/16, 9/8, 19/16, 5/4, 21/16, 11/8, 3/2, 13/8, 27/16, 7/4, 15/8
+Personally, I like the set you’ve chosen so far, and would be happy with all JI scales. However, if we want to include some EDOs, but are limited to 12 total notes, so therefore either subsets or the MACROtonal world, I’d prefer the latter, and would consider 7ed2 on the “white keys” plus 5ed2 on the “black keys” a first choice.
+I wish your project success and hope you will update us as it progresses.
+
+1/1, 17/16, 9/8, 19/16, 5/4, 21/16, 11/8, 3/2, 13/8, 27/16, 7/4, 15/8
+
+(carlos_harm.scl)
+
+//
+
+Patrick Pagano
+i urge you to check my scale, it's in the Scala repo under pagano_b, it's 12 notes but uses 3, 7 & 17 to build
+
+1/1 17/16 425/384 153/128 51/40 1377/1024 17/12 119/80 51/32 17/10 85/48 119/64
+
+
+//
+
+bihexany (Gene Ward Smith?)
+1/1 35/33 7/6 5/4 14/11 15/11 3/2 35/22 5/3 7/4 20/11 21/11
+
+//
+
+hexanys
+1/1 35/32 9/8 5/4 21/16 45/32 3/2 105/64 27/16 7/4 15/8 63/32

@@ -68,6 +68,10 @@
 #define VOL 2
 #define slider_movement_detect 256
 
+#define MIN_NOTE 36
+#define MAX_NOTE 96
+#define NUM_NOTES 60
+
 struct MySettings : public midi::DefaultSettings
 {
   static const unsigned SysExMaxSize = 16;
@@ -175,6 +179,10 @@ static const float alt_tunings[8][12] = {
   { 1., 1.096825, 1.148698, 1.203025, 1.259921, 1.381913, 1.447269, 1.515717, 1.587401, 1.741101, 1.823445, 1.909683 },
 };
 
+// tuning table for notes MIN_NOTE through MAX_NOTE
+// indexed by note-MIN_NOTE
+float frequencies[NUM_NOTES];
+
 //
 // global settings
 //
@@ -255,10 +263,11 @@ void cm_freq_set(byte kb, byte voice, int freq) {
   dsp.setParamValue(str, freq);
 }
 
-// tuning param >= 0 is index into ratio set
-// tuning param < 0 means set ratios to 0
+// create an array of the ratios used in this tuning
+// tuning param >= 0 is index into ratios
+// tuning param < 0 set ratios to 0
 void alt_tuning_set(int tuning) {
-  char buff[80];
+  char buff[20];
   std::string str;
   float ratio = 0.0;
 
@@ -279,12 +288,8 @@ void alt_tuning_set(int tuning) {
   }
 }
 
-void set_caves_for_alt_tuning(int tuning) {
-  
-}
-
 // treat sliders as binary digits in base 2
-// all the way down == 0, else value
+// if slider is all the way down, use 0, else use 1
 // values from left to right: 4, 2, 1
 int get_int_from_sliders() {
   int binary_sliders[3];
@@ -292,8 +297,94 @@ int get_int_from_sliders() {
     int tmp = analogRead(potPin[i]);
     binary_sliders[i] = tmp > 0 ? 1 : 0;
   }
-  int value = binary_sliders[0] * 4 +
-              binary_sliders[1] * 2 +
-              binary_sliders[2] * 1;
-  return value;
+  return binary_sliders[0] * 4 +
+         binary_sliders[1] * 2 +
+         binary_sliders[2] * 1;
+}
+
+// standard conversion, MIDI note to frequency (equal temperament)
+float mtof(int note) {
+  return a3_freq * pow(2., (note - 69.) / 12.);
+}
+
+// MIDI note to frequency in the current alternate tuning 
+float mtoq(int note, float base) {
+  if (!use_alt_tuning || alt_tuning_index < 0) {
+    return mtof(note);
+  }
+
+  return base * alt_tunings[alt_tuning_index][note % 12];
+}
+
+// build a simple lookup table with frequencies for all notes in the range we support
+// frequencies[] is 0-based, indexed by note_number-MIN_NOTE
+// we use this is used to make cave tuning faster
+void build_freq_table() {
+  if (!use_alt_tuning || alt_tuning_index < 0) {
+    return;
+  }
+
+  // always get current value
+  a3_freq = dsp.getParamValue("a3_freq");
+
+  // some pre-computation to make things faster
+  float c_freq[5] = {
+    mtof(36),
+    mtof(48),
+    mtof(60),
+    mtof(72),
+    mtof(84)
+  };
+  
+  for (int i = 0; i < NUM_NOTES; i++) {
+    const int note = MIN_NOTE + i;
+
+    float base;
+    if (36 <= note && note <= 47) {
+      base = c_freq[0];
+    } else if (48 <= note && note <= 59) {
+      base = c_freq[1];
+    } else if (60 <= note && note <= 71) {
+      base = c_freq[2];
+    } else if (72 <= note && note <= 83) {
+      base = c_freq[3];
+    } else {
+      base = c_freq[4];
+    }
+
+    // caves use integer values
+    frequencies[i] = std::round(mtoq(note, base));
+  }
+}
+
+// tune caves to match the current alternate tuning (if any)
+// left channel caves gets even-numbered scale tones:
+//    C, D, E, F#, G#, A#, C, D, E
+// left channel caves gets odd-numbered scale tones:
+//    C#, D#, F, G, A, B, A#, C#, D#, F
+void tune_caves() {
+  if (!use_alt_tuning || alt_tuning_index < 0) {
+    return;
+  }
+
+  build_freq_table();
+
+  for (int bank = 0; bank < 3; bank++) {
+    int bank_ofs = (bank + 2) * 12;
+    for (int v = 0; v < 9; v++) {
+      const int i = bank_ofs + (v * 2);
+      cm_freq[0][bank][v] = frequencies[i];
+      cm_freq[1][bank][v] = frequencies[i+1];
+    }
+  }
+
+  // for (int ch = 0; ch < 2; ch++) {
+  //   for (int bank = 0; bank < 3; bank++) {
+  //     for (int v = 0; v < 9; v++) {
+  //       Serial.printf("ch:%d bank:%d v[%d] = %d\n", ch, bank, v, cm_freq[ch][bank][v]);
+  //     }
+  //   }
+  // }
+
+  Serial.println("Finished tuning caves");
 }
