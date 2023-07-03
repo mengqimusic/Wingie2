@@ -125,7 +125,7 @@ pn1 = vslider("poly_note_1", 36, 24, 96, 1);
 pn2 = vslider("poly_note_2", 36, 24, 96, 1);
 
 // standard tuning poly mode
-poly(n) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
+poly_norm(n) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
 with
 {
     a = pn0 : mtof;
@@ -156,7 +156,7 @@ with
 
 // note_ratio(note) = pow(2., note / 12);
 
-poly(n) = poly(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
+poly(n) = poly_norm(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
 
 note_freq(note) = mtof(note), mtoq(note) : ba.selectn(2, use_alt_tuning);
 strings(note, n) = int_ratios(note_freq(note), n);
