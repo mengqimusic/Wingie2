@@ -209,7 +209,7 @@ void control( void * pvParameters ) {
   oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
   oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
 
-  for (int ch = 0; ch < 2; ch++) {
+for (int ch = 0; ch < 2; ch++) {
     if (Mode[ch] == CAVE_MODE) {
       int cave = oct[ch] + 1;
       for (int v = 0; v < 9; v++ ) {
@@ -251,7 +251,7 @@ void control( void * pvParameters ) {
   modeButtonState[1] = aw1.digitalRead(7);
 
   if (!modeButtonState[0] && !modeButtonState[1]) {
-    // both buttons
+    // both buttons -- CLEAR ALL PREFS AND REBOOT
     Serial.printf("Clearing prefs!\n");
     prefs.begin("settings", RW_MODE);
     prefs.clear();
@@ -268,18 +268,18 @@ void control( void * pvParameters ) {
     alt_tuning_index = get_int_from_sliders();
   } else if (!modeButtonState[1]) {
     // right button only
-    // if already on, turn off and save
     if (use_alt_tuning != 0) {
       Serial.printf("Disabling alt tuning\n");
       dsp.setParamValue("use_alt_tuning", 0);
       use_alt_tuning = 0;
       alt_tuning_index = -1;
-      alt_tuning_set(alt_tuning_index);
+      alt_tuning_set(-1);
     }
   }
 
   if (use_alt_tuning != 0 && alt_tuning_index != -1) {
     alt_tuning_set(alt_tuning_index);
+    tune_caves();
   }
 
   Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");
@@ -409,14 +409,14 @@ void control( void * pvParameters ) {
         if (ch) dsp.setParamValue("note1", note[1] + BASE_NOTE + oct[1] * 12 + 12);
       }
 
-      if (Mode[ch] == CAVE_MODE) {
-        int cave = oct[ch] + 1;
-        if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
-        if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
-        duck_env_triggered[ch] = true;
-        duck_env_init_timer[ch] = currentMillis;
-        for (int v = 0; v < 9; v++ ) {
-          cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+        if (Mode[ch] == CAVE_MODE) {
+          int cave = oct[ch] + 1;
+          if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+          if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+          duck_env_triggered[ch] = true;
+          duck_env_init_timer[ch] = currentMillis;
+          for (int v = 0; v < 9; v++ ) {
+            cm_freq_set(ch, v, cm_freq[ch][cave][v]);
         }
       }
     }
