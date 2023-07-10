@@ -81,7 +81,7 @@ struct MySettings : public midi::DefaultSettings
 };
 
 
-Wingie2 dsp(48000, 32);
+Wingie2 dsp(44100, 32);
 AC101 ac;
 Adafruit_AW9523 aw0; // left channel
 Adafruit_AW9523 aw1; // right channel
