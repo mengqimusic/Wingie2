@@ -143,6 +143,18 @@ int cm_freq_prev[2][3][9] = {
     {212, 425, 531, 637, 1062, 2017, 2336, 2654, 3693}
   }
 };
+static const int cm_freq_default[2][3][9] = {
+  {
+    {62, 115, 218, 411, 777, 1500, 2800, 5200, 11000},
+    {205, 304, 370, 523, 540, 800, 913, 1568, 2400},
+    {212, 425, 531, 637, 1168, 2017, 2336, 2654, 3693}
+  },
+  {
+    {62, 115, 218, 411, 777, 1500, 2800, 5200, 11000},
+    {205, 304, 370, 523, 540, 800, 913, 1568, 2400},
+    {212, 425, 531, 637, 1062, 2017, 2336, 2654, 3693}
+  }
+};
 bool cm_ms[2][3][9]; // mute states
 bool cm_ms_prev[2][3][9] = {
   { {0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -387,4 +399,15 @@ void tune_caves() {
   // }
 
   Serial.println("Finished tuning caves");
+}
+
+void tune_caves_to_default() {
+  for (int ch = 0; ch < 2; ch++) {
+    for (int bank = 0; bank < 3; bank++) {
+      for (int v = 0; v < 9; v++) {1
+       cm_freq[ch][bank][v] = cm_freq_default[ch][bank][v];
+       }
+    }
+  }
+  Serial.println("Caves restored to default tuning");
 }

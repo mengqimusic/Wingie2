@@ -49,6 +49,7 @@ void MIDISetTuning(byte cc, byte value) {
         use_alt_tuning = 0;
         alt_tuning_index = -1;
         alt_tuning_set(-1);
+        tune_caves_to_default();
         dsp.setParamValue("use_alt_tuning", 0);
         Serial.println("MIDI: Alt tuning disabled");
       } else if (value < 9) {
