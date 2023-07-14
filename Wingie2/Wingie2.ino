@@ -404,7 +404,7 @@ void tune_caves() {
 void tune_caves_to_default() {
   for (int ch = 0; ch < 2; ch++) {
     for (int bank = 0; bank < 3; bank++) {
-      for (int v = 0; v < 9; v++) {1
+      for (int v = 0; v < 9; v++) {
        cm_freq[ch][bank][v] = cm_freq_default[ch][bank][v];
        }
     }
