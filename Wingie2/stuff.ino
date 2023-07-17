@@ -83,5 +83,37 @@ void save_stuff() {
     Serial.printf("alt_tuning_index is saved, value is %d.\n", alt_tuning_index);
   }
 
+  if (prefs.putBool("unq_caves_store", unq_caves_store)) {
+    Serial.printf("unq_caves_store is saved, value is %d\n", unq_caves_store);
+  }
+  if (unq_caves_store) {
+    store_unq_caves_to_prefs(true);
+  }
+
   prefs.end();
+}
+
+void store_unq_caves_to_prefs(bool prefs_prepped) {
+  if (!prefs_prepped) {
+    prefs.begin("settings", RW_MODE);
+  }
+  for (int ch = 0; ch < 2; ch++) {
+    for (int cave = 0; cave < 3; cave++) {
+      for (int v = 0; v < 9; v++) {
+        char buff[100];
+        if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
+        else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
+        const char *addr = buff;
+        if (prefs.putUShort(addr, cm_freq_stored_unq[ch][cave][v])) Serial.printf("ch %d cave %d voice %d unquantized frequency (%d) is saved.\n", ch, cave, v, cm_freq_stored_unq[ch][cave][v]);
+      }
+    }
+  }
+  if (!prefs_prepped) {
+    if (prefs.putBool("unq_caves_store", unq_caves_store)) {
+      Serial.printf("unq_caves_store is saved, value is %d\n", unq_caves_store);
+    } else {
+      Serial.println("Failed to save unq_caves_store to prefs");
+    }
+   prefs.end();
+  }
 }

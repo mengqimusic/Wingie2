@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.instr": "csound-orc",
+        "cstddef": "cpp"
+    }
+}

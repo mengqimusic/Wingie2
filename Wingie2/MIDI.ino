@@ -44,24 +44,32 @@ void MIDISetPitch(int ch, int mode, int pitch) {
 }
 
 void MIDISetTuning(byte cc, byte value) {
-    if (cc == CC_TUNING) {
-      if (value == 0) {
-        use_alt_tuning = 0;
-        alt_tuning_index = -1;
-        alt_tuning_set(-1);
-        tune_caves_to_default();
-        dsp.setParamValue("use_alt_tuning", 0);
-        Serial.println("MIDI: Alt tuning disabled");
-      } else if (value < 9) {
-        int t = value - 1;
+  if (cc == CC_TUNING) {
+    if (value == 0) {
+      use_alt_tuning = 0;
+      alt_tuning_index = -1;
+      alt_tuning_set(-1);
+      if (unq_caves_store) {
+        restore_caves_to_unq();
+        unq_caves_store = false;
+      }
+      dsp.setParamValue("use_alt_tuning", 0);
+      Serial.println("MIDI: Alt tuning disabled");
+    } else if (value < 9) {
+      int t = value - 1;
+      alt_tuning_index = t;
+      alt_tuning_set(alt_tuning_index);
+      if (!use_alt_tuning) {
         use_alt_tuning = 1;
         dsp.setParamValue("use_alt_tuning", 1);
-        alt_tuning_index = t;
-        alt_tuning_set(alt_tuning_index);
-        tune_caves();
-        Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
+        store_unq_caves();
+        unq_caves_store = true;
+        store_unq_caves_to_prefs(false); 
       }
+      tune_caves();
+      Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
     }
+  }
 }
 
 void handleControlChange (byte channel, byte number, byte value) {
