@@ -101,7 +101,7 @@ void control( void * pvParameters ) {
     prefs.putUChar("right_mode", 0);
     prefs.putUChar("use_alt_tuning", 0);
     prefs.putChar("alt_tuning_idx", -1);
-
+    prefs.putBool("unq_caves_store", false);
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
         for (int v = 0; v < 9; v++) {
@@ -176,6 +176,29 @@ void control( void * pvParameters ) {
       }
       Serial.println(str_cm_f);
       Serial.println(str_cm_ms);
+    }
+  }
+
+  unq_caves_store = prefs.getBool("unq_caves_store");
+  Serial.printf("unq_caves_store = %d\n", unq_caves_store);
+  if (unq_caves_store) {
+    for (int ch = 0; ch < 2; ch++) {
+      for (int cave = 0; cave < 3; cave++) {
+        char str_cm_f[100];
+        sprintf(str_cm_f, "ch %d cave %d unquantized frequency  =", cave, ch);
+        for (int v = 0; v < 9; v++) {
+          char buff[100];
+          char tmp[100];
+
+          if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
+          else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
+          const char *addr = buff;
+          cm_freq_stored_unq[ch][cave][v] = prefs.getUShort(addr);
+          sprintf(tmp, " %5d", cm_freq_stored_unq[ch][cave][v]);
+          strcat(str_cm_f, tmp);
+        }
+        Serial.println(str_cm_f);
+      }
     }
   }
 

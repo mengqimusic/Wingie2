@@ -126,6 +126,7 @@ bool realtime_value_valid[3] = {true, true, true}, polyFlip = false;
 int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use_alt_tuning, alt_tuning_index;
 float a3_freq;
 int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // Channel, Type, (MSB, LSB)
+bool unq_caves_store = false;
 
 //
 // cave mode
@@ -143,9 +144,22 @@ int cm_freq_prev[2][3][9] = {
     {212, 425, 531, 637, 1062, 2017, 2336, 2654, 3693}
   }
 };
+int cm_freq_stored_unq[2][3][9] = {
+  { 
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}
+  },
+  {
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0, 0}
+  }
+};
 bool cm_ms[2][3][9]; // mute states
 bool cm_ms_prev[2][3][9] = {
-  { {0, 0, 0, 0, 0, 0, 0, 0, 0},
+  { 
+    {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0}
   },
@@ -387,4 +401,47 @@ void tune_caves() {
   // }
 
   Serial.println("Finished tuning caves");
+}
+
+void restore_caves_to_unq() {
+  for (int ch = 0; ch < 2; ch++) {
+    for (int bank = 0; bank < 3; bank++) {
+      for (int v = 0; v < 9; v++) {
+       cm_freq[ch][bank][v] = cm_freq_stored_unq[ch][bank][v];
+       }
+    }
+  }
+
+  // debug
+  // for (int ch = 0; ch < 2; ch++) {
+  //   for (int bank = 0; bank < 3; bank++) {
+  //     for (int v = 0; v < 9; v++) {
+  //       Serial.printf("ch:%d bank:%d v[%d] = %d\n", ch, bank, v, cm_freq[ch][bank][v]);
+  //     }
+  //   }
+  // }
+
+  Serial.println("Unquantized caves restored");
+}
+
+
+void store_unq_caves() {
+  for (int ch = 0; ch < 2; ch++) {
+    for (int bank = 0; bank < 3; bank++) {
+      for (int v = 0; v < 9; v++) {
+       cm_freq_stored_unq[ch][bank][v] = cm_freq[ch][bank][v];
+       }
+    }
+  }
+
+  // debug
+  // for (int ch = 0; ch < 2; ch++) {
+  //   for (int bank = 0; bank < 3; bank++) {
+  //     for (int v = 0; v < 9; v++) {
+  //       Serial.printf("ch:%d bank:%d v[%d] = %d\n", ch, bank, v, cm_freq_stored_unq[ch][bank][v]);
+  //     }
+  //   }
+  // }
+
+  Serial.println("Stored unquantized caves");
 }
