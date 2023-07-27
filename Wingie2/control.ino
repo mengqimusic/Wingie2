@@ -1,4 +1,4 @@
-void control( void * pvParameters ) {
+void control(void *pvParameters) {
   Serial.print("control running on core ");
   Serial.println(xPortGetCoreID());
 
@@ -27,14 +27,14 @@ void control( void * pvParameters ) {
   aw0.reset();
   aw1.reset();
 
-  for (int i = 0; i < 16; i++) { // setup aw9523
+  for (int i = 0; i < 16; i++) {  // setup aw9523
     aw0.pinMode(i, INPUT);
     aw0.enableInterrupt(i, true);
     aw1.pinMode(i, INPUT);
     aw1.enableInterrupt(i, true);
   }
 
-  for (int i = 0; i < 16; i += 8) { // anti-stuck
+  for (int i = 0; i < 16; i += 8) {  // anti-stuck
     bool tmp = aw0.digitalRead(i);
     tmp = aw1.digitalRead(i);
   }
@@ -56,8 +56,8 @@ void control( void * pvParameters ) {
   ac.SetVolumeHeadphone(volume);
   ac.SetVolumeSpeaker(0);
 
-  acWriteReg(OMIXER_SR, 0x0102); // 摆正左右通道 : 左 DAC -> 左输出 右 DAC -> 右输出
-  acWriteReg(DAC_VOL_CTRL, DAC_VOL); // 左右通道输出音量 A0 = 0dB A4 = 3dB
+  acWriteReg(OMIXER_SR, 0x0102);      // 摆正左右通道 : 左 DAC -> 左输出 右 DAC -> 右输出
+  acWriteReg(DAC_VOL_CTRL, DAC_VOL);  // 左右通道输出音量 A0 = 0dB A4 = 3dB
 
   source = !aw1.digitalRead(sourcePin);
   acWriteReg(ADC_SRC, sources[source]);
@@ -225,17 +225,17 @@ void control( void * pvParameters ) {
   for (int ch = 0; ch < 2; ch++) {
     for (int i = 0; i < 2; i++) {
       pinMode(ledPin[ch][i], OUTPUT);
-      digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+      digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
     }
   }
 
   oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
   oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
 
-for (int ch = 0; ch < 2; ch++) {
+  for (int ch = 0; ch < 2; ch++) {
     if (Mode[ch] == CAVE_MODE) {
       int cave = oct[ch] + 1;
-      for (int v = 0; v < 9; v++ ) {
+      for (int v = 0; v < 9; v++) {
         cm_freq_set(ch, v, cm_freq[ch][cave][v]);
       }
     }
@@ -317,9 +317,9 @@ for (int ch = 0; ch < 2; ch++) {
   dsp.setParamValue("/Wingie/right/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
   dsp.setParamValue("/Wingie/right/poly_note_2", 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
 
-  dsp.setParamValue("/Wingie/left/decay", 0.1); // 最小 Startup Decay 避免开机声音过大
+  dsp.setParamValue("/Wingie/left/decay", 0.1);  // 最小 Startup Decay 避免开机声音过大
   dsp.setParamValue("/Wingie/right/decay", 0.1);
-  
+
   for (;;) {
     interrupts();
     currentMillis = millis();
@@ -335,8 +335,7 @@ for (int ch = 0; ch < 2; ch++) {
         if (volume < 63) {
           volume += 1;
           ac.SetVolumeHeadphone(volume);
-        }
-        else startup = false;
+        } else startup = false;
       }
     }
 
@@ -358,7 +357,8 @@ for (int ch = 0; ch < 2; ch++) {
     for (int i = 0; i < 3; i++) {
       potValRealtime[i] = analogRead(potPin[i]);
       int difference = abs(potValRealtime[i] - potValSampled[i]);
-      if (!realtime_value_valid[i]) if (difference > slider_movement_detect) realtime_value_valid[i] = true;
+      if (!realtime_value_valid[i])
+        if (difference > slider_movement_detect) realtime_value_valid[i] = true;
     }
 
     float Mix = potValRealtime[0] / 4095.;
@@ -432,14 +432,14 @@ for (int ch = 0; ch < 2; ch++) {
         if (ch) dsp.setParamValue("note1", note[1] + BASE_NOTE + oct[1] * 12 + 12);
       }
 
-        if (Mode[ch] == CAVE_MODE) {
-          int cave = oct[ch] + 1;
-          if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
-          if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
-          duck_env_triggered[ch] = true;
-          duck_env_init_timer[ch] = currentMillis;
-          for (int v = 0; v < 9; v++ ) {
-            cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+      if (Mode[ch] == CAVE_MODE) {
+        int cave = oct[ch] + 1;
+        if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+        if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+        duck_env_triggered[ch] = true;
+        duck_env_init_timer[ch] = currentMillis;
+        for (int v = 0; v < 9; v++) {
+          cm_freq_set(ch, v, cm_freq[ch][cave][v]);
         }
       }
     }
@@ -475,7 +475,7 @@ for (int ch = 0; ch < 2; ch++) {
         duck_env_triggered[ch] = true;
         duck_env_init_timer[ch] = currentMillis;
 
-        for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+        for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
 
         if (Mode[ch] != CAVE_MODE) {
           for (int v = 0; v < 9; v++) {
@@ -484,7 +484,6 @@ for (int ch = 0; ch < 2; ch++) {
             cm_freq_set(ch, v, cm_freq[ch][cave][v]);
           }
         }
-
       }
 
       if (duck_env_triggered[ch] && currentMillis - duck_env_init_timer[ch] > 20) {
@@ -492,7 +491,6 @@ for (int ch = 0; ch < 2; ch++) {
         if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 0);
         if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 0);
       }
-
     }
 
 
@@ -516,7 +514,6 @@ for (int ch = 0; ch < 2; ch++) {
       }
 
       //Serial.println();
-
     }
 
     if (an[1]) {
@@ -536,7 +533,6 @@ for (int ch = 0; ch < 2; ch++) {
 
       modeButtonState[0] = aw1.digitalRead(4);
       modeButtonState[1] = aw1.digitalRead(7);
-
     }
 
     // 用 state change 来触发动作，不在 ISR 中做动作，使连续的两次 false 只做一次动作，消弭 double trigger。
@@ -570,7 +566,7 @@ for (int ch = 0; ch < 2; ch++) {
           if (key[ch][i] != keyPrev[ch][i]) {
             if (!key[ch][i]) {
 
-              if (modeButtonPressed[0]) { // Change threshold
+              if (modeButtonPressed[0]) {  // Change threshold
                 threshChanged[0] = true;
                 if (!ch) {
                   left_thresh = 0.0825 * i + 0.0825;
@@ -584,7 +580,7 @@ for (int ch = 0; ch < 2; ch++) {
                 }
               }
 
-              else if (modeButtonPressed[1]) { // Change gain
+              else if (modeButtonPressed[1]) {  // Change gain
                 threshChanged[1] = true;
                 if (!ch) {
                   pre_clip_gain = 0.0825 * i + 0.0825;
@@ -614,8 +610,7 @@ for (int ch = 0; ch < 2; ch++) {
                     if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
                     if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
                   }
-                }
-                else { // Not First Press
+                } else {  // Not First Press
                   if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
                     note[ch] = i;
                     writeHeadPos[ch] += 1;
@@ -637,10 +632,21 @@ for (int ch = 0; ch < 2; ch++) {
                       cm_mute_set(ch, v, cm_ms[ch][cave][v]);
                     }
                   }
-                  if (i == 6) {
-                    for (int v = 0 ; v < 9; v++) {
-                      cm_ms[ch][cave][v] = false;
-                      cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                  if (i == 6) {  // in CAVE MODE: hold E or F and press F# for "mute all" and "unmute all"
+                    int mute_unmute = -!key[ch][4] + !key[ch][5];
+                    switch (mute_unmute) {
+                      case -1:
+                        for (int v = 0; v < 9; v++) {
+                          cm_ms[ch][cave][v] = true;
+                          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                        }
+                        break;
+                      case 1:
+                        for (int v = 0; v < 9; v++) {
+                          cm_ms[ch][cave][v] = false;
+                          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                        }
+                        break;
                     }
                   }
                 }
@@ -650,28 +656,25 @@ for (int ch = 0; ch < 2; ch++) {
                     currentPoly[ch] = 1;
                     if (!ch) dsp.setParamValue("/Wingie/left/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
                     if (ch) dsp.setParamValue("/Wingie/right/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
-                  }
-                  else if (currentPoly[ch] == 1) {
+                  } else if (currentPoly[ch] == 1) {
                     currentPoly[ch] = 2;
                     if (!ch) dsp.setParamValue("/Wingie/left/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
                     if (ch) dsp.setParamValue("/Wingie/right/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
-                  }
-                  else if (currentPoly[ch] == 2) {
+                  } else if (currentPoly[ch] == 2) {
                     currentPoly[ch] = 0;
                     if (!ch) dsp.setParamValue("/Wingie/left/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
                     if (ch) dsp.setParamValue("/Wingie/right/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
                   }
                 }
 
-              } // !modeButtonPressed[ch]
-            } // Key Press Action End
+              }  // !modeButtonPressed[ch]
+            }    // Key Press Action End
 
-            else { // Key Release Action Start
+            else {  // Key Release Action Start
               if (!allKeys[ch]) firstPress[ch] = true;
               //if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 0);
               //if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 0);
-            } // Key Release Action End
-
+            }  // Key Release Action End
           }
           keyPrev[ch][i] = key[ch][i];
         }
@@ -699,7 +702,7 @@ for (int ch = 0; ch < 2; ch++) {
 
             if (!key[ch][k]) {
 
-              adj[ch] = adj[ch] * fscale(50, 16000, 1, 20, cm_freq[ch][cave][v], -0.85); // 指数增长下降
+              adj[ch] = adj[ch] * fscale(50, 16000, 1, 20, cm_freq[ch][cave][v], -0.85);  // 指数增长下降
 
               cm_freq[ch][cave][v] += adj[ch];
               cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], CAVE_LOWEST_FREQ);
@@ -780,12 +783,10 @@ for (int ch = 0; ch < 2; ch++) {
         led_blink -= 1;
         if (!led_blink) {
           for (int ch = 0; ch < 2; ch++) {
-            for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i)); // 模式 LED 控制
+            for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
           }
         }
       }
     }
-
   }
-
 }
