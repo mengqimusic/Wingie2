@@ -32,7 +32,7 @@ Hold down the **left Mode button** before plugging in the USB cable.The position
  | up | up | down | hexachordal dodecaphonic |
  | up | up | up | Augmented[12] |
 
-[For nerds: this method treats the sliders as base-2 digits, where the right slider represents the 1's column, the middle slider      represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
+[For nerds: this method treats the sliders as base-2 digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]
 
 To disable alternate tuning at startup, hold down the **right Mode button**. The device will then start using standard tuning.
 
@@ -51,11 +51,11 @@ To disable alternate tuning at startup, hold down the **right Mode button**. The
  |-|-|8| Augmented[12] |
 
 
- ## Caves in Alternatre Tuning
+ ## Caves in Alternate Tuning
 
  When you enable alternate tuning, the caves are also tuned to match the tuning you selected.
  
- In order to accomodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:
+ In order to accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:
 
     C, D, E, F#, G#, A#, C', D', E'
 
