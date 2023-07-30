@@ -159,9 +159,9 @@ with
 poly(n) = poly_norm(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
 
 note_freq(note) = mtof(note), mtoq(note) : ba.selectn(2, use_alt_tuning);
-strings(note, n) = int_ratios(note_freq(note), n);
 
-bars(note, n, tuning) = bar_ratios(mtof(note), n), bar_ratios(mtoq(note), n) : ba.selectn(2, use_alt_tuning);
+strings(note, n) = int_ratios(note_freq(note), n);
+bars(note, n) = bar_ratios(note_freq(note), n);
 
 f(note, n, s) = 
     poly(n),

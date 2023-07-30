@@ -193,9 +193,10 @@ static const float alt_tunings[8][12] = {
   { 1., 1.096825, 1.148698, 1.203025, 1.259921, 1.381913, 1.447269, 1.515717, 1.587401, 1.741101, 1.823445, 1.909683 },
 };
 
-// tuning table for notes MIN_NOTE through MAX_NOTE
+// tuning table for notes MIN_NOTE through MAX_NOTE+6
+// (we add an additional 6 notes to accommodate cave tuning in the high octave)
 // indexed by note-MIN_NOTE
-float frequencies[NUM_NOTES];
+float frequencies[NUM_NOTES+6];
 
 //
 // global settings
@@ -342,15 +343,20 @@ void build_freq_table() {
   a3_freq = dsp.getParamValue("a3_freq");
 
   // some pre-computation to make things faster
-  float c_freq[5] = {
+  float c_freq[6] = {
     mtof(36),
     mtof(48),
     mtof(60),
     mtof(72),
-    mtof(84)
+    mtof(84),
+    mtof(96)
   };
   
-  for (int i = 0; i < NUM_NOTES; i++) {
+  // we extend a further 6 notes so that we can fill up
+  // all the cave slots in the higher octave
+  const int num_notes = NUM_NOTES + 6;
+
+  for (int i = 0; i < num_notes; i++) {
     const int note = MIN_NOTE + i;
 
     float base;
@@ -362,8 +368,10 @@ void build_freq_table() {
       base = c_freq[2];
     } else if (72 <= note && note <= 83) {
       base = c_freq[3];
-    } else {
+    } else if (84 <= note && note <= 96) {
       base = c_freq[4];
+    } else {
+      base = c_freq[5];
     }
 
     // caves use integer values
