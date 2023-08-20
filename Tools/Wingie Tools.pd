@@ -1,4 +1,4 @@
-#N canvas 85 810 2475 1881 12;
+#N canvas 415 960 1850 1673 12;
 #N canvas 85 634 2475 2149 w2ctl 0;
 #X obj 1370 386 ctlout 23 13;
 #X floatatom 1370 355 5 0 0 0 - - - 0;
@@ -772,7 +772,7 @@
 #X connect 142 0 63 0;
 #X connect 142 0 45 0;
 #X coords 0 -1 1 1 850 500 2 500 100;
-#X restore 18 59 pd w2ctl;
+#X restore 18 56 pd w2ctl;
 #N canvas 647 1003 1468 1509 test-seq 0;
 #N canvas 0 22 450 278 (subpatch) 0;
 #X array note 8 float 3;
@@ -829,7 +829,7 @@
 #X connect 26 0 27 0;
 #X connect 27 0 20 0;
 #X coords 0 -1 1 1 320 230 2 100 100;
-#X restore 18 585 pd test-seq;
+#X restore 18 582 pd test-seq;
 #N canvas 998 590 1542 1333 note-play 0;
 #X floatatom 20 210 5 0 0 0 - - - 0;
 #X text 140 115 Left;
@@ -848,9 +848,9 @@
 #X connect 8 0 4 2;
 #X connect 9 0 0 0;
 #X coords 0 -1 1 1 520 90 2 100 100;
-#X restore 353 599 pd note-play;
-#X text 18 16 Wingie Tools for v3.1;
-#X text 752 16 mengqimusic.com;
-#X text 18 563 play a seq or notes:;
-#X text 18 37 settings:;
-#X coords 0 940.5 1 939.5 85 60 0;
+#X restore 353 596 pd note-play;
+#X text 18 13 Wingie Tools for v3.1;
+#X text 752 13 mengqimusic.com;
+#X text 18 560 play a seq or notes:;
+#X text 18 34 settings:;
+#X coords 0 836.5 1 835.5 85 60 0;
