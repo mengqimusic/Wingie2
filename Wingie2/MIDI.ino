@@ -1,4 +1,7 @@
 void handleNoteOn (byte channel, byte pitch, byte velocity) {
+#if MIDI_DIAGNOSTICS
+  recordMidiNoteOn(channel, pitch, velocity);
+#endif
 
   //if (pitch < 96) {
 
@@ -15,6 +18,12 @@ void handleNoteOn (byte channel, byte pitch, byte velocity) {
   }
   //}
 }
+
+#if MIDI_DIAGNOSTICS
+void handleNoteOff(byte channel, byte pitch, byte velocity) {
+  recordMidiNoteOff(channel, pitch, velocity);
+}
+#endif
 
 void MIDISetPitch(int ch, int mode, int pitch) {
 

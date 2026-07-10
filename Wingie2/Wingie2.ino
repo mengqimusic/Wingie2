@@ -80,6 +80,10 @@ struct MySettings : public midi::DefaultSettings
   static const long BaudRate = 31250;
 };
 
+#ifndef MIDI_DIAGNOSTICS
+#define MIDI_DIAGNOSTICS 0
+#endif
+
 
 Wingie2 dsp(44100, 32);
 AC101 ac;
@@ -227,6 +231,11 @@ void setup() {
   MIDI.begin(MIDI_CHANNEL_OMNI);
   MIDI.setHandleNoteOn(handleNoteOn);
   MIDI.setHandleControlChange(handleControlChange);
+#if MIDI_DIAGNOSTICS
+  MIDI.setHandleNoteOff(handleNoteOff);
+  MIDI.setHandleError(handleMidiError);
+  resetMidiDiagnostics();
+#endif
   MIDI.MidiInterface::turnThruOff();
 
   Serial.print("setup running on core ");
@@ -251,7 +260,11 @@ void loop() {
     Serial.println(xPortGetCoreID());
   }
 
+#if MIDI_DIAGNOSTICS
+  serviceMidiDiagnostics();
+#else
   MIDI.read();
+#endif
 }
 
 void Pressed0() {
