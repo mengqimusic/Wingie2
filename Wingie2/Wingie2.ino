@@ -27,6 +27,7 @@
 #include <Adafruit_AW9523.h>
 #include <Wire.h>
 #include "Wingie2.h"
+#include "tap_sequence.h"
 #include "WiFi.h"
 #include <MIDI.h>
 
@@ -216,7 +217,7 @@ unsigned long save_routine_timer, led_flash_timer;
 // for Tap Sequencer
 //
 bool trig[2] = {false, false}, trigged[2] = {false, false}, threshChanged[2] = {false, false};
-int seq[2][12], seqLen[2] = {0, 0}, playHeadPos[2] = {0, 0}, writeHeadPos[2] = {0, 0};
+TapSequence tapSequence[2];
 
 unsigned long currentMillis, routineReadTimer = 0, sourceChangedMillis = 0, startupMillis = 0, duck_env_init_timer[2] = {0};
 

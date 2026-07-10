@@ -603,19 +603,14 @@ void control(void *pvParameters) {
 
                   if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
                     note[ch] = i;
-                    seq[ch][0] = i;
-                    seqLen[ch] = 0;
-                    playHeadPos[ch] = 0;
-                    writeHeadPos[ch] = 0;
+                    tapSequence[ch].reset(uint8_t(i));
                     if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
                     if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
                   }
                 } else {  // Not First Press
                   if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
                     note[ch] = i;
-                    writeHeadPos[ch] += 1;
-                    seqLen[ch] += 1;
-                    seq[ch][writeHeadPos[ch]] = i;
+                    tapSequence[ch].append(uint8_t(i));
                     if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
                     if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
                   }
@@ -722,16 +717,17 @@ void control(void *pvParameters) {
     trig[1] = dsp.getParamValue("/Wingie/right_trig");
 
     for (int ch = 0; ch < 2; ch++) {
-      if (seqLen[ch]) {
+      if (tapSequence[ch].hasCycle()) {
         if (trig[ch] && !trigged[ch]) {
           trigged[ch] = true;
-          if (playHeadPos[ch] < seqLen[ch]) playHeadPos[ch] += 1;
-          else playHeadPos[ch] = 0;
-          note[ch] = seq[ch][playHeadPos[ch]];
-          if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
-          if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
-          if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
-          if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+          uint8_t nextNote;
+          if (tapSequence[ch].advance(nextNote)) {
+            note[ch] = nextNote;
+            if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
+            if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
+            if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
+            if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
+          }
         }
       }
       if (!trig[ch] && trigged[ch]) {
