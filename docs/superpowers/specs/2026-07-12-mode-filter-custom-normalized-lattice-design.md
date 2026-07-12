@@ -208,6 +208,21 @@ The two scattering sections use the `(s, c)` pairs directly. The generated sampl
 show two paired normalized junctions per mode, not `fi.tf2np`, `fi.nlf2`, a coupled rotation,
 or a direct-form biquad hidden behind another library call.
 
+For mode input `x` and stored states `z1/z2`, the specialized recurrence is:
+
+```text
+t2      = c2 * x  - s2 * z2
+t1      = c1 * t2 - s1 * z1
+z2_next = s1 * t2 + c1 * z1
+z1_next = t1
+raw_terminal = t1
+```
+
+For zero input, the two normalized junctions give
+`z1_next^2 + z2_next^2 = z1^2 + s2^2 * z2^2`, so stored energy cannot grow for
+`abs(s2) <= 1`, independently of an instantaneous `s1` change. Host tests still verify the
+floating-point implementation and arbitrary simultaneous coefficient changes.
+
 With the historical effective T60 expression, the widest relevant T60 interval is
 approximately `0.05..10.05 s`. At `16 Hz / 10.05 s`:
 
@@ -350,7 +365,7 @@ full product and must be counted separately from lattice coefficient preparation
 The analytical recurrence estimate per mode per sample is:
 
 ```text
-two normalized junctions: approximately 8 multiplies + 4 adds/subtracts
+two normalized junctions: 6 multiplies + 3 adds/subtracts
 combined visible output:  approximately 1 multiply
 ```
 
@@ -358,10 +373,12 @@ Candidate E adds one shared input subtraction per channel per sample. Candidate 
 Both retain 36 filter states across the product. Candidate E adds four channel-level input
 delay states.
 
-Relative to the measured block-rate rotation bank, the analytical recurrence delta is about
-36 additional multiplies and 18 additional adds per product sample. Replacing the current
-18 mute ASRs with direct output gates removes their states and arithmetic. The net Xtensa
-cost cannot be established from operation counts alone.
+The normalized-lattice and block-rate rotation cores both use approximately six multiplies
+and three adds per mode per sample. Their principal cost difference is block-rate coefficient
+preparation: the lattice replaces 18 rotation `sin` calls with 20 normalized-junction `sqrt`
+calls, and Candidate E adds output reciprocals. Replacing the current 18 mute ASRs with
+direct output gates removes their states and arithmetic. The net Xtensa cost cannot be
+established from operation counts alone.
 
 The measured rotation and coupled generated-class p99 values, `450.0 us` and approximately
 `544.5 us`, define an empirical feasibility interval, not a prediction. Both lattice
