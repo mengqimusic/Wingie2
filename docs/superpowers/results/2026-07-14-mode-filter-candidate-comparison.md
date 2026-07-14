@@ -46,6 +46,66 @@ decay direct form 虽然时序很好，但真机出现“所有通道都没有 w
 | 7. Normalized-lattice E | 两段 normalized lattice；共享 `1-z^-2` 输入差分并做 `1/(c1*c2)` 输出归一化 | 反射系数与归一化每 32 samples；状态逐 sample | 固定系数严格复现历史 transfer function | normalized 状态在新反射系数下继续；输出 scale 可瞬时变大 | 是，alternate tuning 完整 | 是；generated p99 `395.8 us`；complete 两组 0 miss | 用户：`E 也非常好，而且音量明显比 R 要高。`；wet/dry 正常 | 旧 output-bound 与 p99 门禁拒绝 | 保留；已试听，未最终选中 |
 | 8. Normalized-lattice R | 与 E 相同 lattice，直接输出 raw terminal tap | 与 E 相同，但无输入差分和输出 reciprocal | pole 相同；DC、宽带响应、模态电平和增益有意不同 | normalized 状态连续；无 E 的大输出归一化 | 是，alternate tuning 完整 | 是；generated p99 `370.6 us`；正常固件已运行 | 用户：`听起来没问题`；左右 wet 与 dry/thru 正常 | 旧 16 Hz FFT 标签拒绝；后续 Task 8 被跳过 | 保留；已试听，complete timing/压力仍未测 |
 
+## 八方案 × 二十项门禁状态矩阵
+
+这组矩阵把门禁拆成二十个可独立核对的项目。它不追溯要求早期实验补做后来才定义的
+门禁，也不把“没有失败记录”写成通过。状态词含义如下：
+
+- **通过**：在该项明确记录的范围内有直接 PASS 证据；范围外仍不能外推。
+- **失败**：存在直接失败证据；括号区分历史数值、生成、结构或物理失败。除第 18 项外，
+  现在只作为诊断标签保留。
+- **部分**：只覆盖了该门禁的一部分，或只有结构/host 而没有物理证据。
+- **跳过**：由于更早的历史门禁停止，明确没有执行。
+- **未测**：现有记录不能归属到该候选，也没有明确的历史 skip。
+- **不适用**：没有进入该阶段所需的完整产物。
+
+表头缩写：`Hist` 为历史 direct form，`BR-DF` 为 block-rate decay direct form，
+`TF2NP` 为直接 `fi.tf2np`，`Modal` 为 block-rate rotation/modal bank。
+
+### A. 身份、数学与产品集成
+
+| # | 门禁 | Hist | BR-DF | TF2NP | Q | D | Modal | E | R |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Toolchain / artifact identity | 通过：产品 triplet 固定 | 通过：候选/镜像固定 | 部分：compiler/library 固定，无完整候选 | 通过：source/generated/benchmark 固定 | 通过：source/generated/benchmark 固定 | 通过：source/generated/benchmark 固定 | 通过：manifest 与各镜像固定 | 通过：manifest 与各镜像固定 |
+| 2 | 数学系数边界 | 部分：历史公式已审计 | 部分：同公式及 block trajectory | 部分：library reflection 审计 | 通过：`rho < 1` 合同 | 通过：`rho < 1` 合同 | 通过：`rho < 1` 合同 | 通过：`s1/s2` 投影与 finite | 通过：`s1/s2` 投影与 finite |
+| 3 | Contraction / energy contract | 未测：无独立收缩合同 | 未测：状态坐标未改变 | 部分：library 结构审计，未进完整 host | 通过：8,192-sample isolated | 通过：8,192-sample isolated | 通过：5 个 isolated scenarios | 通过：7 个 isolated scenarios | 通过：7 个 isolated scenarios |
+| 4 | 完整 Faust generation | 通过：alternate tuning 完整 | 通过：alternate tuning 完整 | 失败（生成）：`recursive composition A~B` | 通过：alternate tuning 完整 | 通过：alternate tuning 完整 | 通过：alternate tuning 完整 | 通过：alternate tuning 完整 | 通过：alternate tuning 完整 |
+| 5 | Generated structure | 部分：基线生成物已审计，无后期统一 checker | 通过：block modulus/2 guarded `pow` | 跳过：完整生成失败 | 通过：2 guarded `pow`/36 updates | 通过：Q 结构加差分记忆 | 通过：block-rate `rho/sin/cos`/36 updates | 通过：lattice、4 differentiators、18 reciprocals | 通过：lattice、0 differentiator/reciprocal |
+| 6 | UI / control-path contract | 通过：现行产品路径 | 通过：沿用历史产品路径 | 不适用：无完整 UI inventory | 通过：原 UI 与 alternate tuning | 通过：原 UI 与 alternate tuning | 失败（结构）：`mode_changed` 被合并为 shared path | 通过：左右路径与 alternate tuning | 通过：左右路径与 alternate tuning |
+
+### B. Host 响应与动态行为
+
+| # | 门禁 | Hist | BR-DF | TF2NP | Q | D | Modal | E | R |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 7 | Static response / pole / T60 / gain | 通过：180-case reference 基线 | 通过：3 x 180 settled parity | 跳过：完整生成失败 | 通过：556 rows；max `0.162502 cents` | 通过：556 rows；max `2.007266 cents` | 通过：642 rows；max `0.560759216 cents` | 部分：held-coefficient 恒等式；601 complete rows 跳过 | 通过：static rows；响应有意不同于历史 |
+| 8 | FFT peak identity | 未测 | 未测 | 跳过 | 未测 | 未测 | 通过：24/24 单一主要峰 | 跳过：601 complete rows 未运行 | 失败（历史）：6 个 16 Hz rows 为 `+8.009839 cents` |
+| 9 | Output-bound | 未测：无统一 bound gate | 未测：无统一 bound gate | 跳过 | 通过：max `0.666656` | 通过：max `0.666656` | 通过：max `0.666655362` | 失败（历史）：3 个 isolated output 超过 8，state bounded | 通过：isolated 与 complete rows 未超界 |
+| 10 | Dynamic host determinism | 部分：24-case reference coverage | 通过：24-case dynamic parity | 跳过 | 通过：4 scenarios x tuning/channel | 通过：4 scenarios x tuning/channel | 通过：6 dynamic scenarios | 部分：isolated deterministic；complete rows 跳过 | 通过：7 dynamic rows，0 skip |
+
+### C. ESP32 计算、镜像与恢复
+
+| # | 门禁 | Hist | BR-DF | TF2NP | Q | D | Modal | E | R |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 11 | Generated-class deadline | 失败（历史）：p99 `739.5 us`，1,308 misses | 通过：p99 `419.1 us`，0 miss | 不适用 | 通过：p99 `544.7 us`，0 miss | 通过：p99 `544.4 us`，0 miss | 通过：p99 `450.0 us`，0 miss | 通过：p99 `395.8 us`，0 miss | 通过：p99 `370.6 us`，0 miss |
+| 12 | Complete-product deadline | 失败（历史）：p99 `715.9 us`，0 miss | 通过：p99 `456.3 us`，0 miss | 不适用 | 失败（历史）：p99 `714.6 us`，0 miss | 失败（历史）：p99 `715.2 us`，0 miss | 失败（历史）：p99 `717.1 us`，0 miss | 失败（历史）：String/Cave p99 `719.5/719.6 us`，0 miss | 未测：旧 host gate 跳过，之后未补跑 |
+| 13 | Image size / checksum / build | 通过：历史正常镜像 | 通过：benchmark、normal、diagnostic | 不适用 | 通过：benchmark；后来补建正常镜像 | 部分：benchmark images；正常镜像未建 | 部分：benchmark images；正常镜像未建 | 通过：generated、normal、complete images | 通过：generated 与 normal images |
+| 14 | Flash-address / recovery integrity | 通过：历史 app0 多次 verify/readback | 通过：候选写入及历史恢复 | 不适用 | 通过：benchmark 恢复；正常 Q 为当前设备状态 | 通过：benchmark 写入及历史恢复 | 通过：两阶段写入及历史恢复 | 通过：app0 恢复与 segmented-failure readback 相等 | 部分：正常镜像已刷写；无可归属的 R recovery readback |
+
+### D. 物理音频、用户证据与产品边界
+
+| # | 门禁 | Hist | BR-DF | TF2NP | Q | D | Modal | E | R |
+| ---: | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 15 | MIDI parser / callback pressure | 未测：恢复确认不含压力矩阵 | 通过：两批各 `parsed=200000`，0 errors | 不适用 | 未测：旧实验跳过，正常试听后未补 | 未测：旧实验跳过 | 跳过：旧 p99 门禁停止 | 部分：4 个可归属 batches，非完整矩阵 | 未测/不可归属：完整矩阵不存在 |
+| 16 | Wet/dry path | 部分：恢复后左右 wet 正常，dry 未单列 | 失败（物理）：String ch2 后所有 wet 消失 | 不适用 | 未测：只有总体试听原话 | 未测 | 跳过 | 通过：左右 wet 与 dry/thru 正常 | 通过：左右 wet 与 dry/thru 正常 |
+| 17 | Mute/unmute | 部分：ASR 代码存在，物理行为未测 | 部分：沿用 ASR，物理行为未测 | 不适用 | 部分：沿用 ASR，物理行为未测 | 部分：沿用 ASR，物理行为未测 | 部分：host/structure 通过，物理阶段跳过 | 部分：host/structure 通过，物理行为未测 | 部分：host/structure 通过，物理行为未测 |
+| 18 | Physical runnability（当前唯一淘汰门禁） | 通过：历史正常固件/恢复镜像可运行 | 失败（物理）：固件运行但完整 wet 功能失效 | 不适用：无完整候选可上机 | 通过：complete benchmark 与正常固件 | 通过：instrumented complete product | 通过：instrumented complete product；UI 回归另记 | 通过：正常固件及两个 complete captures | 通过：正常固件；complete timing 未测 |
+| 19 | User listening | 部分：只确认恢复 wet 正常，无候选 A/B | 跳过：wet 失败后未做 A/B | 不适用 | 通过：`我听起来没问题。` | 未测 | 跳过 | 通过：`E 也非常好，而且音量明显比 R 要高。` | 通过：`听起来没问题` |
+| 20 | Installation boundary | 已安装基线：main 仍是此 product source | 未安装：archive 中已 revert | 未安装 | 未安装 main；正常 Q 只在当前设备 | 未安装 | 未安装 | 未安装 | 未安装 |
+
+矩阵中的第 18 项决定当前试听资格：BR-DF 的固件虽能执行，但 audible wet 功能失效；
+TF2NP 没有可测试的完整候选；Q、D、Modal、E、R 均有相应范围内的硬件运行证据。其余
+十九项用于说明风险、缺口与差异，不能自动替代真机选择。
+
 ## 1. 历史 direct-form `pm.modeFilter`
 
 历史产品每边有 9 个独立二阶模态，固定系数传递函数为：
@@ -224,20 +284,30 @@ class 成本，但又不包含完整固件路径。
 和 modal 是尚未正常试听的保留候选。二者谁先试、是否重试 E/R 压力，以及最终选择
 Q/E/R/D/modal/都不选，当前记录均无决定。
 
-## 各类门禁的意义与边界
+## 二十项门禁的意义与边界
 
-| 门禁 | 回答什么 | 不能回答什么 |
-| --- | --- | --- |
-| Toolchain / artifact identity | 编译器、library、源、generated C++、header 和镜像是不是指定批次；后续能否复核同一对象 | 不说明算法正确、镜像已刷入或声音可用 |
-| 数学系数与 contraction | 反射系数是否在边界内，零输入状态能量是否按模型不增长，重复输入是否确定 | 不说明完整 Faust 图、浮点实现、UI 或声音一定正确 |
-| Generated structure 与 UI/control path | 昂贵运算位于 sample loop 还是 block path；状态数、mute branch、UI path 和 alternate tuning 是否保留 | 不说明 ESP32 deadline、wet 或听感；modal 的 UI 回归正是在这一层发现 |
-| Static response / pole / FFT / T60 / output bound | 固定条件下的中心频率、衰减、增益、主要峰、数值幅度和 E/R 响应差异 | 不说明快速手势瞬态或物理听感；R 的 16 Hz FFT 和 E 的 output bound 都不能单独作听感结论 |
-| Dynamic host determinism | rapid note、frequency/ratio jump、decay jump、mute-state 下是否 finite、可重复、状态继续 | 不说明真实 MCU 调度、I2S、MIDI、wet 或演奏手感 |
-| Generated-class deadline | 候选 audio class 在注册 stimulus 下的计算分布、输出 finite/varied 和 hard miss | 不包含完整产品路径，也不是正常固件试听 |
-| Complete-product deadline | instrumented 产品在真实 ESP32 audio path 的端到端分布与观察期 hard miss | 因包含 blocking I2S wait，不能当纯 DSP CPU profile；0 miss 不等于有 wet |
-| Image size / checksum / flash address | 镜像能否放入 app0、文件是否完整、写入是否限制在 `0x10000` | 不说明镜像已稳定运行、输出正确或设备当前仍是该镜像 |
-| MIDI parser / callback pressure | 大批 MIDI 是否解析、触发 callback/marker，是否 reset 或 stall | counters 正常不保证 audio wet；block-rate direct form 已证明这一区别 |
-| Wet/dry、mute、运行与用户试听 | 真实设备是否有目标 wet、对照 wet、dry/thru，mute 手感与用户对具体 exposure 的判断 | 一次确认不覆盖未试模式、长期压力、数值 parity、仓库安装或其他候选 |
+| # | 门禁 | 回答什么 | 不能回答什么 |
+| ---: | --- | --- | --- |
+| 1 | Toolchain / artifact identity | 编译器、library、源、generated C++、header 和镜像是否属于指定批次 | 不说明算法正确、镜像已刷入或声音可用 |
+| 2 | 数学系数边界 | pole radius、reflection coefficient、`sqrt` 定义域和数值是否有限 | 不说明完整浮点实现、产品集成或听感 |
+| 3 | Contraction / energy contract | 零输入状态能量是否不增长、尾音是否继续、状态是否 finite | 不说明输出归一化、完整产品或声音是否可用 |
+| 4 | 完整 Faust generation | 真实双通道、alternate-tuning 产品图能否生成完整 C++ | 不等于 Arduino build、刷写或运行 |
+| 5 | Generated structure | 昂贵运算位置、状态数、reciprocal、mute branch 是否符合设计 | 不说明 MCU 时序、wet 或听感 |
+| 6 | UI / control-path contract | 左右参数路径、`mode_changed`、alternate tuning 和固件接口是否保留 | 不说明参数在真机上的声音和手感 |
+| 7 | Static response / pole / T60 / gain | 固定条件下的中心频率、衰减、增益和历史 parity | 不说明换音瞬态或用户偏好 |
+| 8 | FFT peak identity | 单模态是否保持一个主要窄峰、是否出现显著次峰 | 有限 FFT estimate 不等于物理音高判断 |
+| 9 | Output-bound | 输出是否 finite，幅度是否超过注册的数值上限 | 超限不自动表示内部状态发散 |
+| 10 | Dynamic host determinism | rapid note、frequency/ratio/decay jump、mute-state 是否有界、连续、可重复 | 不包含 MCU、I2S、MIDI 或真实演奏手感 |
+| 11 | Generated-class deadline | 候选 audio class 的计算分布、输出 finite/varied 和 hard miss | 不包含完整产品路径，也不是正常固件试听 |
+| 12 | Complete-product deadline | instrumented 产品 audio path 的端到端分布和观察期 hard miss | 包含 blocking I2S wait，不能当纯 DSP CPU profile；0 miss 不等于有 wet |
+| 13 | Image size / checksum / build | 镜像能否放入 app0、checksum/validation hash 是否有效 | 不说明镜像已经刷入或稳定运行 |
+| 14 | Flash-address / recovery integrity | 写入是否限制在 `0x10000`，历史 app0 能否 verify/readback 恢复 | 不说明候选输出正确或用户喜欢 |
+| 15 | MIDI parser / callback pressure | 大批 MIDI 是否解析、触发 callback/marker，是否 reset 或 stall | counters 正常不保证 audio wet |
+| 16 | Wet/dry path | 目标 wet、另一侧 wet、dry/thru 是否在真实设备上可听 | 不覆盖 mute、所有模式、长期压力或音色判断 |
+| 17 | Mute/unmute | mute 是否只关目标输出、状态是否继续、unmute 后行为如何 | 结构证明不能替代物理行为，也不覆盖其他音频路径 |
+| 18 | Physical runnability | 完整候选是否能在硬件上启动、持续运行并保有其基本音频功能 | 不说明声音是否值得选择；这是当前唯一淘汰门禁 |
+| 19 | User listening | 用户对具体曝光中的 pitch、Decay、gain、动态和整体声音的判断 | 一次确认不覆盖未试模式、压力、mute 或其他候选 |
+| 20 | Installation boundary | 用户选定的候选是否成为 main 中一致的 DSP/generated product source | 设备当前刷了某镜像，不等于该候选已安装到仓库产品 |
 
 当前只让“完整方案能否在硬件上跑”淘汰候选，是因为其余指标描述不同设计取舍，不能
 替代真机。但这些门禁仍然有用：它们能指出 TF2NP 没有完整候选、block-rate direct
