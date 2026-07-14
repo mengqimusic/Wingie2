@@ -34,6 +34,23 @@ frequency_i = fundamental * ratio_i
 当前默认沿用 String、Bar 的 Note On、Tap Sequencer 和 Note Off 语义。若要改变这些
 演奏行为，必须先作为新的乐器设计决定讨论，不能由实现细节顺带改变。
 
+## Cave 配置整合
+
+同一个纯 HTML 页面也整合现有 Cave Mode 的调整，但不改变 Cave 的声音或存储语义：
+
+- 左右声道各自保留现有的 3 个 bank；
+- 每个 bank 保留 9 个频率和 9 个现有 mute 状态；
+- octave 继续选择当前 active bank；
+- alternate tuning、unquantized Cave 保存和硬件键盘/MIDI 调整继续沿用现有路径；
+- 页面提供左右声道、bank 和 active 状态选择，频率与 mute 编辑只作用于选定 bank；
+- 修改 active bank 时实时更新 DSP，修改 inactive bank 时先更新配置，等 octave 选择该
+  bank 时再应用；
+- Cave 继续使用现有 Preferences key 格式，不复制一套新的 Cave 存储；
+- Ratio Mode 不增加 mute，Cave 的 mute 仍是 Cave 专属状态。
+
+因此页面包含 Ratio 和 Cave 两个配置区：Ratio 是一个左右共用的 9-value profile，Cave
+是两侧各自的 `3 × (9 frequency + 9 mute)` 配置。
+
 ## 配置连接路线
 
 当前产品不采用 ESP32 SoftAP 作为配置入口。最终网页是可直接植入现有站点的单文件
@@ -114,5 +131,6 @@ c7773da4d11f06047fec7f9873287816706e6ff0395ec3750b93770ae19cdb06
 - Ratio Mode 的具体 LED 闪烁节奏；
 - 目标浏览器和站点 iframe 的串口权限配置；
 - 串口 framing、schema version、request/response 和错误返回格式；
+- Cave 页面中 Reset/factory restore 的具体语义；
 - profile 的导入、导出、Reset 和 Save 交互；
 - Preferences 数据格式、版本迁移与恢复默认值。
