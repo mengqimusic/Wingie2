@@ -1,5 +1,9 @@
 # Wingie2 Mode Filter 技术方案对比
 
+> 本文保留候选实验事实，不再承担最终选型。最终决定见
+> `docs/superpowers/results/2026-07-14-mode-filter-decision.md`；产品实现已由
+> `a22192a` 安装为全系数 block-rate rotation-damping modal bank。
+
 ## 结论先行
 
 八条路径中，真正进入当前真机试听池的是 block-rate decay direct form、Coupled Q、

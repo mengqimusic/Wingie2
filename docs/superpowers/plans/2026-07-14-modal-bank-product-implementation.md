@@ -1,5 +1,8 @@
 # Modal Bank 产品实施计划
 
+最终选型理由与替代方案取舍见
+`docs/superpowers/results/2026-07-14-mode-filter-decision.md`。
+
 ## 目标
 
 用已选定的全系数 block-rate rotation-damping modal bank 替换
