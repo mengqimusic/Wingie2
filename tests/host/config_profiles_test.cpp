@@ -7,6 +7,8 @@
 using namespace wingie_config;
 
 static void testFactoryProfile() {
+  assert(kRatioFrequencyMin == 16);
+  assert(kRatioFrequencyMax == 16000);
   RatioProfileState profile;
   setFactoryRatios(profile);
   assert(profile.revision == 0);

@@ -322,6 +322,8 @@ void control(void *pvParameters) {
   dsp.setParamValue("/Wingie/left/decay", 0.1);  // 最小 Startup Decay 避免开机声音过大
   dsp.setParamValue("/Wingie/right/decay", 0.1);
 
+  serial_config_ready = true;
+
   for (;;) {
     interrupts();
     currentMillis = millis();

@@ -182,6 +182,7 @@ uint32_t cave_config_revision[2][3] = {};
 bool cave_config_dirty[2][3] = {};
 
 wingie_config::RatioProfileState ratio_profile;
+volatile bool serial_config_ready = false;
 
 // alternate tunings
 static const float alt_tunings[8][12] = {

@@ -50,13 +50,21 @@ const char *parseErrorCode(wingie_serial::ParseErrorCode code) {
   }
 }
 
+void writeProtocolLine(const char *data, size_t length) {
+  char frame[wingie_serial::kMaxFrameBytes + 3];
+  frame[0] = '<';
+  memcpy(frame + 1, data, length);
+  frame[length + 1] = '\n';
+  Serial.write(reinterpret_cast<const uint8_t *>(frame), length + 2);
+}
+
 void sendJson(JsonResponse &response) {
   if (!response.valid) {
-    Serial.println("<{\"v\":1,\"id\":0,\"ok\":false,\"error\":{\"code\":\"response_too_large\"}}");
+    const char fallback[] = "{\"v\":1,\"id\":0,\"ok\":false,\"error\":{\"code\":\"response_too_large\"}}";
+    writeProtocolLine(fallback, sizeof(fallback) - 1);
     return;
   }
-  Serial.print('<');
-  Serial.println(response.data);
+  writeProtocolLine(response.data, response.length);
 }
 
 void sendError(uint32_t id, const char *code, const char *field, const char *message) {
@@ -125,8 +133,10 @@ void sendRatioProfile(uint32_t id) {
   response.append(",\"revision\":%lu,\"dirty\":%s},\"factory_profile\":{\"ratios\":",
                   static_cast<unsigned long>(ratio_profile.revision), ratio_profile.dirty ? "true" : "false");
   appendRatioArray(response, wingie_config::kDefaultRatios);
-  response.append("},\"limits\":{\"min\":%.3f,\"max\":%.3f,\"step\":%.3f}}",
-                  wingie_config::kRatioMin, wingie_config::kRatioMax, wingie_config::kRatioStep);
+  response.append("},\"limits\":{\"min\":%.3f,\"max\":%.3f,\"step\":%.3f,"
+                  "\"frequency_min\":%u,\"frequency_max\":%u}}",
+                  wingie_config::kRatioMin, wingie_config::kRatioMax, wingie_config::kRatioStep,
+                  wingie_config::kRatioFrequencyMin, wingie_config::kRatioFrequencyMax);
   sendJson(response);
 }
 
@@ -182,6 +192,10 @@ void processSerialConfigFrame() {
   wingie_serial::ParseError parseError;
   if (!wingie_serial::parseRequestLine(serialConfigFrame, serialConfigLength, request, parseError)) {
     sendError(request.id, parseErrorCode(parseError.code), nullptr, nullptr);
+    return;
+  }
+  if (!serial_config_ready) {
+    sendError(request.id, "busy", nullptr, "configuration is still loading");
     return;
   }
 
