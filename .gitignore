@@ -2,3 +2,5 @@ Wingie2-svg/
 .vscode/
 compile
 .worktrees/
+__pycache__/
+*.py[cod]
