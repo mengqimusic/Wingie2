@@ -77,6 +77,10 @@ void printMidiDiagnostics() {
                 dsp.getParamValue("/Wingie/right/poly_note_0"),
                 dsp.getParamValue("/Wingie/right/poly_note_1"),
                 dsp.getParamValue("/Wingie/right/poly_note_2"));
+  Serial.printf("ANTI_FEEDBACK enabled=%.0f energy_limit=%.6f rho_guard=%.6f\n",
+                dsp.getParamValue("anti_feedback_enabled"),
+                dsp.getParamValue("anti_feedback_energy_limit"),
+                dsp.getParamValue("anti_feedback_rho_guard"));
 }
 
 void serviceMidiDiagnostics() {
@@ -95,6 +99,14 @@ void serviceMidiDiagnostics() {
         break;
       case 'p':
         printMidiDiagnostics();
+        break;
+      case '0':
+        dsp.setParamValue("anti_feedback_enabled", 0);
+        Serial.println("ANTI_FEEDBACK enabled=0");
+        break;
+      case '1':
+        dsp.setParamValue("anti_feedback_enabled", 1);
+        Serial.println("ANTI_FEEDBACK enabled=1");
         break;
     }
   }
