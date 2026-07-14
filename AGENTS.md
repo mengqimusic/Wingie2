@@ -24,6 +24,8 @@ There is no enforced formatter. Match the surrounding file: Arduino tabs general
 
 No automated test suite or coverage threshold is configured. Every firmware change must pass the full Arduino CLI compile above. Hardware-facing changes also require a Wingie2 smoke test covering the affected audio channel, MIDI messages, I2C controls, tuning mode, or saved Preferences. Report compilation and physical-device validation separately; a successful build does not prove hardware behavior.
 
+Do not read back or back up the device's current app0 image before routine product or candidate flashing. If a rollback is needed, check out the known Git commit and rebuild it with the pinned toolchain; Git source and reproducible builds are the recovery source of truth.
+
 ## Commit & Pull Request Guidelines
 
 History favors short, imperative summaries such as `Fix typos in tuning readme` and `Retune caves to default`. Keep each commit focused on one concern. Pull requests should explain the behavior and motivation, identify Core or library requirements, link relevant issues, and report build plus hardware results. Include screenshots for Pure Data or TouchOSC changes and attach useful MIDI traces or serial logs when behavior changes.
