@@ -17,6 +17,9 @@ nHarmonics = 9;
 modalBlockSize = 32;
 modalBlockPulse = ba.time % modalBlockSize == 0;
 modalBlockHold(x) = x : control(modalBlockPulse) : ba.sAndH(modalBlockPulse);
+anti_feedback_enabled = hslider("../../anti_feedback_enabled", 1, 0, 1, 1);
+anti_feedback_energy_limit = hslider("../../anti_feedback_energy_limit", 1, 0.000001, 65536, 0.000001);
+anti_feedback_rho_guard = hslider("../../anti_feedback_rho_guard", 0.998435, 0.001, 0.999999, 0.000001);
 decay = hslider("decay", 5, 0.1, 10, 0.01) : si.smoo;
 output_gain = 1 : ba.lin2LogGain;
 left_thresh = hslider("left_thresh", 0.1, 0, 1, 0.01);
@@ -175,24 +178,45 @@ f(note, n, s) =
     cave(n)
   : ba.selectn(4, s);
 
-modalRotation(freq, rho, x) =
-    ((_<:_,_), (_<:_,_) : par(i, 4, _ <: _,_)
-      : (*(s), *(c), *(c), *(0-s))
-      :> (*(rho), (*(rho) : +(x)))) ~ cross
+controlledModalStep(sine, cosine, rhoUser, rhoGuard, energyLimit, enabled, x,
+                    qPrevious, pPrevious, peakPrevious,
+                    gainPrevious, rhoPrevious) = q, p, peak, inputGain, rho
 with {
-  theta = 2 * ma.PI * freq / ma.SR;
-  c = cos(theta) : modalBlockHold;
-  s = sin(theta) : modalBlockHold;
-  cross = _,_ <: !,_,_,!;
+  overload = max(1, peakPrevious / energyLimit)
+      : control(modalBlockPulse) : ba.sAndH(modalBlockPulse);
+  guardedRho = min(rhoUser, rhoGuard)
+      : control(modalBlockPulse) : ba.sAndH(modalBlockPulse);
+  boundaryGain = select2(enabled > 0, 1, 1 / overload);
+  boundaryRho = select2((enabled > 0) & (overload > 1),
+                        rhoUser, guardedRho);
+  inputGain = select2(modalBlockPulse, gainPrevious, boundaryGain);
+  rho = select2(modalBlockPulse, rhoPrevious, boundaryRho);
+  q = rho * (sine * pPrevious + cosine * qPrevious);
+  p = inputGain * x + rho * (cosine * pPrevious - sine * qPrevious);
+  energy = q * q + p * p;
+  peak = select2(modalBlockPulse, max(energy, peakPrevious), energy);
 };
 
-blockRateMode(freq, t60, gain) = modalRotation(freq, rho) : _,!
+controlledModalRotation(sine, cosine, rhoUser, rhoGuard,
+                        energyLimit, enabled, x) =
+    controlledModalStep(sine, cosine, rhoUser, rhoGuard,
+                        energyLimit, enabled, x) ~ si.bus(5);
+
+blockRateMode(freq, t60, gain, x) =
+    controlledModalRotation(s, c, rhoReference,
+                            anti_feedback_rho_guard,
+                            anti_feedback_energy_limit,
+                            anti_feedback_enabled, x)
+    : _,!,!,!,!
     : *(scale) * gain
     : attach(_, t60)
 with {
-  rhoReference = pow(0.001, 1.0 / (t60 * ma.SR));
-  rho = rhoReference : modalBlockHold;
-  scale = (2.0 / rhoReference) : modalBlockHold;
+  rhoUser = pow(0.001, 1.0 / (t60 * ma.SR));
+  rhoReference = rhoUser : modalBlockHold;
+  theta = 2 * ma.PI * freq / ma.SR;
+  c = cos(theta) : modalBlockHold;
+  s = sin(theta) : modalBlockHold;
+  scale = (2.0 / rhoUser) : modalBlockHold;
 };
 
 r(note, index, source) = blockRateMode(a, b, ba.lin2LogGain(c))
