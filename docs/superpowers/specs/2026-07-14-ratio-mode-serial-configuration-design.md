@@ -36,12 +36,12 @@ frequency_i = fundamental * ratio_i
 
 ## 配置连接路线
 
-当前产品不采用 ESP32 SoftAP 作为配置入口。网页运行在 USB 所连接的电脑上，通过
-串口与 Wingie2 通信：
+当前产品不采用 ESP32 SoftAP 作为配置入口。最终网页是可直接植入现有站点的单文件
+HTML，使用浏览器 Web Serial API 连接 USB 串口与 Wingie2：
 
 ```text
-browser
-  -> local serial bridge
+single HTML page
+  -> navigator.serial
   -> USB serial
   -> one validated RatioConfig command path
   -> control task
@@ -53,8 +53,12 @@ browser
 它先校验完整九 ratio snapshot，再把完整配置交给 control task 应用。实时编辑只改变
 运行值，用户明确执行 Save 时才写 Preferences。
 
-浏览器直接使用 Web Serial，还是由本地 Python HTTP/serial bridge 提供页面，尚待确认。
-无论选择哪一种，固件串口协议、校验和持久化语义必须相同。
+网页包含内联 HTML、CSS 和 JavaScript，不依赖 CDN、Node、Python、ESP32 WebServer 或
+无线网络。页面必须由用户手势触发串口选择；固件串口协议、校验和持久化语义独立于网页
+的视觉实现。
+
+Web Serial 的浏览器支持和安全上下文是产品使用前提。目标页面应优先运行在 HTTPS 的
+桌面 Chromium 浏览器中；`file://`、移动 Safari 或未授权的 iframe 不作为默认兼容目标。
 
 ## SoftAP 真机试验
 
@@ -108,7 +112,7 @@ c7773da4d11f06047fec7f9873287816706e6ff0395ec3750b93770ae19cdb06
 
 - ratio 的最小值、最大值、编辑精度和默认 profile；
 - Ratio Mode 的具体 LED 闪烁节奏；
-- Web Serial 与本地 Python bridge 的选择；
+- 目标浏览器和站点 iframe 的串口权限配置；
 - 串口 framing、schema version、request/response 和错误返回格式；
 - profile 的导入、导出、Reset 和 Save 交互；
 - Preferences 数据格式、版本迁移与恢复默认值。
