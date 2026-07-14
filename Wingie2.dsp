@@ -125,6 +125,8 @@ int_ratios(freq, n) = freq * (n + 1);
 
 req(n) = 62, 115, 218, 411, 777, 1500, 2800, 5200, 11000 : ba.selectn(nHarmonics, n);
 cave(n) = par(i, nHarmonics, vslider("cave_freq_%i", req(i), 50, 16000, 1)) : ba.selectn(nHarmonics, n);
+ratio_req(n) = 1, 2, 3, 4, 5, 6, 7, 8, 9 : ba.selectn(nHarmonics, n);
+ratio_mode(note, n) = note_freq(note) * (par(i, nHarmonics, hslider("../../ratio_mode_ratio_%i", ratio_req(i), 0.125, 32, 0.001)) : ba.selectn(nHarmonics, n));
 
 pn0 = vslider("poly_note_0", 36, 24, 96, 1);
 pn1 = vslider("poly_note_1", 36, 24, 96, 1);
@@ -173,10 +175,9 @@ f(note, n, s) =
     poly(n),
     strings(note, n),
     bars(note, n),
-    //odd_ratios(ba.midikey2hz(note), n),
-    //cymbal_808(n) * note_ratio(note - 48),
-    cave(n)
-  : ba.selectn(4, s);
+    cave(n),
+    ratio_mode(note, n)
+  : ba.selectn(5, s);
 
 controlledModalStep(sine, cosine, rhoUser, rhoGuard, energyLimit, enabled, x,
                     qPrevious, pPrevious, peakPrevious,
