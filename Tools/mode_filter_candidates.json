@@ -3,7 +3,6 @@
   "flash": {
     "chip": "esp32",
     "app_address": "0x10000",
-    "backup_size": "0x140000",
     "default_baud": 460800
   },
   "build_context": {
@@ -14,16 +13,16 @@
   },
   "candidates": [
     {
-      "id": "historical",
-      "name": "Historical direct form",
+      "id": "original",
+      "name": "Original direct form / Tap Sequencer fixed",
       "availability": "available",
-      "artifact": "historical-direct-form.bin",
-      "size": 1310720,
-      "sha256": "6da9aca6795cc6ef9352705089c5c8aef58a91dc51d37c73592052ef2fa8c36b",
-      "test_state": "已运行的历史/恢复固件",
-      "requires_allow_risky": false,
-      "note": "历史 direct-form 产品 app0 恢复读回；文件包含完整 0x140000-byte app0 区域。",
-      "source": "2026-07-12 recovery readback; source triplet remains the main product implementation"
+      "artifact": "original-tap-sequencer-fixed.bin",
+      "size": 1189744,
+      "sha256": "7d02277ac41c6f6c7825c53d9a2e118c92c4590c4a191c668f96c23c62f09d3b",
+      "test_state": "原始 direct form；64 音修复已验证",
+      "known_issue": true,
+      "note": "2e049bf 状态的已验证正常固件，保留原始 direct-form 声音并包含 64-note Tap Sequencer 修复；原始 direct-form 仍有高速变音高 MIDI 压力触发 wet/resonator 停止的已知故障。",
+      "source": "commit 2e049bf8e08ce5c2d50450cbd2bee3c2bc12ec99; tested normal image recorded in 2026-07-10 Tap Sequencer results"
     },
     {
       "id": "block-rate-direct",
@@ -32,9 +31,9 @@
       "artifact": "block-rate-decay-direct-form.bin",
       "size": 1189424,
       "sha256": "e110a3e11a362e06f1e5c37b467d33143d5b9b42b0eaebadafa7a9a4e89a3ce5",
-      "test_state": "已知物理 wet 失败",
-      "requires_allow_risky": true,
-      "note": "固件能运行，但既有真机实验中完整 wet 功能失效；仅用于复核历史结果。",
+      "test_state": "有 wet；高速压力曾触发故障",
+      "known_issue": true,
+      "note": "正常固件已在真机复测并确认有 wet；早期高速变音高 MIDI 压力曾触发所有 wet 消失，本次没有重跑该压力。",
       "source": "commit 5ede5556b71426ffd97be8d6ed1ff918d87566d7, normal product build"
     },
     {
@@ -45,7 +44,7 @@
       "size": null,
       "sha256": null,
       "test_state": "不可生成",
-      "requires_allow_risky": false,
+      "known_issue": false,
       "note": "固定 Faust 2.59.6 与完整 alternate-tuning 图发生 recursive composition A~B，未生成可烧录候选。",
       "source": "fix/mode-filter-tf2np experiment evidence"
     },
@@ -57,7 +56,7 @@
       "size": 1191248,
       "sha256": "aa054f2b97f5a0461a718991889594c6feec5120dfff73435d0b9ff201a4faeb",
       "test_state": "已正常试听",
-      "requires_allow_risky": false,
+      "known_issue": false,
       "note": "正常产品固件；用户已确认听起来没问题。",
       "source": "DSP bd3589c733af175605472b4ce20f4e2ac4dc038e5697c2e88d94ab5a3c1c7bff; generated C++ cc31d6bb16577bb26309c3cfec87d98e24d12055a310818c70f788dc766332bd"
     },
@@ -68,9 +67,9 @@
       "artifact": "coupled-d.bin",
       "size": 1191216,
       "sha256": "69a04121e3fb6f69f0a4e8b0072ad14b01332fe4d50a541cd1fcda82dfbf3e05",
-      "test_state": "正常固件尚未试听",
-      "requires_allow_risky": false,
-      "note": "正常产品固件，不含 benchmark instrumentation；需要本轮真机试听。",
+      "test_state": "已确认正常工作",
+      "known_issue": false,
+      "note": "不含 benchmark instrumentation 的正常产品固件已在真机确认正常工作。",
       "source": "DSP 8765f80597f8713b6a8434e3a26ba83dc8cc6a09b493db5bdfc1c88edbf1ff1f; generated C++ 56565327a397b561b6157cd273072c9380101ca473c50cc335ff94ad0b64da37"
     },
     {
@@ -80,9 +79,9 @@
       "artifact": "block-rate-modal-bank.bin",
       "size": 1189504,
       "sha256": "9f381eaa28592f8cd4636530d0203444c8fd4a52542844c1797fa92a68585f64",
-      "test_state": "正常固件尚未试听；已知 UI 路径回归",
-      "requires_allow_risky": true,
-      "note": "生成 UI 使用共享 /Wingie/mode_changed，产品代码查找左右路径；mode_changed 控制可能无效。",
+      "test_state": "已确认正常工作；旧日志有路径差异",
+      "known_issue": true,
+      "note": "正常产品固件已在真机确认正常工作；早期 instrumented log 曾记录共享 mode_changed 路径差异，尚无逐路径复测记录。",
       "source": "DSP 2ab02168ba7365a38973b633f05d2a30e0cac99479d1de28d0d72d56dd915b2f; generated C++ bc3118e041742dc52837ef153469f4bb44e63e8ffff10d9c191595a5c9540ee8"
     },
     {
@@ -93,7 +92,7 @@
       "size": 1192000,
       "sha256": "3f75faf17ada5b6106ff718b819caab4b0ecfee615c60e3e95e255bbacd1b6a6",
       "test_state": "已正常试听",
-      "requires_allow_risky": false,
+      "known_issue": false,
       "note": "正常产品固件；用户确认左右 wet 与 dry/thru 正常，音量明显高于 R。",
       "source": "DSP 8a263f033a8e2cf2b82778b660231486cdeeff52f241d6092a5c483a167926cc; generated C++ 6ce72feba061c30f714ee3b7cf3d71169cbe62f2f39e5e95c53df20971425bb5"
     },
@@ -105,7 +104,7 @@
       "size": 1190368,
       "sha256": "bc16f74e69ab0d99517fe51866eee0326666c52d3372ed488efe3e1f5e00fc05",
       "test_state": "已正常试听",
-      "requires_allow_risky": false,
+      "known_issue": false,
       "note": "正常产品固件；用户确认左右 wet 与 dry/thru 正常。",
       "source": "DSP 61332a727c48b31705f21534e567293bd326391e9180e8a5d3aebccd5d29cd8a; generated C++ a15689f123c9cb7e055a57135351cbd16d36f6c93adb1366869079f1d59e837e"
     }

@@ -11,7 +11,6 @@ import unittest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "Tools/flash_mode_filter_candidate.py"
-BACKUP_SIZE = 0x140000
 
 
 class FlashModeFilterCandidateTest(unittest.TestCase):
@@ -36,19 +35,14 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
                 args = sys.argv[1:]
                 with Path(os.environ["FAKE_ESPTOOL_LOG"]).open("a") as handle:
                     handle.write(json.dumps(args) + "\\n")
-                if "read_flash" in args:
-                    index = args.index("read_flash")
-                    size = int(args[index + 2], 0)
-                    output = Path(args[index + 3])
-                    output.write_bytes(b"\\xe9" + bytes(size - 1))
                 """
             ),
             encoding="utf-8",
         )
         self.esptool.chmod(0o755)
 
-        self.ready_bytes = b"\xe9ready-image"
-        self.risky_bytes = b"\xe9risky-image"
+        self.original_bytes = b"\xe9original-image"
+        self.known_issue_bytes = b"\xe9known-issue-image"
         self.manifest = self.root / "manifest.json"
         self.manifest.write_text(
             json.dumps(
@@ -57,12 +51,18 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
                     "flash": {
                         "chip": "esp32",
                         "app_address": "0x10000",
-                        "backup_size": "0x140000",
                         "default_baud": 460800,
                     },
                     "candidates": [
-                        self.candidate("ready", "ready.bin", self.ready_bytes, False),
-                        self.candidate("risky", "risky.bin", self.risky_bytes, True),
+                        self.candidate(
+                            "original", "original.bin", self.original_bytes, False
+                        ),
+                        self.candidate(
+                            "known-issue",
+                            "known-issue.bin",
+                            self.known_issue_bytes,
+                            True,
+                        ),
                         {
                             "id": "unavailable",
                             "name": "Unavailable",
@@ -71,7 +71,7 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
                             "size": None,
                             "sha256": None,
                             "test_state": "不可生成",
-                            "requires_allow_risky": False,
+                            "known_issue": False,
                             "note": "no complete image",
                             "source": "test",
                         },
@@ -80,14 +80,14 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
             ),
             encoding="utf-8",
         )
-        (self.cache / "ready.bin").write_bytes(self.ready_bytes)
-        (self.cache / "risky.bin").write_bytes(self.risky_bytes)
+        (self.cache / "original.bin").write_bytes(self.original_bytes)
+        (self.cache / "known-issue.bin").write_bytes(self.known_issue_bytes)
 
     def tearDown(self):
         self.temporary.cleanup()
 
     @staticmethod
-    def candidate(candidate_id, artifact, content, risky):
+    def candidate(candidate_id, artifact, content, known_issue):
         return {
             "id": candidate_id,
             "name": candidate_id.title(),
@@ -96,8 +96,8 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
             "size": len(content),
             "sha256": hashlib.sha256(content).hexdigest(),
             "test_state": "test",
-            "requires_allow_risky": risky,
-            "note": "known risk" if risky else "normal",
+            "known_issue": known_issue,
+            "note": "known issue" if known_issue else "normal",
             "source": "test",
         }
 
@@ -122,71 +122,80 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
             return []
         return [json.loads(line) for line in self.log.read_text().splitlines()]
 
-    def test_list_distinguishes_ready_risky_and_unavailable(self):
+    def test_list_distinguishes_ready_attention_and_unavailable(self):
         result = self.run_cli("list")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("ready\t就绪", result.stdout)
-        self.assertIn("risky\t就绪/风险", result.stdout)
+        self.assertIn("original\t就绪", result.stdout)
+        self.assertIn("known-issue\t就绪/注意", result.stdout)
         self.assertIn("unavailable\t不可用", result.stdout)
 
-    def test_flash_backs_up_before_app_only_write_and_verifies(self):
+    def test_repository_original_is_tap_sequencer_fixed_image(self):
+        manifest = json.loads(
+            (REPO_ROOT / "Tools/mode_filter_candidates.json").read_text()
+        )
+        original = next(
+            candidate
+            for candidate in manifest["candidates"]
+            if candidate["id"] == "original"
+        )
+        self.assertEqual(original["artifact"], "original-tap-sequencer-fixed.bin")
+        self.assertEqual(original["size"], 1_189_744)
+        self.assertEqual(
+            original["sha256"],
+            "7d02277ac41c6f6c7825c53d9a2e118c92c4590c4a191c668f96c23c62f09d3b",
+        )
+        self.assertIn("2e049bf", original["source"])
+
+    def test_flash_uses_one_write_session_and_no_separate_verify(self):
         result = self.run_cli(
             "flash",
-            "ready",
+            "original",
             "--port",
             str(self.port),
-            "--confirm",
-            "ready",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         commands = self.logged_commands()
         operations = [
             next(
                 operation
-                for operation in ("image_info", "read_flash", "write_flash", "verify_flash")
+                for operation in ("image_info", "write_flash", "verify_flash")
                 if operation in command
             )
             for command in commands
         ]
         self.assertEqual(
             operations,
-            ["image_info", "read_flash", "image_info", "write_flash", "verify_flash"],
+            ["image_info", "write_flash"],
         )
-        read = commands[1]
-        read_index = read.index("read_flash")
-        self.assertEqual(read[read_index + 1 : read_index + 3], ["0x10000", "0x140000"])
-        write = commands[3]
+        self.assertTrue(all("read_flash" not in command for command in commands))
+        self.assertTrue(all("verify_flash" not in command for command in commands))
+        write = commands[1]
+        self.assertEqual(write.count("hard_reset"), 1)
+        self.assertEqual(write[write.index("--after") + 1], "hard_reset")
         write_index = write.index("write_flash")
         self.assertEqual(write[write_index + 1 : write_index + 3], ["-z", "0x10000"])
-        verify = commands[4]
-        verify_index = verify.index("verify_flash")
-        self.assertEqual(verify[verify_index + 1], "0x10000")
 
     def test_bad_hash_refuses_before_running_esptool(self):
-        (self.cache / "ready.bin").write_bytes(b"tampered-data")
+        (self.cache / "original.bin").write_bytes(b"tampered-data")
         result = self.run_cli(
             "flash",
-            "ready",
+            "original",
             "--port",
             str(self.port),
-            "--confirm",
-            "ready",
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.log.exists())
 
-    def test_risky_candidate_requires_explicit_override(self):
+    def test_known_issue_candidate_needs_no_extra_override(self):
         result = self.run_cli(
             "flash",
-            "risky",
+            "known-issue",
             "--port",
             str(self.port),
-            "--confirm",
-            "risky",
         )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("--allow-risky", result.stderr)
-        self.assertFalse(self.log.exists())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("known issue", result.stdout)
+        self.assertNotIn("--allow-risky", result.stdout)
 
     def test_unavailable_candidate_is_never_flashable(self):
         result = self.run_cli(
@@ -194,75 +203,26 @@ class FlashModeFilterCandidateTest(unittest.TestCase):
             "unavailable",
             "--port",
             str(self.port),
-            "--confirm",
-            "unavailable",
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("没有可烧录镜像", result.stderr)
         self.assertFalse(self.log.exists())
 
-    def test_restore_backs_up_current_app_and_verifies_full_restore(self):
-        restore_image = self.root / "restore.app0.bin"
-        restore_image.write_bytes(b"\xe9" + bytes(BACKUP_SIZE - 1))
-        result = self.run_cli(
-            "restore",
-            str(restore_image),
-            "--port",
-            str(self.port),
-            "--confirm",
-            "restore",
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        commands = self.logged_commands()
-        operations = [
-            next(
-                operation
-                for operation in ("image_info", "read_flash", "write_flash", "verify_flash")
-                if operation in command
-            )
-            for command in commands
-        ]
-        self.assertEqual(
-            operations,
-            ["image_info", "read_flash", "image_info", "write_flash", "verify_flash"],
-        )
-        write = commands[3]
-        write_index = write.index("write_flash")
-        self.assertEqual(write[write_index + 3], str(restore_image.resolve()))
-        verify = commands[4]
-        verify_index = verify.index("verify_flash")
-        self.assertEqual(verify[verify_index + 2], str(restore_image.resolve()))
-
-    def test_backup_refuses_to_overwrite_existing_file(self):
-        output = self.root / "existing-backup.bin"
-        output.write_bytes(b"keep-me")
-        result = self.run_cli(
-            "backup",
-            "--port",
-            str(self.port),
-            "--output",
-            str(output),
-        )
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("拒绝覆盖", result.stderr)
-        self.assertEqual(output.read_bytes(), b"keep-me")
-        self.assertFalse(self.log.exists())
-
-    def test_dry_run_does_not_invoke_esptool_or_create_backup(self):
+    def test_dry_run_does_not_invoke_esptool(self):
         result = self.run_cli(
             "--dry-run",
             "flash",
-            "ready",
+            "original",
             "--port",
             str(self.port),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("read_flash 0x10000 0x140000", result.stdout)
         self.assertIn("write_flash -z 0x10000", result.stdout)
+        self.assertNotIn("read_flash", result.stdout)
+        self.assertNotIn("verify_flash", result.stdout)
         self.assertIn("演练完成：未读取或写入设备", result.stdout)
         self.assertNotIn("烧录完成", result.stdout)
         self.assertFalse(self.log.exists())
-        self.assertFalse((self.cache / "backups").exists())
 
 
 if __name__ == "__main__":

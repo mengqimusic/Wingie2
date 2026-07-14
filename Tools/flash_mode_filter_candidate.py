@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Safely install, inspect, flash, and restore Wingie2 mode-filter images."""
+"""Safely install, inspect, and flash Wingie2 mode-filter images."""
 
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import glob
 import hashlib
 import json
@@ -18,7 +17,7 @@ from typing import Any, Iterable
 
 
 APP_ADDRESS = 0x10000
-BACKUP_SIZE = 0x140000
+APP_MAX_SIZE = 0x140000
 DEFAULT_MANIFEST = Path(__file__).with_name("mode_filter_candidates.json")
 DEFAULT_CACHE = Path(
     os.environ.get(
@@ -61,9 +60,6 @@ def load_manifest(path: Path) -> dict[str, Any]:
     flash = data.get("flash", {})
     if parse_int(flash.get("app_address", -1)) != APP_ADDRESS:
         raise FlashError("安全边界错误：app_address 必须是 0x10000")
-    if parse_int(flash.get("backup_size", -1)) != BACKUP_SIZE:
-        raise FlashError("安全边界错误：backup_size 必须是 0x140000")
-
     candidates = data.get("candidates")
     if not isinstance(candidates, list):
         raise FlashError("候选清单缺少 candidates 数组")
@@ -106,7 +102,7 @@ def verify_candidate(candidate: dict[str, Any], path: Path) -> str:
         raise FlashError(
             f"{candidate['id']} 大小不符：期望 {expected_size}，实际 {actual_size}"
         )
-    if actual_size > BACKUP_SIZE:
+    if actual_size > APP_MAX_SIZE:
         raise FlashError(f"{candidate['id']} 超过 app0 边界 0x140000 bytes")
     actual_hash = sha256_file(path)
     if actual_hash != candidate.get("sha256"):
@@ -211,6 +207,8 @@ def esptool_connected(
         port,
         "--baud",
         str(baud),
+        "--after",
+        "hard_reset",
     ] + command
 
 
@@ -219,56 +217,6 @@ def image_info(prefix: list[str], chip: str, path: Path, dry_run: bool) -> None:
         esptool_offline(prefix, chip, ["image_info", str(path)]),
         dry_run,
     )
-
-
-def default_backup_path(cache_dir: Path, label: str) -> Path:
-    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
-    return cache_dir / "backups" / f"{stamp}-{label}.app0.bin"
-
-
-def backup_current(
-    *,
-    prefix: list[str],
-    chip: str,
-    port: str,
-    baud: int,
-    output: Path,
-    dry_run: bool,
-) -> tuple[Path, str | None]:
-    output = output.expanduser().resolve()
-    partial = output.with_name(output.name + ".partial")
-    print(f"备份当前 app0 -> {output}")
-    if not dry_run:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        if output.exists():
-            raise FlashError(f"备份目标已存在，拒绝覆盖：{output}")
-        if partial.exists():
-            raise FlashError(f"发现未完成的备份，拒绝覆盖：{partial}")
-    run_command(
-        esptool_connected(
-            prefix,
-            chip,
-            port,
-            baud,
-            ["read_flash", hex(APP_ADDRESS), hex(BACKUP_SIZE), str(partial)],
-        ),
-        dry_run,
-    )
-    if dry_run:
-        return output, None
-    if not partial.is_file() or partial.stat().st_size != BACKUP_SIZE:
-        actual = partial.stat().st_size if partial.exists() else "missing"
-        raise FlashError(f"备份大小错误：期望 {BACKUP_SIZE}，实际 {actual}")
-    os.replace(partial, output)
-    digest = sha256_file(output)
-    image_info(prefix, chip, output, False)
-    print(f"备份 SHA-256: {digest}")
-    return output, digest
-
-
-def require_confirmation(expected: str, supplied: str | None, dry_run: bool) -> None:
-    if not dry_run and supplied != expected:
-        raise FlashError(f"需要显式确认：添加 --confirm {expected}")
 
 
 def command_list(manifest: dict[str, Any], cache_dir: Path) -> int:
@@ -286,8 +234,8 @@ def command_list(manifest: dict[str, Any], cache_dir: Path) -> int:
                 except FlashError:
                     cache_state = "校验失败"
                 else:
-                    cache_state = "就绪/风险" if candidate.get(
-                        "requires_allow_risky"
+                    cache_state = "就绪/注意" if candidate.get(
+                        "known_issue"
                     ) else "就绪"
         print(
             f"{candidate['id']}\t{cache_state}\t"
@@ -355,28 +303,6 @@ def hardware_values(
     return prefix, chip, port, baud
 
 
-def command_backup(
-    args: argparse.Namespace,
-    manifest: dict[str, Any],
-    cache_dir: Path,
-) -> int:
-    prefix, chip, port, baud = hardware_values(args, manifest)
-    output = args.output or default_backup_path(cache_dir, "manual")
-    path, _ = backup_current(
-        prefix=prefix,
-        chip=chip,
-        port=port,
-        baud=baud,
-        output=output,
-        dry_run=args.dry_run,
-    )
-    if args.dry_run:
-        print(f"演练完成：未读取设备；计划备份到 {path}")
-    else:
-        print(f"备份完成：{path}")
-    return 0
-
-
 def command_flash(
     args: argparse.Namespace,
     manifest: dict[str, Any],
@@ -385,53 +311,10 @@ def command_flash(
     candidate = find_candidate(manifest, args.candidate)
     path = candidate_path(candidate, cache_dir)
     digest = verify_candidate(candidate, path)
-    if (
-        candidate.get("requires_allow_risky")
-        and not args.allow_risky
-        and not args.dry_run
-    ):
-        raise FlashError(
-            f"{candidate['id']} 有已知风险：{candidate['note']}\n"
-            "如仍需复核，添加 --allow-risky。"
-        )
-    require_confirmation(candidate["id"], args.confirm, args.dry_run)
     print(f"候选状态：{candidate['test_state']}")
     print(f"候选说明：{candidate['note']}")
     prefix, chip, port, baud = hardware_values(args, manifest)
     image_info(prefix, chip, path, args.dry_run)
-    backup_output = args.backup_output or default_backup_path(
-        cache_dir, f"before-{candidate['id']}"
-    )
-    backup_path, _ = backup_current(
-        prefix=prefix,
-        chip=chip,
-        port=port,
-        baud=baud,
-        output=backup_output,
-        dry_run=args.dry_run,
-    )
-    restore_command = [
-        sys.executable,
-        str(Path(__file__).resolve()),
-        "--cache-dir",
-        str(cache_dir),
-    ]
-    if args.esptool:
-        restore_command.extend(["--esptool", args.esptool])
-    restore_command.extend(
-        [
-            "restore",
-            str(backup_path),
-            "--port",
-            port,
-            "--baud",
-            str(baud),
-            "--confirm",
-            "restore",
-        ]
-    )
-    print("若写入后需要恢复，请执行：")
-    print(command_text(restore_command))
     run_command(
         esptool_connected(
             prefix,
@@ -442,78 +325,10 @@ def command_flash(
         ),
         args.dry_run,
     )
-    run_command(
-        esptool_connected(
-            prefix,
-            chip,
-            port,
-            baud,
-            ["verify_flash", hex(APP_ADDRESS), str(path)],
-        ),
-        args.dry_run,
-    )
     if args.dry_run:
         print(f"演练完成：未读取或写入设备。候选 {candidate['id']} ({digest})")
     else:
-        print(f"烧录完成：{candidate['id']} ({digest})")
-    return 0
-
-
-def command_restore(
-    args: argparse.Namespace,
-    manifest: dict[str, Any],
-    cache_dir: Path,
-) -> int:
-    source = args.backup.expanduser().resolve()
-    if not source.is_file():
-        raise FlashError(f"恢复文件不存在：{source}")
-    if source.stat().st_size != BACKUP_SIZE:
-        raise FlashError(
-            f"恢复文件必须是完整 0x140000-byte app0 备份；实际 {source.stat().st_size}"
-        )
-    digest = sha256_file(source)
-    require_confirmation("restore", args.confirm, args.dry_run)
-    prefix, chip, port, baud = hardware_values(args, manifest)
-    image_info(prefix, chip, source, args.dry_run)
-    safety_output = args.safety_backup_output or default_backup_path(
-        cache_dir, "before-restore"
-    )
-    safety_path, _ = backup_current(
-        prefix=prefix,
-        chip=chip,
-        port=port,
-        baud=baud,
-        output=safety_output,
-        dry_run=args.dry_run,
-    )
-    if args.dry_run:
-        print(f"计划在恢复前备份到：{safety_path}")
-    else:
-        print(f"恢复前的新备份：{safety_path}")
-    run_command(
-        esptool_connected(
-            prefix,
-            chip,
-            port,
-            baud,
-            ["write_flash", "-z", hex(APP_ADDRESS), str(source)],
-        ),
-        args.dry_run,
-    )
-    run_command(
-        esptool_connected(
-            prefix,
-            chip,
-            port,
-            baud,
-            ["verify_flash", hex(APP_ADDRESS), str(source)],
-        ),
-        args.dry_run,
-    )
-    if args.dry_run:
-        print(f"演练完成：未读取或写入设备。恢复源 {source} ({digest})")
-    else:
-        print(f"恢复完成：{source} ({digest})")
+        print(f"烧录完成并通过 esptool flash hash 校验：{candidate['id']} ({digest})")
     return 0
 
 
@@ -527,7 +342,8 @@ def build_parser() -> argparse.ArgumentParser:
         description="Wingie2 mode-filter 候选固件安全烧录工具",
         epilog=(
             "典型用法：先运行 list，再用 --dry-run flash <ID> 检查命令，"
-            "最后用 flash <ID> --confirm <ID> 烧录。"
+            "最后用 flash <ID> 烧录。write_flash 会校验 flash hash，"
+            "然后执行一次 hard reset 启动新固件。"
         ),
     )
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -549,26 +365,9 @@ def build_parser() -> argparse.ArgumentParser:
     install_parser.add_argument("candidate")
     install_parser.add_argument("image", type=Path)
 
-    backup_parser = subparsers.add_parser("backup", help="读取完整 app0 备份")
-    add_hardware_arguments(backup_parser)
-    backup_parser.add_argument("--output", type=Path)
-
-    flash_parser = subparsers.add_parser("flash", help="备份后烧录候选 app0")
+    flash_parser = subparsers.add_parser("flash", help="烧录并校验候选 app0")
     flash_parser.add_argument("candidate")
     add_hardware_arguments(flash_parser)
-    flash_parser.add_argument("--backup-output", type=Path)
-    flash_parser.add_argument("--confirm", help="必须与候选 ID 完全一致")
-    flash_parser.add_argument(
-        "--allow-risky",
-        action="store_true",
-        help="允许烧录有已知物理失败或 UI 回归的候选",
-    )
-
-    restore_parser = subparsers.add_parser("restore", help="备份当前状态后恢复 app0")
-    restore_parser.add_argument("backup", type=Path)
-    add_hardware_arguments(restore_parser)
-    restore_parser.add_argument("--safety-backup-output", type=Path)
-    restore_parser.add_argument("--confirm", help="必须为 restore")
     return parser
 
 
@@ -581,9 +380,7 @@ def main(argv: list[str] | None = None) -> int:
             "list": command_list,
             "inspect": command_inspect,
             "install": command_install,
-            "backup": command_backup,
             "flash": command_flash,
-            "restore": command_restore,
         }
         command = commands[args.command]
         if args.command == "list":
