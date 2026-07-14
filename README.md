@@ -6,6 +6,36 @@
 
 [**How to build programming environment**](https://github.com/mengqimusic/Wingie2#english) (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
 
+## Ratio / Cave USB 配置
+
+[`Tools/wingie_config.html`](Tools/wingie_config.html) 是可直接部署或植入现有网站的单文件
+配置页。CSS 与 JavaScript 全部内联，不需要 SoftAP、Wi‑Fi、CDN、Node 或 Python；浏览器
+通过 USB Web Serial 与 Wingie2 通信。
+
+1. 使用桌面版 Chrome、Edge 或其他支持 Web Serial 的 Chromium 浏览器，通过 HTTPS 打开页面；
+2. 关闭 Arduino Serial Monitor 等占用 Wingie2 串口的软件；
+3. 点击“连接 Wingie2”，选择对应的 USB 串口；
+4. Ratio 或 Cave 编辑完成后先点击 Apply，使它进入当前运行状态；
+5. 确认声音后点击“Save to Wingie2”，才会写入 flash 并在重启后保留。
+
+Ratio profile 由左右声道共用，Factory Ratio Reset 只改变运行状态，仍需另行 Save。
+Cave 保留左右各 3 个 bank 与逐共鸣器 mute；页面不提供 Cave factory reset。
+
+若页面放在 iframe 中，iframe 需要 `allow="serial"`，服务器也必须允许相应的
+`Permissions-Policy: serial=(self)`。Safari、Firefox、移动浏览器和非安全 HTTP 页面不在
+当前支持范围内。
+
+## Ratio / Cave USB Configuration
+
+[`Tools/wingie_config.html`](Tools/wingie_config.html) is a self-contained page that can be deployed
+or embedded directly. It uses USB Web Serial and has no SoftAP, Wi-Fi, CDN, Node, or Python
+dependency. Open it from an HTTPS origin in a desktop Chromium browser, connect the Wingie2 port,
+Apply edits to the running configuration, then use Save to write Ratio and Cave settings to flash.
+
+For an iframe, add `allow="serial"` and serve a compatible
+`Permissions-Policy: serial=(self)` header. Safari, Firefox, mobile browsers, and insecure HTTP
+origins are not supported.
+
 ## 编译过程 Compiling
 
 安装 [Faust](https://faustide.grame.fr/)  并将路径加入 PATH（osx）Install [Faust](https://faustide.grame.fr/)  and add it to PATH (osx) 

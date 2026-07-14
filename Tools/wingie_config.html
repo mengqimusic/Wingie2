@@ -1,0 +1,1548 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wingie2 Ratio / Cave Config</title>
+  <style>
+    #wingie-config {
+      --wg-bg: #111311;
+      --wg-panel: #191c19;
+      --wg-panel-raised: #202420;
+      --wg-line: #343a34;
+      --wg-line-strong: #4a524a;
+      --wg-text: #f2f1e9;
+      --wg-muted: #a6ada4;
+      --wg-accent: #d7ff4f;
+      --wg-accent-dark: #1e2607;
+      --wg-cyan: #70e6d3;
+      --wg-orange: #ffb45c;
+      --wg-red: #ff7d6e;
+      --wg-radius: 16px;
+      color: var(--wg-text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(215, 255, 79, 0.08), transparent 28rem),
+        linear-gradient(180deg, #151815 0%, var(--wg-bg) 38rem);
+      min-height: 100vh;
+      padding: 24px;
+      box-sizing: border-box;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.45;
+    }
+
+    #wingie-config * {
+      box-sizing: border-box;
+    }
+
+    #wingie-config button,
+    #wingie-config input {
+      font: inherit;
+    }
+
+    #wingie-config button {
+      color: inherit;
+    }
+
+    #wingie-config .wg-shell {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+    }
+
+    #wingie-config .wg-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    #wingie-config .wg-eyebrow {
+      margin: 0 0 6px;
+      color: var(--wg-accent);
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    #wingie-config h1,
+    #wingie-config h2,
+    #wingie-config p {
+      margin-top: 0;
+    }
+
+    #wingie-config h1 {
+      margin-bottom: 7px;
+      font-size: clamp(29px, 5vw, 48px);
+      line-height: 1;
+      letter-spacing: -0.045em;
+      font-weight: 760;
+    }
+
+    #wingie-config h2 {
+      margin-bottom: 5px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    #wingie-config .wg-subtitle,
+    #wingie-config .wg-help {
+      color: var(--wg-muted);
+    }
+
+    #wingie-config .wg-subtitle {
+      margin-bottom: 0;
+      max-width: 700px;
+    }
+
+    #wingie-config .wg-connect-cluster,
+    #wingie-config .wg-actions,
+    #wingie-config .wg-inline,
+    #wingie-config .wg-status-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #wingie-config .wg-status-row {
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    #wingie-config .wg-connection {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid var(--wg-line);
+      border-radius: 999px;
+      color: var(--wg-muted);
+      background: rgba(0, 0, 0, 0.16);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    #wingie-config .wg-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #656b65;
+      box-shadow: 0 0 0 4px rgba(101, 107, 101, 0.1);
+    }
+
+    #wingie-config .wg-connection[data-state="connecting"] .wg-dot {
+      background: var(--wg-orange);
+      box-shadow: 0 0 0 4px rgba(255, 180, 92, 0.12);
+      animation: wg-pulse 1s ease-in-out infinite;
+    }
+
+    #wingie-config .wg-connection[data-state="connected"] {
+      color: var(--wg-text);
+      border-color: rgba(112, 230, 211, 0.38);
+    }
+
+    #wingie-config .wg-connection[data-state="connected"] .wg-dot {
+      background: var(--wg-cyan);
+      box-shadow: 0 0 0 4px rgba(112, 230, 211, 0.12);
+    }
+
+    @keyframes wg-pulse {
+      50% { opacity: 0.35; }
+    }
+
+    #wingie-config .wg-button {
+      min-height: 40px;
+      padding: 0 15px;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 10px;
+      background: var(--wg-panel-raised);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease, transform 120ms ease;
+    }
+
+    #wingie-config .wg-button:hover:not(:disabled) {
+      border-color: #6c766c;
+      background: #292e29;
+    }
+
+    #wingie-config .wg-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    #wingie-config .wg-button:focus-visible,
+    #wingie-config .wg-tab:focus-visible,
+    #wingie-config .wg-segment:focus-visible,
+    #wingie-config input:focus-visible {
+      outline: 2px solid var(--wg-accent);
+      outline-offset: 2px;
+    }
+
+    #wingie-config .wg-button:disabled,
+    #wingie-config input:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
+    #wingie-config .wg-button-primary {
+      border-color: var(--wg-accent);
+      color: #151804;
+      background: var(--wg-accent);
+      font-weight: 720;
+    }
+
+    #wingie-config .wg-button-primary:hover:not(:disabled) {
+      border-color: #e3ff7e;
+      background: #e3ff7e;
+    }
+
+    #wingie-config .wg-button-quiet {
+      border-color: transparent;
+      background: transparent;
+      color: var(--wg-muted);
+    }
+
+    #wingie-config .wg-alert {
+      display: none;
+      margin: 0 0 16px;
+      padding: 11px 14px;
+      border: 1px solid var(--wg-line);
+      border-radius: 10px;
+      background: var(--wg-panel);
+      font-size: 14px;
+    }
+
+    #wingie-config .wg-alert[data-visible="true"] {
+      display: block;
+    }
+
+    #wingie-config .wg-alert[data-kind="success"] {
+      border-color: rgba(112, 230, 211, 0.42);
+      color: var(--wg-cyan);
+    }
+
+    #wingie-config .wg-alert[data-kind="error"] {
+      border-color: rgba(255, 125, 110, 0.52);
+      color: #ffc2ba;
+    }
+
+    #wingie-config .wg-alert[data-kind="warning"] {
+      border-color: rgba(255, 180, 92, 0.5);
+      color: #ffd19a;
+    }
+
+    #wingie-config .wg-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 5px;
+      width: min(430px, 100%);
+      padding: 5px;
+      margin-bottom: 16px;
+      border: 1px solid var(--wg-line);
+      border-radius: 13px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #wingie-config .wg-tab,
+    #wingie-config .wg-segment {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--wg-muted);
+      cursor: pointer;
+    }
+
+    #wingie-config .wg-tab[aria-selected="true"],
+    #wingie-config .wg-segment[aria-pressed="true"] {
+      color: var(--wg-text);
+      background: var(--wg-panel-raised);
+      box-shadow: inset 0 0 0 1px var(--wg-line);
+    }
+
+    #wingie-config .wg-panel[hidden] {
+      display: none;
+    }
+
+    #wingie-config .wg-card {
+      margin-bottom: 16px;
+      padding: clamp(16px, 3vw, 24px);
+      border: 1px solid var(--wg-line);
+      border-radius: var(--wg-radius);
+      background: rgba(25, 28, 25, 0.94);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
+    }
+
+    #wingie-config .wg-card-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    #wingie-config .wg-help {
+      margin-bottom: 0;
+      font-size: 14px;
+    }
+
+    #wingie-config .wg-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 0 9px;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 999px;
+      color: var(--wg-muted);
+      font-size: 11px;
+      font-weight: 760;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    #wingie-config .wg-badge[data-kind="live"] {
+      color: var(--wg-cyan);
+      border-color: rgba(112, 230, 211, 0.42);
+      background: rgba(112, 230, 211, 0.07);
+    }
+
+    #wingie-config .wg-badge[data-kind="pending"] {
+      color: var(--wg-orange);
+      border-color: rgba(255, 180, 92, 0.42);
+      background: rgba(255, 180, 92, 0.07);
+    }
+
+    #wingie-config .wg-badge[data-kind="draft"] {
+      color: var(--wg-accent);
+      border-color: rgba(215, 255, 79, 0.42);
+      background: rgba(215, 255, 79, 0.07);
+    }
+
+    #wingie-config .wg-note-state {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      min-width: min(340px, 100%);
+    }
+
+    #wingie-config .wg-note {
+      padding: 9px 11px;
+      border: 1px solid var(--wg-line);
+      border-radius: 9px;
+      background: rgba(0, 0, 0, 0.14);
+    }
+
+    #wingie-config .wg-note-label {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--wg-muted);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #wingie-config .wg-note-value {
+      display: block;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    #wingie-config .wg-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--wg-line);
+      border-radius: 12px;
+    }
+
+    #wingie-config table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #wingie-config th,
+    #wingie-config td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--wg-line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    #wingie-config tr:last-child td {
+      border-bottom: 0;
+    }
+
+    #wingie-config th {
+      color: var(--wg-muted);
+      background: rgba(0, 0, 0, 0.14);
+      font-size: 11px;
+      font-weight: 680;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    #wingie-config th:first-child,
+    #wingie-config td:first-child {
+      width: 54px;
+      text-align: center;
+      color: var(--wg-muted);
+    }
+
+    #wingie-config .wg-ratio-input,
+    #wingie-config .wg-frequency-input {
+      width: 132px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 8px;
+      color: var(--wg-text);
+      background: #111411;
+      text-align: right;
+    }
+
+    #wingie-config .wg-frequency-input {
+      width: 150px;
+    }
+
+    #wingie-config input:invalid {
+      border-color: var(--wg-red);
+    }
+
+    #wingie-config .wg-cent-value,
+    #wingie-config .wg-hz-value {
+      color: #d7ddd5;
+      font-size: 13px;
+    }
+
+    #wingie-config .wg-hz-clipped {
+      color: var(--wg-orange);
+    }
+
+    #wingie-config .wg-actions {
+      margin-top: 16px;
+    }
+
+    #wingie-config .wg-meta {
+      margin-left: auto;
+      color: var(--wg-muted);
+      font-size: 12px;
+    }
+
+    #wingie-config .wg-selector-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    #wingie-config .wg-segments {
+      display: inline-grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(82px, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--wg-line);
+      border-radius: 11px;
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    #wingie-config .wg-segment {
+      position: relative;
+      min-width: 0;
+    }
+
+    #wingie-config .wg-segment[data-active="true"]::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--wg-cyan);
+    }
+
+    #wingie-config .wg-mute-cell {
+      width: 130px;
+      text-align: center;
+    }
+
+    #wingie-config .wg-switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      vertical-align: middle;
+    }
+
+    #wingie-config .wg-switch input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    #wingie-config .wg-switch-track {
+      position: absolute;
+      inset: 0;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 999px;
+      background: #111411;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+
+    #wingie-config .wg-switch-track::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #8b928a;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    #wingie-config .wg-switch input:checked + .wg-switch-track {
+      border-color: rgba(255, 125, 110, 0.7);
+      background: rgba(255, 125, 110, 0.16);
+    }
+
+    #wingie-config .wg-switch input:checked + .wg-switch-track::after {
+      transform: translateX(20px);
+      background: var(--wg-red);
+    }
+
+    #wingie-config .wg-switch input:focus-visible + .wg-switch-track {
+      outline: 2px solid var(--wg-accent);
+      outline-offset: 2px;
+    }
+
+    #wingie-config .wg-data-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: center;
+    }
+
+    #wingie-config .wg-data-card .wg-actions {
+      margin-top: 0;
+      justify-content: flex-end;
+    }
+
+    #wingie-config .wg-state-summary {
+      margin: 6px 0 0;
+      color: var(--wg-muted);
+      font-size: 13px;
+    }
+
+    #wingie-config .wg-footer {
+      padding: 4px 2px 18px;
+      color: #798078;
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      #wingie-config {
+        padding: 16px;
+      }
+
+      #wingie-config .wg-header,
+      #wingie-config .wg-card-head,
+      #wingie-config .wg-data-card {
+        grid-template-columns: 1fr;
+      }
+
+      #wingie-config .wg-header {
+        align-items: start;
+      }
+
+      #wingie-config .wg-connect-cluster,
+      #wingie-config .wg-data-card .wg-actions {
+        justify-content: flex-start;
+      }
+
+      #wingie-config .wg-note-state {
+        min-width: 0;
+      }
+
+      #wingie-config .wg-meta {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #wingie-config *,
+      #wingie-config *::before,
+      #wingie-config *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin:0;background:#111311">
+  <main id="wingie-config">
+    <div class="wg-shell">
+      <header class="wg-header">
+        <div>
+          <p class="wg-eyebrow">Wingie2 Configuration</p>
+          <h1>Ratio / Cave</h1>
+          <p class="wg-subtitle">通过 USB 串口编辑共鸣器比例与 Cave bank。编辑先进入运行状态，只有 Save 才写入 flash。</p>
+        </div>
+        <div class="wg-connect-cluster">
+          <div id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">
+            <span class="wg-dot" aria-hidden="true"></span>
+            <span id="wg-connection-text">未连接</span>
+          </div>
+          <button id="wg-connect" class="wg-button wg-button-primary" type="button">连接 Wingie2</button>
+          <button id="wg-disconnect" class="wg-button" type="button" hidden>断开</button>
+        </div>
+      </header>
+
+      <div id="wg-alert" class="wg-alert" data-visible="false" data-kind="info" role="status" aria-live="polite"></div>
+
+      <nav class="wg-tabs" role="tablist" aria-label="配置区域">
+        <button id="wg-tab-ratio" class="wg-tab" type="button" role="tab" aria-selected="true" aria-controls="wg-panel-ratio">Ratio Mode</button>
+        <button id="wg-tab-cave" class="wg-tab" type="button" role="tab" aria-selected="false" aria-controls="wg-panel-cave">Cave Mode</button>
+      </nav>
+
+      <section id="wg-panel-ratio" class="wg-panel" role="tabpanel" aria-labelledby="wg-tab-ratio">
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div>
+              <div class="wg-inline">
+                <h2>共享 Ratio Profile</h2>
+                <span id="wg-ratio-badge" class="wg-badge">等待设备</span>
+              </div>
+              <p class="wg-help">左右声道共用这 9 个比例。Ratio 可低于 1；键盘与 MIDI 改变基频。</p>
+            </div>
+            <div class="wg-note-state" aria-label="当前基频">
+              <div class="wg-note">
+                <span class="wg-note-label">Left Fundamental</span>
+                <span id="wg-left-note" class="wg-note-value">—</span>
+              </div>
+              <div class="wg-note">
+                <span class="wg-note-label">Right Fundamental</span>
+                <span id="wg-right-note" class="wg-note-value">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="wg-table-wrap">
+            <table aria-label="Ratio profile">
+              <thead>
+                <tr>
+                  <th>Res.</th>
+                  <th>Ratio</th>
+                  <th>Interval</th>
+                  <th>Left Hz</th>
+                  <th>Right Hz</th>
+                </tr>
+              </thead>
+              <tbody id="wg-ratio-rows"></tbody>
+            </table>
+          </div>
+
+          <div class="wg-actions">
+            <button id="wg-apply-ratio" class="wg-button wg-button-primary" type="button" disabled>Apply Ratio</button>
+            <button id="wg-reset-ratio" class="wg-button" type="button" disabled>恢复 Factory Ratio</button>
+            <span id="wg-ratio-meta" class="wg-meta">范围由设备连接后提供</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="wg-panel-cave" class="wg-panel" role="tabpanel" aria-labelledby="wg-tab-cave" hidden>
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div>
+              <div class="wg-inline">
+                <h2>Cave Banks</h2>
+                <span id="wg-cave-badge" class="wg-badge">等待设备</span>
+              </div>
+              <p class="wg-help">左右各有 3 个 bank。当前 active bank 的修改立即作用于声音，其他 bank 在八度开关选中后生效。</p>
+            </div>
+          </div>
+
+          <div class="wg-selector-row">
+            <div id="wg-side-selector" class="wg-segments" aria-label="Cave 声道">
+              <button class="wg-segment" type="button" data-side="left" aria-pressed="true">Left</button>
+              <button class="wg-segment" type="button" data-side="right" aria-pressed="false">Right</button>
+            </div>
+            <div id="wg-bank-selector" class="wg-segments" aria-label="Cave bank">
+              <button class="wg-segment" type="button" data-bank="0" aria-pressed="true">Bank 1</button>
+              <button class="wg-segment" type="button" data-bank="1" aria-pressed="false">Bank 2</button>
+              <button class="wg-segment" type="button" data-bank="2" aria-pressed="false">Bank 3</button>
+            </div>
+          </div>
+
+          <div class="wg-table-wrap">
+            <table aria-label="Cave bank">
+              <thead>
+                <tr>
+                  <th>Res.</th>
+                  <th>Frequency Hz</th>
+                  <th class="wg-mute-cell">Mute</th>
+                </tr>
+              </thead>
+              <tbody id="wg-cave-rows"></tbody>
+            </table>
+          </div>
+
+          <div class="wg-actions">
+            <button id="wg-apply-cave" class="wg-button wg-button-primary" type="button" disabled>Apply This Bank</button>
+            <span id="wg-cave-meta" class="wg-meta">范围由设备连接后提供</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="wg-card wg-data-card" aria-labelledby="wg-data-title">
+        <div>
+          <h2 id="wg-data-title">配置状态</h2>
+          <p id="wg-state-summary" class="wg-state-summary">连接设备后可应用、保存、导入或导出完整 Ratio / Cave 配置。</p>
+        </div>
+        <div class="wg-actions">
+          <button id="wg-apply-all" class="wg-button" type="button" disabled>Apply All Edits</button>
+          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled>Save to Wingie2</button>
+          <button id="wg-refresh" class="wg-button" type="button" disabled>重新读取</button>
+          <button id="wg-export" class="wg-button" type="button" disabled>Export JSON</button>
+          <button id="wg-import" class="wg-button" type="button" disabled>Import JSON</button>
+          <input id="wg-import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+      </section>
+
+      <footer class="wg-footer">需要桌面版 Chromium 浏览器与 HTTPS 安全上下文；页面不会使用 Wi‑Fi、网络请求或外部资源。</footer>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const root = document.getElementById("wingie-config");
+      const sides = ["left", "right"];
+      const ratioCount = 9;
+      const caveBankCount = 3;
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+
+      const elements = {
+        connection: root.querySelector("#wg-connection"),
+        connectionText: root.querySelector("#wg-connection-text"),
+        connect: root.querySelector("#wg-connect"),
+        disconnect: root.querySelector("#wg-disconnect"),
+        alert: root.querySelector("#wg-alert"),
+        ratioRows: root.querySelector("#wg-ratio-rows"),
+        caveRows: root.querySelector("#wg-cave-rows"),
+        ratioBadge: root.querySelector("#wg-ratio-badge"),
+        caveBadge: root.querySelector("#wg-cave-badge"),
+        ratioMeta: root.querySelector("#wg-ratio-meta"),
+        caveMeta: root.querySelector("#wg-cave-meta"),
+        leftNote: root.querySelector("#wg-left-note"),
+        rightNote: root.querySelector("#wg-right-note"),
+        applyRatio: root.querySelector("#wg-apply-ratio"),
+        resetRatio: root.querySelector("#wg-reset-ratio"),
+        applyCave: root.querySelector("#wg-apply-cave"),
+        applyAll: root.querySelector("#wg-apply-all"),
+        save: root.querySelector("#wg-save"),
+        refresh: root.querySelector("#wg-refresh"),
+        export: root.querySelector("#wg-export"),
+        import: root.querySelector("#wg-import"),
+        importFile: root.querySelector("#wg-import-file"),
+        stateSummary: root.querySelector("#wg-state-summary"),
+        sideSelector: root.querySelector("#wg-side-selector"),
+        bankSelector: root.querySelector("#wg-bank-selector")
+      };
+
+      const state = {
+        port: null,
+        reader: null,
+        readTask: null,
+        writeChain: Promise.resolve(),
+        inputBuffer: "",
+        pending: new Map(),
+        nextId: 1,
+        connected: false,
+        closing: false,
+        pollTimer: null,
+        ratio: null,
+        cave: {left: [null, null, null], right: [null, null, null]},
+        status: null,
+        selectedSide: "left",
+        selectedBank: 0
+      };
+
+      class ProtocolError extends Error {
+        constructor(response) {
+          const details = response && response.error ? response.error : {};
+          super(details.message || details.code || "设备拒绝了请求");
+          this.name = "ProtocolError";
+          this.code = details.code || "protocol_error";
+          this.field = details.field || "";
+        }
+      }
+
+      function setAlert(message, kind = "info") {
+        elements.alert.textContent = message;
+        elements.alert.dataset.kind = kind;
+        elements.alert.dataset.visible = message ? "true" : "false";
+      }
+
+      function setConnection(stage, label) {
+        elements.connection.dataset.state = stage;
+        elements.connectionText.textContent = label;
+        elements.connect.hidden = stage === "connected" || stage === "connecting";
+        elements.disconnect.hidden = stage !== "connected";
+      }
+
+      function formatError(error) {
+        if (error && error.code === "revision_conflict") return "设备配置已被其他操作修改。保留了本地编辑，请重新读取后再确认覆盖。";
+        if (error && error.code === "invalid_ratio") return "Ratio 超出设备范围或精度不符合设备要求。";
+        if (error && error.code === "invalid_cave_bank") return "Cave bank 中有频率超出设备范围。";
+        if (error && error.name === "NotFoundError") return "没有选择串口设备。";
+        if (error && error.name === "SecurityError") return "浏览器拒绝串口权限。请使用 HTTPS 页面，并确认 iframe 允许 serial。";
+        if (error && error.name === "NetworkError") return "串口已被占用，或设备在连接过程中断开。";
+        return error && error.message ? error.message : "发生未知错误。";
+      }
+
+      function delay(milliseconds) {
+        return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+      }
+
+      function assertArray(value, length, name) {
+        if (!Array.isArray(value) || value.length !== length) throw new Error(`${name} 数据格式不兼容。`);
+      }
+
+      function createRatioRows() {
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < ratioCount; index += 1) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><input class="wg-ratio-input" data-index="${index}" type="number" inputmode="decimal" aria-label="Resonator ${index + 1} ratio" disabled></td>
+            <td><span class="wg-cent-value" data-cents="${index}">—</span></td>
+            <td><span class="wg-hz-value" data-side="left" data-hz="${index}">—</span></td>
+            <td><span class="wg-hz-value" data-side="right" data-hz="${index}">—</span></td>`;
+          fragment.appendChild(row);
+        }
+        elements.ratioRows.appendChild(fragment);
+      }
+
+      function createCaveRows() {
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < ratioCount; index += 1) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><input class="wg-frequency-input" data-index="${index}" type="number" inputmode="numeric" step="1" aria-label="Resonator ${index + 1} frequency" disabled></td>
+            <td class="wg-mute-cell">
+              <label class="wg-switch" aria-label="Mute resonator ${index + 1}">
+                <input class="wg-mute-input" data-index="${index}" type="checkbox" disabled>
+                <span class="wg-switch-track"></span>
+              </label>
+            </td>`;
+          fragment.appendChild(row);
+        }
+        elements.caveRows.appendChild(fragment);
+      }
+
+      function rejectPending(error) {
+        for (const pending of state.pending.values()) {
+          window.clearTimeout(pending.timer);
+          pending.reject(error);
+        }
+        state.pending.clear();
+      }
+
+      function handleProtocolLine(line) {
+        const clean = line.endsWith("\r") ? line.slice(0, -1) : line;
+        if (!clean.startsWith("<")) return;
+        let response;
+        try {
+          response = JSON.parse(clean.slice(1));
+        } catch (error) {
+          setAlert("设备返回了无法解析的协议响应。", "error");
+          return;
+        }
+        const pending = state.pending.get(response.id);
+        if (!pending) return;
+        state.pending.delete(response.id);
+        window.clearTimeout(pending.timer);
+        if (response.ok) pending.resolve(response);
+        else pending.reject(new ProtocolError(response));
+      }
+
+      async function readLoop() {
+        const reader = state.port.readable.getReader();
+        state.reader = reader;
+        try {
+          while (true) {
+            const {value, done} = await reader.read();
+            if (done) break;
+            state.inputBuffer += decoder.decode(value, {stream: true});
+            if (state.inputBuffer.length > 8192) state.inputBuffer = state.inputBuffer.slice(-4096);
+            let newline = state.inputBuffer.indexOf("\n");
+            while (newline >= 0) {
+              const line = state.inputBuffer.slice(0, newline);
+              state.inputBuffer = state.inputBuffer.slice(newline + 1);
+              handleProtocolLine(line);
+              newline = state.inputBuffer.indexOf("\n");
+            }
+          }
+        } catch (error) {
+          if (!state.closing) setAlert(`串口读取中断：${formatError(error)}`, "error");
+        } finally {
+          reader.releaseLock();
+          if (state.reader === reader) state.reader = null;
+          if (!state.closing) transportLost();
+        }
+      }
+
+      function sendLine(line) {
+        const operation = state.writeChain.then(async () => {
+          if (!state.port || !state.port.writable) throw new Error("串口未连接。");
+          const writer = state.port.writable.getWriter();
+          try {
+            await writer.write(encoder.encode(line));
+          } finally {
+            writer.releaseLock();
+          }
+        });
+        state.writeChain = operation.catch(() => undefined);
+        return operation;
+      }
+
+      function request(operation, payload = {}, timeoutMilliseconds = 3500) {
+        if (!state.port) return Promise.reject(new Error("请先连接 Wingie2。"));
+        const id = state.nextId;
+        state.nextId = state.nextId >= 0xffffffff ? 1 : state.nextId + 1;
+        const body = {v: 1, id, op: operation, ...payload};
+        const result = new Promise((resolve, reject) => {
+          const timer = window.setTimeout(() => {
+            state.pending.delete(id);
+            reject(new Error(`设备没有响应 ${operation} 请求。`));
+          }, timeoutMilliseconds);
+          state.pending.set(id, {resolve, reject, timer});
+        });
+        sendLine(`@${JSON.stringify(body)}\n`).catch((error) => {
+          const pending = state.pending.get(id);
+          if (!pending) return;
+          state.pending.delete(id);
+          window.clearTimeout(pending.timer);
+          pending.reject(error);
+        });
+        return result;
+      }
+
+      function applyRatioPayload(response) {
+        assertArray(response.profile && response.profile.ratios, ratioCount, "Ratio");
+        assertArray(response.factory_profile && response.factory_profile.ratios, ratioCount, "Factory Ratio");
+        const values = response.profile.ratios.map(Number);
+        const factory = response.factory_profile.ratios.map(Number);
+        if (!values.every(Number.isFinite) || !factory.every(Number.isFinite)) throw new Error("设备返回了无效的 Ratio 数据。");
+        const limits = response.limits || {};
+        const required = [limits.min, limits.max, limits.step, limits.frequency_min, limits.frequency_max];
+        if (!required.every(Number.isFinite)) throw new Error("设备没有返回完整的 Ratio limits。请更新固件。");
+        state.ratio = {
+          values,
+          draft: values.map(String),
+          revision: Number(response.profile.revision),
+          dirty: Boolean(response.profile.dirty),
+          local: false,
+          factory,
+          limits: {
+            min: Number(limits.min),
+            max: Number(limits.max),
+            step: Number(limits.step),
+            frequencyMin: Number(limits.frequency_min),
+            frequencyMax: Number(limits.frequency_max)
+          }
+        };
+      }
+
+      function applyCavePayload(response) {
+        if (!sides.includes(response.side) || !Number.isInteger(response.bank) || response.bank < 0 || response.bank >= caveBankCount) {
+          throw new Error("设备返回了无效的 Cave bank 标识。");
+        }
+        assertArray(response.frequencies, ratioCount, "Cave frequency");
+        assertArray(response.mute, ratioCount, "Cave mute");
+        const frequencies = response.frequencies.map(Number);
+        if (!frequencies.every(Number.isInteger) || !response.mute.every((value) => typeof value === "boolean")) {
+          throw new Error("设备返回了无效的 Cave bank 数据。");
+        }
+        const limits = response.limits || {};
+        if (!Number.isFinite(limits.min) || !Number.isFinite(limits.max)) throw new Error("设备没有返回 Cave limits。");
+        state.cave[response.side][response.bank] = {
+          frequencies,
+          draftFrequencies: frequencies.map(String),
+          mute: response.mute.slice(),
+          draftMute: response.mute.slice(),
+          revision: Number(response.revision),
+          dirty: Boolean(response.dirty),
+          local: false,
+          active: Boolean(response.active),
+          limits: {min: Number(limits.min), max: Number(limits.max)}
+        };
+      }
+
+      async function loadRatio() {
+        applyRatioPayload(await request("get"));
+      }
+
+      async function loadCaveBank(side, bank) {
+        applyCavePayload(await request("get_cave", {side, bank}));
+      }
+
+      async function refreshStatus() {
+        const response = await request("status", {}, 2500);
+        state.status = response;
+        renderStatus();
+        renderSelectors();
+        renderEffectiveFrequencies();
+      }
+
+      async function refreshAll() {
+        setAlert("正在读取 Ratio 与 6 个 Cave banks…", "info");
+        await loadRatio();
+        await Promise.all(sides.flatMap((side) => [0, 1, 2].map((bank) => loadCaveBank(side, bank))));
+        await refreshStatus();
+        renderAll();
+        setAlert("已读取设备当前配置。", "success");
+      }
+
+      async function handshake() {
+        let lastError = null;
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          try {
+            const hello = await request("hello", {}, 1300);
+            if (hello.device !== "Wingie2" || hello.config_schema !== 1) throw new Error("所选设备不是兼容的 Wingie2 固件。");
+            return;
+          } catch (error) {
+            lastError = error;
+            await delay(550);
+          }
+        }
+        throw lastError || new Error("无法完成 Wingie2 握手。");
+      }
+
+      async function connect() {
+        if (!("serial" in navigator)) {
+          setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome、Edge 或其他 Chromium 浏览器。", "error");
+          return;
+        }
+        elements.connect.disabled = true;
+        setConnection("connecting", "正在连接…");
+        setAlert("请选择 Wingie2 的 USB 串口。", "info");
+        try {
+          state.port = await navigator.serial.requestPort();
+          state.closing = false;
+          state.inputBuffer = "";
+          await state.port.open({baudRate: 115200, bufferSize: 1024});
+          state.readTask = readLoop();
+          await handshake();
+          state.connected = true;
+          setConnection("connected", "Wingie2 已连接");
+          await refreshAll();
+          state.pollTimer = window.setInterval(() => {
+            if (state.connected && state.pending.size === 0) refreshStatus().catch(() => undefined);
+          }, 1500);
+        } catch (error) {
+          setAlert(formatError(error), "error");
+          await disconnect(false);
+        } finally {
+          elements.connect.disabled = false;
+          updateControls();
+        }
+      }
+
+      function transportLost() {
+        if (state.closing) return;
+        state.connected = false;
+        state.port = null;
+        state.readTask = null;
+        if (state.pollTimer) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+        rejectPending(new Error("设备已断开。"));
+        setConnection("disconnected", "设备已断开");
+        updateControls();
+      }
+
+      async function disconnect(showMessage = true) {
+        state.closing = true;
+        state.connected = false;
+        if (state.pollTimer) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+        rejectPending(new Error("串口已关闭。"));
+        try {
+          if (state.reader) await state.reader.cancel();
+          if (state.readTask) await state.readTask.catch(() => undefined);
+          if (state.port) await state.port.close();
+        } catch (error) {
+          if (showMessage) setAlert(formatError(error), "error");
+        } finally {
+          state.reader = null;
+          state.readTask = null;
+          state.port = null;
+          state.closing = false;
+          setConnection("disconnected", "未连接");
+          if (showMessage) setAlert("已断开 Wingie2。", "info");
+          updateControls();
+        }
+      }
+
+      function readRatioDraft() {
+        if (!state.ratio) throw new Error("尚未读取 Ratio profile。");
+        const {min, max, step} = state.ratio.limits;
+        return state.ratio.draft.map((raw, index) => {
+          const value = Number(raw);
+          if (!Number.isFinite(value) || value < min || value > max) throw new Error(`Ratio ${index + 1} 必须在 ${min}–${max} 之间。`);
+          const canonical = Math.round(value / step) * step;
+          if (Math.abs(value - canonical) > step * 0.51) throw new Error(`Ratio ${index + 1} 的精度必须是 ${step}。`);
+          return Number(canonical.toFixed(6));
+        });
+      }
+
+      function currentCaveBank() {
+        return state.cave[state.selectedSide][state.selectedBank];
+      }
+
+      function readCaveDraft(bank = currentCaveBank()) {
+        if (!bank) throw new Error("尚未读取 Cave bank。");
+        const frequencies = bank.draftFrequencies.map((raw, index) => {
+          const value = Number(raw);
+          if (!Number.isInteger(value) || value < bank.limits.min || value > bank.limits.max) {
+            throw new Error(`Cave frequency ${index + 1} 必须是 ${bank.limits.min}–${bank.limits.max} Hz 的整数。`);
+          }
+          return value;
+        });
+        return {frequencies, mute: bank.draftMute.map(Boolean)};
+      }
+
+      async function applyRatio(announce = true) {
+        const ratios = readRatioDraft();
+        const response = await request("set", {expected_revision: state.ratio.revision, ratios});
+        state.ratio.values = ratios;
+        state.ratio.draft = ratios.map(String);
+        state.ratio.revision = Number(response.revision);
+        state.ratio.dirty = true;
+        state.ratio.local = false;
+        renderRatio();
+        updateControls();
+        if (announce) setAlert("Ratio profile 已应用到左右声道的运行状态，尚未写入 flash。", "success");
+      }
+
+      async function applyCave(side = state.selectedSide, bankIndex = state.selectedBank, announce = true) {
+        const bank = state.cave[side][bankIndex];
+        const values = readCaveDraft(bank);
+        const response = await request("set_cave", {
+          side,
+          bank: bankIndex,
+          expected_revision: bank.revision,
+          frequencies: values.frequencies,
+          mute: values.mute
+        });
+        bank.frequencies = values.frequencies;
+        bank.draftFrequencies = values.frequencies.map(String);
+        bank.mute = values.mute;
+        bank.draftMute = values.mute.slice();
+        bank.revision = Number(response.revision);
+        bank.dirty = true;
+        bank.local = false;
+        if (side === state.selectedSide && bankIndex === state.selectedBank) renderCave();
+        updateControls();
+        if (announce) {
+          const active = activeBank(side) === bankIndex;
+          setAlert(active ? "Cave bank 已应用并立即作用于当前声音，尚未写入 flash。" : "Cave bank 已应用；该 bank 在八度开关选中后作用于声音，尚未写入 flash。", "success");
+        }
+      }
+
+      async function applyAll() {
+        const localCaves = sides.flatMap((side) => [0, 1, 2]
+          .filter((bank) => state.cave[side][bank] && state.cave[side][bank].local)
+          .map((bank) => ({side, bank})));
+        const total = (state.ratio && state.ratio.local ? 1 : 0) + localCaves.length;
+        if (!total) return;
+        elements.applyAll.disabled = true;
+        setAlert(`正在应用 ${total} 组本地编辑…`, "info");
+        try {
+          if (state.ratio.local) await applyRatio(false);
+          for (const item of localCaves) await applyCave(item.side, item.bank, false);
+          setAlert("全部本地编辑已进入设备运行状态，尚未写入 flash。", "success");
+        } catch (error) {
+          setAlert(`部分编辑可能已经应用。${formatError(error)}`, "error");
+        } finally {
+          updateControls();
+        }
+      }
+
+      async function resetRatio() {
+        if (!window.confirm("将运行中的 Ratio profile 恢复为 factory 值？此操作不会立即写入 flash。")) return;
+        try {
+          await request("reset");
+          await loadRatio();
+          renderRatio();
+          updateControls();
+          setAlert("已恢复 factory Ratio。点击 Save 才会持久化。", "success");
+        } catch (error) {
+          setAlert(formatError(error), "error");
+        }
+      }
+
+      function localEditCount() {
+        let count = state.ratio && state.ratio.local ? 1 : 0;
+        for (const side of sides) {
+          for (const bank of state.cave[side]) if (bank && bank.local) count += 1;
+        }
+        return count;
+      }
+
+      function deviceDirtyCount() {
+        let count = state.ratio && state.ratio.dirty ? 1 : 0;
+        for (const side of sides) {
+          for (const bank of state.cave[side]) if (bank && bank.dirty) count += 1;
+        }
+        return count;
+      }
+
+      async function saveConfiguration() {
+        const local = localEditCount();
+        if (local && !window.confirm(`还有 ${local} 组本地编辑没有 Apply，它们不会被保存。仍保存设备当前运行配置？`)) return;
+        elements.save.disabled = true;
+        setAlert("正在写入 Wingie2 flash…", "info");
+        try {
+          await request("save", {}, 6000);
+          if (state.ratio) state.ratio.dirty = false;
+          for (const side of sides) {
+            for (const bank of state.cave[side]) if (bank) bank.dirty = false;
+          }
+          renderAll();
+          setAlert("Ratio 与 Cave 运行配置已保存到 Wingie2。", "success");
+        } catch (error) {
+          setAlert(formatError(error), "error");
+        } finally {
+          updateControls();
+        }
+      }
+
+      function exportConfiguration() {
+        try {
+          const ratios = readRatioDraft();
+          const cave = {left: [], right: []};
+          for (const side of sides) {
+            cave[side] = state.cave[side].map((bank) => readCaveDraft(bank));
+          }
+          const output = {
+            format: "wingie2-ratio-cave",
+            version: 1,
+            exported_at: new Date().toISOString(),
+            ratio: {ratios},
+            cave
+          };
+          const blob = new Blob([`${JSON.stringify(output, null, 2)}\n`], {type: "application/json"});
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `wingie2-config-${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+          setAlert("已导出当前页面中的完整 Ratio / Cave 配置。", "success");
+        } catch (error) {
+          setAlert(formatError(error), "error");
+        }
+      }
+
+      function validateImportedConfiguration(parsed) {
+        if (!parsed || parsed.format !== "wingie2-ratio-cave" || parsed.version !== 1) throw new Error("不是兼容的 Wingie2 配置文件。");
+        assertArray(parsed.ratio && parsed.ratio.ratios, ratioCount, "Imported Ratio");
+        const ratioDraft = parsed.ratio.ratios.map(String);
+        const caveDraft = {left: [], right: []};
+        for (const side of sides) {
+          assertArray(parsed.cave && parsed.cave[side], caveBankCount, `Imported Cave ${side}`);
+          caveDraft[side] = parsed.cave[side].map((bank, bankIndex) => {
+            assertArray(bank && bank.frequencies, ratioCount, `Imported Cave ${side} bank ${bankIndex + 1}`);
+            assertArray(bank && bank.mute, ratioCount, `Imported Cave ${side} mute ${bankIndex + 1}`);
+            if (!bank.mute.every((value) => typeof value === "boolean")) throw new Error(`Imported Cave ${side} bank ${bankIndex + 1} mute 必须是布尔值。`);
+            return {frequencies: bank.frequencies.map(String), mute: bank.mute.slice()};
+          });
+        }
+        const previousRatio = state.ratio.draft;
+        state.ratio.draft = ratioDraft;
+        try {
+          readRatioDraft();
+        } finally {
+          state.ratio.draft = previousRatio;
+        }
+        for (const side of sides) {
+          caveDraft[side].forEach((draft, bankIndex) => {
+            const bank = state.cave[side][bankIndex];
+            const previousFrequencies = bank.draftFrequencies;
+            const previousMute = bank.draftMute;
+            bank.draftFrequencies = draft.frequencies;
+            bank.draftMute = draft.mute;
+            try {
+              readCaveDraft(bank);
+            } finally {
+              bank.draftFrequencies = previousFrequencies;
+              bank.draftMute = previousMute;
+            }
+          });
+        }
+        return {ratioDraft, caveDraft};
+      }
+
+      async function importConfiguration(file) {
+        try {
+          const imported = validateImportedConfiguration(JSON.parse(await file.text()));
+          state.ratio.draft = imported.ratioDraft;
+          state.ratio.local = true;
+          for (const side of sides) {
+            imported.caveDraft[side].forEach((draft, bankIndex) => {
+              const bank = state.cave[side][bankIndex];
+              bank.draftFrequencies = draft.frequencies;
+              bank.draftMute = draft.mute;
+              bank.local = true;
+            });
+          }
+          renderAll();
+          setAlert("配置已导入页面但尚未发送。检查后点击 Apply All Edits。", "warning");
+        } catch (error) {
+          setAlert(`导入失败：${formatError(error)}`, "error");
+        } finally {
+          elements.importFile.value = "";
+        }
+      }
+
+      function activeBank(side) {
+        const active = state.status && state.status.cave_active_bank ? state.status.cave_active_bank[side] : null;
+        if (Number.isInteger(active)) return active;
+        const found = state.cave[side].findIndex((bank) => bank && bank.active);
+        return found >= 0 ? found : null;
+      }
+
+      function renderStatus() {
+        for (const side of sides) {
+          const target = side === "left" ? elements.leftNote : elements.rightNote;
+          const fundamental = state.status && state.status.fundamental_hz ? state.status.fundamental_hz[side] : null;
+          const note = state.status && state.status.note ? state.status.note[side] : null;
+          target.textContent = Number.isFinite(fundamental) && Number.isFinite(note) ? `${Number(fundamental).toFixed(3)} Hz · MIDI ${note}` : "—";
+        }
+      }
+
+      function renderEffectiveFrequencies() {
+        const ratio = state.ratio;
+        for (let index = 0; index < ratioCount; index += 1) {
+          const value = ratio ? Number(ratio.draft[index]) : NaN;
+          const cents = elements.ratioRows.querySelector(`[data-cents="${index}"]`);
+          cents.textContent = Number.isFinite(value) && value > 0 ? `${1200 * Math.log2(value) >= 0 ? "+" : ""}${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
+          for (const side of sides) {
+            const target = elements.ratioRows.querySelector(`[data-side="${side}"][data-hz="${index}"]`);
+            const fundamental = state.status && state.status.fundamental_hz ? Number(state.status.fundamental_hz[side]) : NaN;
+            if (!ratio || !Number.isFinite(value) || !Number.isFinite(fundamental)) {
+              target.textContent = "—";
+              continue;
+            }
+            const raw = fundamental * value;
+            const effective = Math.min(ratio.limits.frequencyMax, Math.max(ratio.limits.frequencyMin, raw));
+            target.textContent = `${effective.toFixed(2)}${raw < ratio.limits.frequencyMin ? "  MIN" : raw > ratio.limits.frequencyMax ? "  MAX" : ""}`;
+            target.classList.toggle("wg-hz-clipped", raw < ratio.limits.frequencyMin || raw > ratio.limits.frequencyMax);
+          }
+        }
+      }
+
+      function renderRatio() {
+        const inputs = elements.ratioRows.querySelectorAll(".wg-ratio-input");
+        inputs.forEach((input, index) => {
+          input.disabled = !state.connected || !state.ratio;
+          if (!state.ratio) {
+            input.value = "";
+            return;
+          }
+          input.min = state.ratio.limits.min;
+          input.max = state.ratio.limits.max;
+          input.step = state.ratio.limits.step;
+          input.value = state.ratio.draft[index];
+        });
+        if (!state.ratio) {
+          elements.ratioBadge.textContent = "等待设备";
+          elements.ratioBadge.dataset.kind = "";
+          elements.ratioMeta.textContent = "范围由设备连接后提供";
+        } else {
+          elements.ratioBadge.textContent = state.ratio.local ? "Local Edit" : state.ratio.dirty ? "RAM · Unsaved" : "Saved";
+          elements.ratioBadge.dataset.kind = state.ratio.local ? "draft" : state.ratio.dirty ? "pending" : "live";
+          elements.ratioMeta.textContent = `Ratio ${state.ratio.limits.min}–${state.ratio.limits.max} · step ${state.ratio.limits.step} · revision ${state.ratio.revision}`;
+        }
+        renderEffectiveFrequencies();
+      }
+
+      function renderSelectors() {
+        elements.sideSelector.querySelectorAll("[data-side]").forEach((button) => {
+          button.setAttribute("aria-pressed", button.dataset.side === state.selectedSide ? "true" : "false");
+        });
+        elements.bankSelector.querySelectorAll("[data-bank]").forEach((button) => {
+          const bank = Number(button.dataset.bank);
+          button.setAttribute("aria-pressed", bank === state.selectedBank ? "true" : "false");
+          button.dataset.active = activeBank(state.selectedSide) === bank ? "true" : "false";
+        });
+      }
+
+      function renderCave() {
+        renderSelectors();
+        const bank = currentCaveBank();
+        elements.caveRows.querySelectorAll(".wg-frequency-input").forEach((input, index) => {
+          input.disabled = !state.connected || !bank;
+          if (!bank) {
+            input.value = "";
+            return;
+          }
+          input.min = bank.limits.min;
+          input.max = bank.limits.max;
+          input.value = bank.draftFrequencies[index];
+        });
+        elements.caveRows.querySelectorAll(".wg-mute-input").forEach((input, index) => {
+          input.disabled = !state.connected || !bank;
+          input.checked = bank ? bank.draftMute[index] : false;
+        });
+        if (!bank) {
+          elements.caveBadge.textContent = "等待设备";
+          elements.caveBadge.dataset.kind = "";
+          elements.caveMeta.textContent = "范围由设备连接后提供";
+          return;
+        }
+        const isActive = activeBank(state.selectedSide) === state.selectedBank;
+        if (bank.local) {
+          elements.caveBadge.textContent = isActive ? "Edit · Apply Live" : "Edit · Apply Pending";
+          elements.caveBadge.dataset.kind = "draft";
+        } else {
+          elements.caveBadge.textContent = isActive ? "Live · Active Bank" : "Pending · Inactive Bank";
+          elements.caveBadge.dataset.kind = isActive ? "live" : "pending";
+        }
+        elements.caveMeta.textContent = `${bank.limits.min}–${bank.limits.max} Hz · revision ${bank.revision}${bank.dirty ? " · RAM unsaved" : " · saved"}`;
+      }
+
+      function updateControls() {
+        const ready = state.connected && Boolean(state.ratio) && sides.every((side) => state.cave[side].every(Boolean));
+        const local = localEditCount();
+        elements.applyRatio.disabled = !ready || !state.ratio.local;
+        elements.resetRatio.disabled = !ready;
+        elements.applyCave.disabled = !ready || !currentCaveBank() || !currentCaveBank().local;
+        elements.applyAll.disabled = !ready || local === 0;
+        elements.save.disabled = !ready;
+        elements.refresh.disabled = !ready;
+        elements.export.disabled = !ready;
+        elements.import.disabled = !ready;
+        const dirty = deviceDirtyCount();
+        if (!ready) {
+          elements.stateSummary.textContent = "连接设备后可应用、保存、导入或导出完整 Ratio / Cave 配置。";
+        } else if (local) {
+          elements.stateSummary.textContent = `${local} 组本地编辑尚未 Apply；${dirty} 组设备运行配置尚未 Save。`;
+        } else if (dirty) {
+          elements.stateSummary.textContent = `${dirty} 组运行配置尚未写入 flash。断电前请 Save。`;
+        } else {
+          elements.stateSummary.textContent = "页面、设备运行状态与 flash 已同步。";
+        }
+      }
+
+      function renderAll() {
+        renderRatio();
+        renderCave();
+        renderStatus();
+        updateControls();
+      }
+
+      function selectTab(name) {
+        const ratioSelected = name === "ratio";
+        root.querySelector("#wg-tab-ratio").setAttribute("aria-selected", ratioSelected ? "true" : "false");
+        root.querySelector("#wg-tab-cave").setAttribute("aria-selected", ratioSelected ? "false" : "true");
+        root.querySelector("#wg-panel-ratio").hidden = !ratioSelected;
+        root.querySelector("#wg-panel-cave").hidden = ratioSelected;
+      }
+
+      elements.connect.addEventListener("click", connect);
+      elements.disconnect.addEventListener("click", () => disconnect(true));
+      root.querySelector("#wg-tab-ratio").addEventListener("click", () => selectTab("ratio"));
+      root.querySelector("#wg-tab-cave").addEventListener("click", () => selectTab("cave"));
+
+      elements.ratioRows.addEventListener("input", (event) => {
+        const input = event.target.closest(".wg-ratio-input");
+        if (!input || !state.ratio) return;
+        state.ratio.draft[Number(input.dataset.index)] = input.value;
+        state.ratio.local = true;
+        renderEffectiveFrequencies();
+        renderRatio();
+        updateControls();
+      });
+
+      elements.caveRows.addEventListener("input", (event) => {
+        const bank = currentCaveBank();
+        if (!bank) return;
+        const frequency = event.target.closest(".wg-frequency-input");
+        const mute = event.target.closest(".wg-mute-input");
+        if (frequency) bank.draftFrequencies[Number(frequency.dataset.index)] = frequency.value;
+        if (mute) bank.draftMute[Number(mute.dataset.index)] = mute.checked;
+        bank.local = true;
+        renderCave();
+        updateControls();
+      });
+
+      elements.sideSelector.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-side]");
+        if (!button) return;
+        state.selectedSide = button.dataset.side;
+        renderCave();
+        updateControls();
+      });
+
+      elements.bankSelector.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-bank]");
+        if (!button) return;
+        state.selectedBank = Number(button.dataset.bank);
+        renderCave();
+        updateControls();
+      });
+
+      elements.applyRatio.addEventListener("click", () => applyRatio().catch((error) => setAlert(formatError(error), "error")));
+      elements.resetRatio.addEventListener("click", resetRatio);
+      elements.applyCave.addEventListener("click", () => applyCave().catch((error) => setAlert(formatError(error), "error")));
+      elements.applyAll.addEventListener("click", applyAll);
+      elements.save.addEventListener("click", saveConfiguration);
+      elements.refresh.addEventListener("click", async () => {
+        if (localEditCount() && !window.confirm("重新读取会丢弃尚未 Apply 的本地编辑。继续？")) return;
+        try {
+          await refreshAll();
+        } catch (error) {
+          setAlert(formatError(error), "error");
+        }
+      });
+      elements.export.addEventListener("click", exportConfiguration);
+      elements.import.addEventListener("click", () => elements.importFile.click());
+      elements.importFile.addEventListener("change", () => {
+        const file = elements.importFile.files && elements.importFile.files[0];
+        if (file) importConfiguration(file);
+      });
+
+      if ("serial" in navigator) {
+        navigator.serial.addEventListener("disconnect", (event) => {
+          if (event.target === state.port) transportLost();
+        });
+      } else {
+        elements.connect.disabled = true;
+        setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome、Edge 或其他 Chromium 浏览器。", "warning");
+      }
+
+      createRatioRows();
+      createCaveRows();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
