@@ -5,7 +5,7 @@ declare author      "Dave Seidel";
 declare license     "BSD";
 declare copyright   "(c)Meng Qi 2020";
 declare date        "2020-09-30";
-declare editDate    "2023-06-23";
+declare editDate    "2026-07-14";
 
 //-----------------------------------------------
 // Wingie
@@ -14,6 +14,9 @@ declare editDate    "2023-06-23";
 import("stdfaust.lib"); 
 
 nHarmonics = 9;
+modalBlockSize = 32;
+modalBlockPulse = ba.time % modalBlockSize == 0;
+modalBlockHold(x) = x : control(modalBlockPulse) : ba.sAndH(modalBlockPulse);
 decay = hslider("decay", 5, 0.1, 10, 0.01) : si.smoo;
 output_gain = 1 : ba.lin2LogGain;
 left_thresh = hslider("left_thresh", 0.1, 0, 1, 0.01);
@@ -109,7 +112,7 @@ note1 = hslider("note1", 36, 12, 96, 1);
 mode0 = hslider("mode0", 0, 0, 4, 1);
 mode1 = hslider("mode1", 0, 0, 4, 1);
 
-env_mode_change = 1 - en.ar(0.002, env_mode_change_decay, button("mode_changed"));
+env_mode_change(t) = 1 - en.ar(0.002, env_mode_change_decay, t);
 env_mute(t) = 1 - en.asr(0.25, 1., 0.25, t);
 
 bar_ratios(freq, n) = freq * bar_factor * pow((n + 1) + 0.5, 2);
@@ -172,22 +175,40 @@ f(note, n, s) =
     cave(n)
   : ba.selectn(4, s);
 
-// scale(x, in_low, in_high, out_low, out_high, e) = (out_low + (out_high - out_low) * ((x - in_low) / (in_high - in_low)) ^ e);
+modalRotation(freq, rho, x) =
+    ((_<:_,_), (_<:_,_) : par(i, 4, _ <: _,_)
+      : (*(s), *(c), *(c), *(0-s))
+      :> (*(rho), (*(rho) : +(x)))) ~ cross
+with {
+  theta = 2 * ma.PI * freq / ma.SR;
+  c = cos(theta) : modalBlockHold;
+  s = sin(theta) : modalBlockHold;
+  cross = _,_ <: !,_,_,!;
+};
 
-r(note, index, source) = pm.modeFilter(a, b, ba.lin2LogGain(c))
+blockRateMode(freq, t60, gain) = modalRotation(freq, rho) : _,!
+    : *(scale) * gain
+    : attach(_, t60)
+with {
+  rhoReference = pow(0.001, 1.0 / (t60 * ma.SR));
+  rho = rhoReference : modalBlockHold;
+  scale = (2.0 / rhoReference) : modalBlockHold;
+};
+
+r(note, index, source) = blockRateMode(a, b, ba.lin2LogGain(c))
 with
 {
-  a = min(f(note, index, source), 16000);
-  //decay_factor = scale(a, 8, 16000, 1, 0, 0.4);
-  b = (env_mode_change * decay) + 0.05;
-  c = env_mute(button("mute_%index")) * (ba.if(a == 16000, 0, 1) : si.smoo);
+  a = max(16, min(f(note, index, source), 16000));
+  b = decay;
+  c = env_mute(button("mute_%index"));
 };
 
 process = _,_
     : fi.dcblocker, fi.dcblocker
     : (_ <: attach(_, _ : an.amp_follower(amp_follower_decay) : _ > left_thresh : hbargraph("left_trig", 0, 1))),
       (_ <: attach(_, _ : an.amp_follower(amp_follower_decay) : _ > right_thresh : hbargraph("right_trig", 0, 1)))
-        : (_ * env_mode_change * volume0), (_ * env_mode_change * volume1)
+        : hgroup("left", _ * env_mode_change(button("mode_changed")) * volume0),
+          hgroup("right", _ * env_mode_change(button("mode_changed")) * volume1)
             <: (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("left", sum(i, nHarmonics, r(note0, i, mode0))) * pre_clip_gain),
                (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("right", sum(i, nHarmonics, r(note1, i, mode1))) * pre_clip_gain),
                _,
