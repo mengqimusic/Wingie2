@@ -215,6 +215,8 @@ void control(void *pvParameters) {
   alt_tuning_index = prefs.getChar("alt_tuning_idx", -1);
   Serial.printf("use_alt_tuning = %d, alt_tuning_index = %d\n", use_alt_tuning, alt_tuning_index);
 
+  load_ratio_profile_from_preferences();
+
   prefs.end();
 
   // Preferences Section End
@@ -225,8 +227,8 @@ void control(void *pvParameters) {
   for (int ch = 0; ch < 2; ch++) {
     for (int i = 0; i < 2; i++) {
       pinMode(ledPin[ch][i], OUTPUT);
-      digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
     }
+    set_mode_led(ch);
   }
 
   oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
@@ -440,6 +442,7 @@ void control(void *pvParameters) {
         duck_env_init_timer[ch] = currentMillis;
         for (int v = 0; v < 9; v++) {
           cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
         }
       }
     }
@@ -475,7 +478,9 @@ void control(void *pvParameters) {
         duck_env_triggered[ch] = true;
         duck_env_init_timer[ch] = currentMillis;
 
-        for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
+        ratio_led_on[ch] = true;
+        ratio_led_timer[ch] = currentMillis;
+        set_mode_led(ch);
 
         if (Mode[ch] != CAVE_MODE) {
           for (int v = 0; v < 9; v++) {
@@ -624,6 +629,7 @@ void control(void *pvParameters) {
                     else v = i;
                     if (!(!key[ch][4] || !key[ch][5])) {
                       cm_ms[ch][cave][v] = !cm_ms[ch][cave][v];
+                      mark_cave_changed(ch, cave);
                       cm_mute_set(ch, v, cm_ms[ch][cave][v]);
                     }
                   }
@@ -635,12 +641,14 @@ void control(void *pvParameters) {
                           cm_ms[ch][cave][v] = true;
                           cm_mute_set(ch, v, cm_ms[ch][cave][v]);
                         }
+                        mark_cave_changed(ch, cave);
                         break;
                       case 1:
                         for (int v = 0; v < 9; v++) {
                           cm_ms[ch][cave][v] = false;
                           cm_mute_set(ch, v, cm_ms[ch][cave][v]);
                         }
+                        mark_cave_changed(ch, cave);
                         break;
                     }
                   }
@@ -702,6 +710,7 @@ void control(void *pvParameters) {
               cm_freq[ch][cave][v] += adj[ch];
               cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], CAVE_LOWEST_FREQ);
               cm_freq[ch][cave][v] = min(cm_freq[ch][cave][v], CAVE_HIGHEST_FREQ);
+              mark_cave_changed(ch, cave);
               cm_freq_set(ch, v, cm_freq[ch][cave][v]);
             }
           }
@@ -779,8 +788,18 @@ void control(void *pvParameters) {
         led_blink -= 1;
         if (!led_blink) {
           for (int ch = 0; ch < 2; ch++) {
-            for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(ledColor[Mode[ch]], i));  // 模式 LED 控制
+            set_mode_led(ch);
           }
+        }
+      }
+    }
+
+    if (!save_routine_flag) {
+      for (int ch = 0; ch < 2; ch++) {
+        if (Mode[ch] == RATIO_MODE && currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL) {
+          ratio_led_timer[ch] = currentMillis;
+          ratio_led_on[ch] = !ratio_led_on[ch];
+          set_mode_led(ch);
         }
       }
     }

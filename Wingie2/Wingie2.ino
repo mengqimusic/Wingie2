@@ -27,15 +27,18 @@
 #include <Adafruit_AW9523.h>
 #include <Wire.h>
 #include "Wingie2.h"
+#include "config_profiles.h"
+#include "serial_config_protocol.h"
 #include "tap_sequence.h"
 #include "WiFi.h"
 #include <MIDI.h>
 
-#define MODE_NUM 3 // +1
+#define MODE_NUM 4 // +1
 #define POLY_MODE 0
 #define STRING_MODE 1
 #define BAR_MODE 2
 #define CAVE_MODE 3
+#define RATIO_MODE 4
 
 #define BASE_NOTE 48
 #define POLY_MODE_NOTE_ADD_L 12
@@ -175,6 +178,10 @@ bool cm_ms_prev[2][3][9] = {
   }
 };
 bool cave_midi_set[2] = {false, false};
+uint32_t cave_config_revision[2][3] = {};
+bool cave_config_dirty[2][3] = {};
+
+wingie_config::RatioProfileState ratio_profile;
 
 // alternate tunings
 static const float alt_tunings[8][12] = {
@@ -210,8 +217,10 @@ float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
 bool save_routine_flag = false, stuff_saved = false, dirty[10];
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
+#define RATIO_LED_INTERVAL 500
 #define SAVE_DELAY 3000
-unsigned long save_routine_timer, led_flash_timer;
+unsigned long save_routine_timer, led_flash_timer, ratio_led_timer[2] = {0, 0};
+bool ratio_led_on[2] = {true, true};
 
 //
 // for Tap Sequencer
@@ -225,6 +234,7 @@ bool startup = true, core_print = true; // 启动淡入所用
 
 void setup() {
   Serial.begin(115200);
+  wingie_config::setFactoryRatios(ratio_profile);
 
   WiFi.mode(WIFI_MODE_NULL);
   btStop();
@@ -261,6 +271,7 @@ void loop() {
     Serial.println(xPortGetCoreID());
   }
 
+  service_serial_configuration();
 #if MIDI_DIAGNOSTICS
   serviceMidiDiagnostics();
 #else
@@ -290,6 +301,19 @@ void cm_freq_set(byte kb, byte voice, int freq) {
   else snprintf(buff, sizeof(buff), "/Wingie/right/cave_freq_%d", voice);
   const std::string str = buff;
   dsp.setParamValue(str, freq);
+}
+
+void set_mode_led(byte ch) {
+  if (Mode[ch] == RATIO_MODE) {
+    for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], ratio_led_on[ch] ? LOW : HIGH);
+    return;
+  }
+  for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], !bitRead(ledColor[Mode[ch]], index));
+}
+
+void mark_cave_changed(byte ch, byte bank) {
+  cave_config_revision[ch][bank]++;
+  cave_config_dirty[ch][bank] = true;
 }
 
 // create an array of the ratios used in this tuning
@@ -412,6 +436,8 @@ void tune_caves() {
       cm_freq[0][bank][v] = frequencies[i];
       cm_freq[1][bank][v] = frequencies[i+1];
     }
+    mark_cave_changed(0, bank);
+    mark_cave_changed(1, bank);
   }
 
   // for (int ch = 0; ch < 2; ch++) {
@@ -431,6 +457,7 @@ void restore_caves_to_unq() {
       for (int v = 0; v < 9; v++) {
        cm_freq[ch][bank][v] = cm_freq_stored_unq[ch][bank][v];
        }
+      mark_cave_changed(ch, bank);
     }
   }
 

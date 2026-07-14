@@ -27,7 +27,7 @@ void handleNoteOff(byte channel, byte pitch, byte velocity) {
 
 void MIDISetPitch(int ch, int mode, int pitch) {
 
-  if (mode == STRING_MODE || mode == BAR_MODE) {
+  if (mode == STRING_MODE || mode == BAR_MODE || mode == RATIO_MODE) {
     if (!ch) dsp.setParamValue("note0", pitch);
     if (ch) dsp.setParamValue("note1", pitch);
   }
@@ -114,6 +114,7 @@ void handleControlChange (byte channel, byte number, byte value) {
             midi_value_14bit = min(midi_value_14bit, CAVE_HIGHEST_FREQ);
 
             cm_freq[ch][cave][v] = midi_value_14bit;
+            mark_cave_changed(ch, cave);
             cm_freq_set(ch, v, cm_freq[ch][cave][v]);
             //cave_midi_set[ch] = true;
           }
@@ -150,7 +151,7 @@ void MIDISetParam(int ch, byte number, byte value) {
 
   if (number == CC_MODE) {
     int modeFromMIDI = (value >> 5);
-    if (Mode[ch] != modeFromMIDI) {
+    if (modeFromMIDI <= RATIO_MODE && Mode[ch] != modeFromMIDI) {
       Mode[ch] = modeFromMIDI;
       modeChangingFromMIDI[ch] = true;
     }

@@ -83,6 +83,26 @@ void printMidiDiagnostics() {
                 dsp.getParamValue("anti_feedback_rho_guard"));
 }
 
+void serviceMidiDiagnosticsByte(char value) {
+  switch (value) {
+    case 'r':
+      resetMidiDiagnostics();
+      Serial.println("MIDI_DIAG reset");
+      break;
+    case 'p':
+      printMidiDiagnostics();
+      break;
+    case '0':
+      dsp.setParamValue("anti_feedback_enabled", 0);
+      Serial.println("ANTI_FEEDBACK enabled=0");
+      break;
+    case '1':
+      dsp.setParamValue("anti_feedback_enabled", 1);
+      Serial.println("ANTI_FEEDBACK enabled=1");
+      break;
+  }
+}
+
 void serviceMidiDiagnostics() {
   int available = Serial2.available();
   if (available > midiDiagnostic.maxRxAvailable) {
@@ -90,25 +110,5 @@ void serviceMidiDiagnostics() {
   }
   midiDiagnostic.readCalls++;
   if (MIDI.read()) midiDiagnostic.parsedMessages++;
-
-  while (Serial.available()) {
-    switch (Serial.read()) {
-      case 'r':
-        resetMidiDiagnostics();
-        Serial.println("MIDI_DIAG reset");
-        break;
-      case 'p':
-        printMidiDiagnostics();
-        break;
-      case '0':
-        dsp.setParamValue("anti_feedback_enabled", 0);
-        Serial.println("ANTI_FEEDBACK enabled=0");
-        break;
-      case '1':
-        dsp.setParamValue("anti_feedback_enabled", 1);
-        Serial.println("ANTI_FEEDBACK enabled=1");
-        break;
-    }
-  }
 }
 #endif

@@ -4,32 +4,7 @@ void save_stuff() {
   //
   Serial.printf("Saving prefs\n");
   prefs.begin("settings", RW_MODE);
-
-  for (int ch = 0; ch < 2; ch++) {
-    for (int cave = 0; cave < 3; cave++) {
-      for (int v = 0; v < 9; v++) {
-        if (cm_freq[ch][cave][v] != cm_freq_prev[ch][cave][v])  {
-          cm_freq_prev[ch][cave][v] = cm_freq[ch][cave][v];
-
-          char buff[100];
-          if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
-          else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
-          const char *addr = buff;
-          if (prefs.putUShort(addr, cm_freq[ch][cave][v])) Serial.printf("ch %d cave %d voice %d frequency (%d) is saved.\n", ch, cave, v, cm_freq[ch][cave][v]);
-        }
-
-        if (cm_ms[ch][cave][v] != cm_ms_prev[ch][cave][v])  {
-          cm_ms_prev[ch][cave][v] = cm_ms[ch][cave][v];
-
-          char buff[100];
-          if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
-          else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
-          const char *addr = buff;
-          if (prefs.putBool(addr, cm_ms[ch][cave][v])) Serial.printf("ch %d cave %d voice %d mute state (%d) is saved.\n", ch, cave, v, cm_ms[ch][cave][v]);
-        }
-      }
-    }
-  }
+  save_ratio_and_cave_preferences(prefs);
 
   if (dirty[0]) {
     dirty[0] = false;
