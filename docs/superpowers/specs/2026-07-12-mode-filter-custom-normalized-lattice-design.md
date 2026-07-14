@@ -148,14 +148,20 @@ under their discontinuities.
 | Artifact | Generated-class p99 | Complete-product p99 | Outcome |
 | --- | ---: | ---: | --- |
 | Contemporary historical direct form | `739.5 us` | `715.9 us` | CPU gate failed |
-| Direct form with block-rate decay `pow` | `419.1 us` | `456.3 us` | CPU passed; physical wet failed |
+| Direct form with block-rate decay `pow` | `419.1 us` | `456.3 us` | CPU passed; inherited high-rate MIDI trigger stopped wet in old pressure run; later normal retest has wet |
 | Coupled Candidate Q | `544.7 us` | `714.6 us` | product timing gate failed |
 | Coupled Candidate D | `544.4 us` | `715.2 us` | product timing gate failed |
 | Block-rate rotation bank | `450.0 us` | `717.1 us` | product timing gate failed |
 
 The direct-form block-rate experiment proves that moving the two channel decay `pow` calls
-off the sample-rate path can recover a large amount of CPU. Its physical wet failure means
-its implementation is not an acceptable product or a source to restore.
+off the sample-rate path can recover a large amount of CPU. The old wet disappearance is now
+attributed to the already-reproduced high-rate variable-pitch MIDI trigger inherited from the
+historical direct form, not to the block-rate coefficient preparation itself. A 2026-07-14
+normal-firmware retest confirmed wet. The old experiment decision remains historical evidence,
+but it no longer disqualifies the candidate under the current hardware-run rule.
+
+The same follow-up trial also confirmed that normal Coupled D and block-rate modal-bank firmware
+work on hardware. Those confirmations do not add unrecorded pressure or sound-preference results.
 
 The coupled and rotation experiments prove that bounded two-state recurrences can pass the
 generated-class gate while still failing the recorded complete-product gate. Neither result

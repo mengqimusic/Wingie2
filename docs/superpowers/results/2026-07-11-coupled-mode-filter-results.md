@@ -5,9 +5,9 @@
 `candidate rejected / do not merge the coupled experiment branch`.
 
 Candidate Q and Candidate D both passed host, generated-structure, and generated-class
-ESP32 gates, but both failed the first end-to-end product deadline gate. Neither candidate
-entered product source, normal or diagnostic candidate firmware, MIDI pressure, or listening
-A/B.
+ESP32 gates, but both failed the first end-to-end product deadline gate. In the original
+experiment, neither candidate entered product source, normal or diagnostic candidate firmware,
+MIDI pressure, or listening A/B.
 
 The complete experiment history is preserved at branch and tag:
 
@@ -44,8 +44,17 @@ Each distribution covered 100,000 blocks at 240 MHz, 44.1 kHz, and 32 samples pe
 The maxima remained below the hard block deadline and misses remained zero, but those facts
 do not override the fixed p99 rejection gate.
 
-No physical listening PASS exists for either coupled candidate. The failed machine gate
-skipped candidate firmware, String/Poly/Bar pressure, and user A/B by design.
+No physical listening PASS existed for either coupled candidate in that experiment. The failed
+machine gate skipped candidate firmware, String/Poly/Bar pressure, and user A/B by design.
+
+## 2026-07-14 Follow-Up Trial
+
+Candidate D was later built as a normal, non-instrumented product image: 1,191,216 bytes,
+SHA-256 `69a04121e3fb6f69f0a4e8b0072ad14b01332fe4d50a541cd1fcda82dfbf3e05`.
+The image was flashed and the user confirmed that coupled-d works normally. This adds normal
+build/flash/run evidence; it does not retroactively change the old p99 decision or establish a
+complete pressure matrix, separately itemized wet/dry paths, mute behavior, or a qualitative
+sound preference.
 
 ## Historical Recovery
 

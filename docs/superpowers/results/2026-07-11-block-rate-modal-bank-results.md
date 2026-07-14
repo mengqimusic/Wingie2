@@ -2,7 +2,7 @@
 
 ## Decision
 
-`candidate rejected / do not install the block-rate rotation bank`.
+`historical gate rejection / do not merge the experiment branch`.
 
 The independent block-rate rotation candidate passed its mathematical contract, generated
 structure, complete host matrix, and generated-class ESP32 deadline gate. It failed the
@@ -11,8 +11,20 @@ first complete-product ESP32 deadline gate: String p99 was `717.1 us`, above the
 the block deadline and deadline misses were zero.
 
 The first failed gate skipped the Cave deadline capture, diagnostic firmware, hardware
-pressure, and user listening A/B. No candidate listening PASS exists. Task 9 and Task 10
-were not executed.
+pressure, and user listening A/B in the original experiment. Task 9 and Task 10 were not
+executed then.
+
+## 2026-07-14 Follow-Up Trial
+
+A normal, non-instrumented product image was later built: 1,189,504 bytes, SHA-256
+`9f381eaa28592f8cd4636530d0203444c8fd4a52542844c1797fa92a68585f64`.
+The image was flashed and the user confirmed that modal-bank works normally. This adds normal
+build/flash/run evidence without changing the historical p99 result or creating an unrecorded
+pressure matrix or qualitative sound judgment.
+
+The old instrumented complete-product log below still records a shared `mode_changed` path
+difference. The successful normal run shows that it did not prevent basic operation in this
+exposure; it does not by itself prove that every mode-change control path was separately tested.
 
 Because the first rejection gate is ESP32 deadline, a new custom normalized-lattice design
 session is authorized by the candidate order. It must be a new design and plan; it must not

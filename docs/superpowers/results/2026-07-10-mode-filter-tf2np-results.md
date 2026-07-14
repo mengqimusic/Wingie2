@@ -4,7 +4,7 @@
 
 `rejected / do not execute the existing TF2NP plan`.
 
-The direct-form deadline optimization prerequisite was rejected by its physical audio gate. The subsequent read-only audit also found that the existing direct `fi.tf2np` replacement cannot be generated for the complete product graph with Faust 2.59.6 and alternate tuning enabled. No TF2NP product code was accepted or merged into `main`.
+The direct-form deadline optimization prerequisite was historically rejected by its physical audio gate. A later normal-firmware retest confirmed that the candidate has wet; the old disappearance is attributable to the inherited high-rate variable-pitch MIDI trigger described below, not to a static absence of candidate wet. The subsequent read-only audit still found that the existing direct `fi.tf2np` replacement cannot be generated for the complete product graph with Faust 2.59.6 and alternate tuning enabled. No TF2NP product code was accepted or merged into `main`.
 
 The complete experiment history is preserved at tag:
 
@@ -22,7 +22,7 @@ The 32-sample direct-form coefficient candidate passed its host and ESP32 machin
 - end-to-end audio, 100,000 blocks at 240 MHz: p99 `456.3 us`, max `469.642 us`, zero deadline misses;
 - three settled 180-case matrices and one 24-case dynamic matrix: zero numerical failures.
 
-The candidate was nevertheless rejected during String channel 2 hardware pressure. MIDI parsing and callbacks completed, but the user reported `当前所有通道都没有 wet`. Later Poly/Bar batches and candidate A/B were skipped. Numerical gates do not override this physical rejection.
+The candidate was nevertheless rejected during the original String channel 2 hardware pressure. MIDI parsing and callbacks completed, but the user reported `当前所有通道都没有 wet`. Later Poly/Bar batches and candidate A/B were skipped under the then-current gate.
 
 The candidate commit was reverted in the archive. The final device recovery wrote only app0 at `0x10000`, verified the complete historical image, compared a full `0x140000`-byte readback, and restored startup state. Historical app0 SHA-256:
 
@@ -31,6 +31,24 @@ The candidate commit was reverted in the archive. The final device recovery wrot
 ```
 
 The user explicitly confirmed that both restored wet paths were normal.
+
+## 2026-07-14 Follow-Up Trial
+
+A normal product image from the same frozen block-rate direct-form candidate was rebuilt as
+1,189,424 bytes with SHA-256
+`e110a3e11a362e06f1e5c37b467d33143d5b9b42b0eaebadafa7a9a4e89a3ce5` and flashed through
+the candidate tool. The user confirmed that block-rate-direct has wet.
+
+The earlier disappearance was triggered by the high-rate variable-pitch MIDI pressure, not
+by a candidate-specific missing-wet condition. The historical direct-form diagnostic had
+already reproduced the same sufficient trigger independently on both sides: String mode,
+about 1 kHz pitch changes, intact parser/callback/Faust parameter updates, and loss of the
+pressured side's wet/resonator output. In the block-rate run, all wet was still audible after
+the channel 1 batch and disappeared only after the channel 2 batch. That sequence supports
+the pressure trigger, but it does not prove that two independent per-side failures occurred
+in that run. The exact internal mechanism and the reason all wet disappeared remain
+unmeasured; the retained evidence does not distinguish NaN/Inf, a large finite state, or
+another realtime floating-point state failure.
 
 ## Direct TF2NP Audit
 
