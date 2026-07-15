@@ -22,14 +22,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/i2c.h"
-#include "esp_system.h"
 
 #include "AC101.h"
 #include <Adafruit_AW9523.h>
 #include <Wire.h>
 #include "Wingie2.h"
 #include "config_profiles.h"
-#include "config_runtime.h"
 #include "serial_config_protocol.h"
 #include "tap_sequence.h"
 #include "WiFi.h"
@@ -48,7 +46,7 @@
 #define MIC_BOOST 0xAAC4 // 0xFFC4 = 48dB, 0x99C4 = 30dB, 0x88C4 = 0dB
 #define DAC_VOL 0xA2A2 // 左右通道输出音量 A0 = 0dB, A2 = 1.5dB, A4 = 3dB
 
-#define CAVE_LOWEST_FREQ 16
+#define CAVE_LOWEST_FREQ 8
 #define CAVE_HIGHEST_FREQ 15999
 
 #define CC_MODE 0
@@ -129,7 +127,7 @@ bool keyChanged = false;
 bool source, key[2][12], keyPrev[2][12], firstPress[2] = {true, true};
 bool sourceChanged = false, sourceChanged2 = false;
 int note[2], currentNote[2] = {36, 36}, octPrev[2], oct[2], Mode[2] = {POLY_MODE, POLY_MODE}, allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
-bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false, false}, duck_env_triggered[2] = {false, false};
+bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false, false}, modeChangingFromMIDI[2] = {false, false}, duck_env_triggered[2] = {false, false};
 
 //
 // for MIDI
@@ -143,8 +141,8 @@ bool unq_caves_store = false;
 //
 // cave mode
 //
-float cm_freq[2][3][9]; // channel, cave_number, voice
-float cm_freq_prev[2][3][9] = {
+int cm_freq[2][3][9]; // channel, cave_number, voice
+int cm_freq_prev[2][3][9] = {
   {
     {62, 115, 218, 411, 777, 1500, 2800, 5200, 11000},
     {205, 304, 370, 523, 540, 800, 913, 1568, 2400},
@@ -156,7 +154,7 @@ float cm_freq_prev[2][3][9] = {
     {212, 425, 531, 637, 1062, 2017, 2336, 2654, 3693}
   }
 };
-float cm_freq_stored_unq[2][3][9] = {
+int cm_freq_stored_unq[2][3][9] = {
   { 
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -184,13 +182,9 @@ bool cm_ms_prev[2][3][9] = {
 bool cave_midi_set[2] = {false, false};
 uint32_t cave_config_revision[2][3] = {};
 bool cave_config_dirty[2][3] = {};
-bool cave_storage_migration_pending = false;
-bool unquantized_caves_dirty = false;
 
 wingie_config::RatioProfileState ratio_profile;
 volatile bool serial_config_ready = false;
-
-bool load_cave_bank_from_preferences(Preferences &store, byte ch, byte bank, bool unquantized);
 
 // alternate tunings
 static const float alt_tunings[8][12] = {
@@ -226,15 +220,15 @@ float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
 bool save_routine_flag = false, stuff_saved = false, dirty[10];
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
-#define RATIO_LED_INTERVAL 20
+#define RATIO_LED_INTERVAL 500
 #define SAVE_DELAY 3000
 unsigned long save_routine_timer, led_flash_timer, ratio_led_timer[2] = {0, 0};
-uint8_t ratio_led_phase[2] = {0, 0};
+bool ratio_led_on[2] = {true, true};
 
 //
 // for Tap Sequencer
 //
-bool trig[2] = {false, false}, trigged[2] = {false, false}, trigStatePrev[2] = {false, false}, threshChanged[2] = {false, false};
+bool trig[2] = {false, false}, trigged[2] = {false, false}, threshChanged[2] = {false, false};
 TapSequence tapSequence[2];
 
 unsigned long currentMillis, routineReadTimer = 0, sourceChangedMillis = 0, startupMillis = 0, duck_env_init_timer[2] = {0};
@@ -243,7 +237,6 @@ bool startup = true, core_print = true; // 启动淡入所用
 
 void setup() {
   Serial.begin(115200);
-  initialize_config_runtime();
   wingie_config::setFactoryRatios(ratio_profile);
 
   WiFi.mode(WIFI_MODE_NULL);
@@ -325,22 +318,23 @@ void apply_cave_bank_to_dsp(byte ch, byte bank) {
   }
 }
 
+void unmute_channel_resonators(byte ch) {
+  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
+    cm_mute_set(ch, index, false);
+  }
+}
+
 void set_mode_led(byte ch) {
   if (Mode[ch] == RATIO_MODE) {
-    for (int index = 0; index < 2; index++) {
-      digitalWrite(ledPin[ch][index], !bitRead(ledColor[ratio_led_phase[ch]], index));
-    }
+    for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], ratio_led_on[ch] ? LOW : HIGH);
     return;
   }
   for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], !bitRead(ledColor[Mode[ch]], index));
 }
 
-void mark_cave_changed(byte ch, byte bank, ConfigOrigin origin) {
-  lock_config_state();
+void mark_cave_changed(byte ch, byte bank) {
   cave_config_revision[ch][bank]++;
   cave_config_dirty[ch][bank] = true;
-  mark_config_state_changed(origin);
-  unlock_config_state();
 }
 
 // create an array of the ratios used in this tuning
@@ -410,29 +404,23 @@ void apply_pitched_mode_channel(byte ch, int midiNote) {
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
                                     fundamental * pitched_mode_ratio(Mode[ch], index)));
     cm_freq_set(ch, index, frequency);
-    cm_mute_set(ch, index, Mode[ch] == RATIO_MODE ? false : cm_ms[ch][oct[ch] + 1][index]);
   }
+  unmute_channel_resonators(ch);
 }
 
-void set_channel_note(byte ch, int midiNote, ConfigOrigin origin) {
-  lock_config_state();
-  const bool changed = currentNote[ch] != midiNote;
+void set_channel_note(byte ch, int midiNote) {
   currentNote[ch] = midiNote;
   if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
     apply_pitched_mode_channel(ch, midiNote);
   }
-  if (changed) mark_config_state_changed(origin);
-  unlock_config_state();
-}
-
-void set_channel_note(byte ch, int midiNote) {
-  set_channel_note(ch, midiNote, CONFIG_ORIGIN_HARDWARE);
 }
 
 void apply_current_mode_parameters(byte ch) {
-  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+  if (Mode[ch] == POLY_MODE) {
+    unmute_channel_resonators(ch);
+  } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
     apply_pitched_mode_channel(ch, currentNote[ch]);
-  } else {
+  } else if (Mode[ch] == CAVE_MODE) {
     apply_cave_bank_to_dsp(ch, oct[ch] + 1);
   }
 }
@@ -497,7 +485,8 @@ void build_freq_table() {
       base = c_freq[5];
     }
 
-    frequencies[i] = mtoq(note, base);
+    // caves use integer values
+    frequencies[i] = std::round(mtoq(note, base));
   }
 }
 
@@ -506,34 +495,27 @@ void build_freq_table() {
 //    C, D, E, F#, G#, A#, C, D, E
 // left channel caves gets odd-numbered scale tones:
 //    C#, D#, F, G, A, B, A#, C#, D#, F
-void tune_caves(ConfigOrigin origin) {
+void tune_caves() {
   if (!use_alt_tuning || alt_tuning_index < 0) {
     return;
   }
 
   build_freq_table();
-  lock_config_state();
 
   for (int bank = 0; bank < 3; bank++) {
-    bool changed[2] = {false, false};
     int bank_ofs = (bank + 2) * 12;
     for (int v = 0; v < 9; v++) {
       const int i = bank_ofs + (v * 2);
-      float canonical[2];
-      wingie_config::canonicalizeCaveFrequency(frequencies[i], canonical[0]);
-      wingie_config::canonicalizeCaveFrequency(frequencies[i + 1], canonical[1]);
-      for (int ch = 0; ch < 2; ch++) {
-        if (fabsf(cm_freq[ch][bank][v] - canonical[ch]) > 0.0001f) {
-          cm_freq[ch][bank][v] = canonical[ch];
-          changed[ch] = true;
-        }
-      }
+      cm_freq[0][bank][v] = frequencies[i];
+      cm_freq[1][bank][v] = frequencies[i+1];
     }
-    for (int ch = 0; ch < 2; ch++) {
-      if (changed[ch]) mark_cave_changed(ch, bank, origin);
-    }
+    mark_cave_changed(0, bank);
+    mark_cave_changed(1, bank);
   }
-  unlock_config_state();
+
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == CAVE_MODE) apply_cave_bank_to_dsp(ch, oct[ch] + 1);
+  }
 
   // for (int ch = 0; ch < 2; ch++) {
   //   for (int bank = 0; bank < 3; bank++) {
@@ -546,21 +528,19 @@ void tune_caves(ConfigOrigin origin) {
   Serial.println("Finished tuning caves");
 }
 
-void restore_caves_to_unq(ConfigOrigin origin) {
-  lock_config_state();
+void restore_caves_to_unq() {
   for (int ch = 0; ch < 2; ch++) {
     for (int bank = 0; bank < 3; bank++) {
-      bool changed = false;
       for (int v = 0; v < 9; v++) {
-        if (fabsf(cm_freq[ch][bank][v] - cm_freq_stored_unq[ch][bank][v]) > 0.0001f) {
-          cm_freq[ch][bank][v] = cm_freq_stored_unq[ch][bank][v];
-          changed = true;
-        }
-      }
-      if (changed) mark_cave_changed(ch, bank, origin);
+       cm_freq[ch][bank][v] = cm_freq_stored_unq[ch][bank][v];
+       }
+      mark_cave_changed(ch, bank);
     }
   }
-  unlock_config_state();
+
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == CAVE_MODE) apply_cave_bank_to_dsp(ch, oct[ch] + 1);
+  }
 
   // debug
   // for (int ch = 0; ch < 2; ch++) {
@@ -576,7 +556,6 @@ void restore_caves_to_unq(ConfigOrigin origin) {
 
 
 void store_unq_caves() {
-  lock_config_state();
   for (int ch = 0; ch < 2; ch++) {
     for (int bank = 0; bank < 3; bank++) {
       for (int v = 0; v < 9; v++) {
@@ -584,8 +563,6 @@ void store_unq_caves() {
        }
     }
   }
-  unquantized_caves_dirty = true;
-  unlock_config_state();
 
   // debug
   // for (int ch = 0; ch < 2; ch++) {

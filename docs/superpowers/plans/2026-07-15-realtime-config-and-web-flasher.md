@@ -1,5 +1,8 @@
 # Wingie2 实时配置与网页刷机实施计划
 
+> **状态**：实时配置 schema 2 因完整镜像 WDT 回归而暂缓；网页刷机切片仍有效。当前配置产品
+> 回到 schema 1 的整组 Apply/显式 Save，本文实时配置部分保留为已废弃设计记录。
+
 ## 配置切片
 
 1. 扩展 host 数据合同：Ratio/Cave canonicalization、Cave centiHz storage、CRC、协议 patch 命令。

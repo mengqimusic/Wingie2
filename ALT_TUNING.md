@@ -13,7 +13,7 @@ By default, Wingie2 uses standard western tuning (equal temperament). As of vers
 
 Alternate tuning is enabled in two ways: by holding down the **left Mode button** when starting the device; or using MIDI. The advantage    of using MIDI is that it is unnecessary to restart the device, allowing the tuning to be changed on the fly.
 
- Alternate tuning also affects Caves mode; see below for details.
+Alternate tuning also affects Caves mode; see below for details.
 
  Alternate tuning honors the Global Tuning (A3) setting.
 
@@ -53,8 +53,7 @@ To disable alternate tuning at startup, hold down the **right Mode button**. The
 
  ## Caves in Alternate Tuning
 
- When you enable alternate tuning, the caves are also tuned to match the tuning you selected. Cave
- frequencies are calculated and stored at `0.01 Hz` resolution in the current firmware.
+ When you enable alternate tuning, the caves are also tuned to match the tuning you selected.
  
  In order to accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:
 
@@ -69,7 +68,4 @@ The three-position toggles switch between three octaves, similar to Poly, String
 
 ## Saving the tuning setting
 
-Changing tuning from MIDI or the USB configuration page affects the running instrument immediately but
-does not write flash automatically. Save the current tuning and its Cave backup either by holding both
-Mode buttons as described in the manual or by using the confirmed Save action in the USB configuration
-page. On restart, the saved tuning configuration is restored.
+The current tuning configuration is saved along with other settings when you hold down both Mode buttons simultaneously, as described in the manual. On restart, your tuning configuration will be restored.

@@ -17,6 +17,21 @@ from ratio_mode_reference import (
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def extract_braced_block(source, marker):
+    marker_index = source.index(marker)
+    opening_index = source.index("{", marker_index)
+    depth = 0
+    for index in range(opening_index, len(source)):
+        character = source[index]
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth == 0:
+                return source[opening_index : index + 1]
+    raise AssertionError(f"unterminated block after {marker!r}")
+
+
 class RatioModeReferenceTest(unittest.TestCase):
     def test_standard_tuning_and_subharmonic_ratios(self):
         fundamental = note_frequency(69)
@@ -70,9 +85,50 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("return index + 1.0f;", firmware)
         self.assertIn("return barFactor * barIndex * barIndex;", firmware)
         self.assertIn("fundamental * pitched_mode_ratio(Mode[ch], index)", firmware)
-        self.assertIn("Mode[ch] == RATIO_MODE ? false : cm_ms", firmware)
         self.assertIn("set_channel_note(ch, pitch);", midi)
         self.assertIn("value == 127 ? RATIO_MODE : (value >> 5)", midi)
+
+    def test_only_cave_mode_applies_cave_mutes(self):
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        cave_block = extract_braced_block(firmware, "void apply_cave_bank_to_dsp")
+        pitched_block = extract_braced_block(firmware, "void apply_pitched_mode_channel")
+        current_mode_block = extract_braced_block(firmware, "void apply_current_mode_parameters")
+
+        self.assertIn("cm_ms[ch][bank][index]", cave_block)
+        self.assertIn("unmute_channel_resonators(ch);", pitched_block)
+        self.assertNotIn("cm_ms", pitched_block)
+        self.assertIn("if (Mode[ch] == POLY_MODE)", current_mode_block)
+        self.assertIn("unmute_channel_resonators(ch);", current_mode_block)
+        self.assertIn("else if (Mode[ch] == CAVE_MODE)", current_mode_block)
+
+    def test_cave_bank_updates_only_when_octave_changes(self):
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+        octave_change_block = extract_braced_block(
+            control, "if (octPrev[ch] != oct[ch])"
+        )
+
+        self.assertIn("if (Mode[ch] == CAVE_MODE)", octave_change_block)
+        self.assertIn("apply_cave_bank_to_dsp(ch, cave);", octave_change_block)
+
+    def test_active_cave_bank_refreshes_after_tuning_changes(self):
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        tune_block = extract_braced_block(firmware, "void tune_caves()")
+        restore_block = extract_braced_block(firmware, "void restore_caves_to_unq()")
+
+        active_apply = "if (Mode[ch] == CAVE_MODE) apply_cave_bank_to_dsp(ch, oct[ch] + 1);"
+        self.assertIn(active_apply, tune_block)
+        self.assertIn(active_apply, restore_block)
+
+    def test_startup_initializes_all_mode_parameters(self):
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "set_channel_note(0, BASE_NOTE + oct[0] * 12);\n"
+            "  set_channel_note(1, BASE_NOTE + oct[1] * 12 + 12);\n"
+            "  apply_current_mode_parameters(0);\n"
+            "  apply_current_mode_parameters(1);",
+            control,
+        )
 
 
 if __name__ == "__main__":

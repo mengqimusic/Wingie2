@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wingie2 Configuration</title>
+  <title>Wingie2 Ratio / Cave Config</title>
   <style>
     #wingie-config {
       --wg-bg: #111311;
@@ -14,14 +14,18 @@
       --wg-text: #f2f1e9;
       --wg-muted: #a6ada4;
       --wg-accent: #d7ff4f;
+      --wg-accent-dark: #1e2607;
       --wg-cyan: #70e6d3;
       --wg-orange: #ffb45c;
       --wg-red: #ff7d6e;
+      --wg-radius: 16px;
       color: var(--wg-text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(215, 255, 79, 0.08), transparent 28rem),
+        linear-gradient(180deg, #151815 0%, var(--wg-bg) 38rem);
       min-height: 100vh;
       padding: 24px;
       box-sizing: border-box;
-      background: #111311;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       font-variant-numeric: tabular-nums;
       line-height: 1.45;
@@ -29,12 +33,10 @@
 
     #wingie-config * {
       box-sizing: border-box;
-      letter-spacing: 0;
     }
 
     #wingie-config button,
-    #wingie-config input,
-    #wingie-config select {
+    #wingie-config input {
       font: inherit;
     }
 
@@ -43,7 +45,7 @@
     }
 
     #wingie-config .wg-shell {
-      width: min(1240px, 100%);
+      width: min(1080px, 100%);
       margin: 0 auto;
     }
 
@@ -52,65 +54,61 @@
       grid-template-columns: minmax(0, 1fr) auto;
       gap: 24px;
       align-items: end;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
+    }
+
+    #wingie-config .wg-eyebrow {
+      margin: 0 0 6px;
+      color: var(--wg-accent);
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
     }
 
     #wingie-config h1,
     #wingie-config h2,
-    #wingie-config h3,
     #wingie-config p {
       margin-top: 0;
     }
 
     #wingie-config h1 {
-      margin-bottom: 6px;
-      font-size: 38px;
+      margin-bottom: 7px;
+      font-size: clamp(29px, 5vw, 48px);
       line-height: 1;
+      letter-spacing: -0.045em;
       font-weight: 760;
     }
 
     #wingie-config h2 {
-      margin-bottom: 4px;
+      margin-bottom: 5px;
       font-size: 20px;
-    }
-
-    #wingie-config h3 {
-      margin-bottom: 0;
-      font-size: 15px;
-    }
-
-    #wingie-config .wg-eyebrow {
-      margin: 0 0 5px;
-      color: var(--wg-accent);
-      font-size: 12px;
-      font-weight: 760;
-      text-transform: uppercase;
+      letter-spacing: -0.02em;
     }
 
     #wingie-config .wg-subtitle,
-    #wingie-config .wg-help,
-    #wingie-config .wg-meta {
+    #wingie-config .wg-help {
       color: var(--wg-muted);
     }
 
     #wingie-config .wg-subtitle {
-      max-width: 690px;
       margin-bottom: 0;
-    }
-
-    #wingie-config .wg-help {
-      margin-bottom: 0;
-      font-size: 13px;
+      max-width: 700px;
     }
 
     #wingie-config .wg-connect-cluster,
     #wingie-config .wg-actions,
     #wingie-config .wg-inline,
-    #wingie-config .wg-bank-tabs {
+    #wingie-config .wg-status-row {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 9px;
+      gap: 10px;
+    }
+
+    #wingie-config .wg-status-row {
+      justify-content: space-between;
+      margin-bottom: 14px;
     }
 
     #wingie-config .wg-connection {
@@ -137,12 +135,13 @@
 
     #wingie-config .wg-connection[data-state="connecting"] .wg-dot {
       background: var(--wg-orange);
+      box-shadow: 0 0 0 4px rgba(255, 180, 92, 0.12);
       animation: wg-pulse 1s ease-in-out infinite;
     }
 
     #wingie-config .wg-connection[data-state="connected"] {
       color: var(--wg-text);
-      border-color: rgba(112, 230, 211, 0.4);
+      border-color: rgba(112, 230, 211, 0.38);
     }
 
     #wingie-config .wg-connection[data-state="connected"] .wg-dot {
@@ -156,17 +155,35 @@
 
     #wingie-config .wg-button {
       min-height: 40px;
-      padding: 0 14px;
+      padding: 0 15px;
       border: 1px solid var(--wg-line-strong);
-      border-radius: 8px;
-      color: var(--wg-text);
+      border-radius: 10px;
       background: var(--wg-panel-raised);
       cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease, color 120ms ease, transform 120ms ease;
     }
 
     #wingie-config .wg-button:hover:not(:disabled) {
       border-color: #6c766c;
       background: #292e29;
+    }
+
+    #wingie-config .wg-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    #wingie-config .wg-button:focus-visible,
+    #wingie-config .wg-tab:focus-visible,
+    #wingie-config .wg-segment:focus-visible,
+    #wingie-config input:focus-visible {
+      outline: 2px solid var(--wg-accent);
+      outline-offset: 2px;
+    }
+
+    #wingie-config .wg-button:disabled,
+    #wingie-config input:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
     }
 
     #wingie-config .wg-button-primary {
@@ -177,30 +194,22 @@
     }
 
     #wingie-config .wg-button-primary:hover:not(:disabled) {
+      border-color: #e3ff7e;
       background: #e3ff7e;
     }
 
-    #wingie-config .wg-button:disabled,
-    #wingie-config input:disabled,
-    #wingie-config select:disabled {
-      cursor: not-allowed;
-      opacity: 0.42;
-    }
-
-    #wingie-config .wg-button:focus-visible,
-    #wingie-config input:focus-visible,
-    #wingie-config select:focus-visible,
-    #wingie-config .wg-bank-button:focus-visible {
-      outline: 2px solid var(--wg-accent);
-      outline-offset: 2px;
+    #wingie-config .wg-button-quiet {
+      border-color: transparent;
+      background: transparent;
+      color: var(--wg-muted);
     }
 
     #wingie-config .wg-alert {
       display: none;
-      margin-bottom: 16px;
+      margin: 0 0 16px;
       padding: 11px 14px;
       border: 1px solid var(--wg-line);
-      border-radius: 8px;
+      border-radius: 10px;
       background: var(--wg-panel);
       font-size: 14px;
     }
@@ -210,8 +219,13 @@
     }
 
     #wingie-config .wg-alert[data-kind="success"] {
-      border-color: rgba(112, 230, 211, 0.45);
+      border-color: rgba(112, 230, 211, 0.42);
       color: var(--wg-cyan);
+    }
+
+    #wingie-config .wg-alert[data-kind="error"] {
+      border-color: rgba(255, 125, 110, 0.52);
+      color: #ffc2ba;
     }
 
     #wingie-config .wg-alert[data-kind="warning"] {
@@ -219,44 +233,73 @@
       color: #ffd19a;
     }
 
-    #wingie-config .wg-alert[data-kind="error"] {
-      border-color: rgba(255, 125, 110, 0.55);
-      color: #ffc2ba;
-    }
-
-    #wingie-config .wg-channel-grid {
+    #wingie-config .wg-tabs {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-      align-items: start;
+      gap: 5px;
+      width: min(430px, 100%);
+      padding: 5px;
+      margin-bottom: 16px;
+      border: 1px solid var(--wg-line);
+      border-radius: 13px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    #wingie-config .wg-tab,
+    #wingie-config .wg-segment {
+      min-height: 40px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--wg-muted);
+      cursor: pointer;
+    }
+
+    #wingie-config .wg-tab[aria-selected="true"],
+    #wingie-config .wg-segment[aria-pressed="true"] {
+      color: var(--wg-text);
+      background: var(--wg-panel-raised);
+      box-shadow: inset 0 0 0 1px var(--wg-line);
+    }
+
+    #wingie-config .wg-panel[hidden] {
+      display: none;
     }
 
     #wingie-config .wg-card {
       margin-bottom: 16px;
-      padding: 20px;
+      padding: clamp(16px, 3vw, 24px);
       border: 1px solid var(--wg-line);
-      border-radius: 8px;
-      background: var(--wg-panel);
+      border-radius: var(--wg-radius);
+      background: rgba(25, 28, 25, 0.94);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
     }
 
     #wingie-config .wg-card-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+
+    #wingie-config .wg-help {
+      margin-bottom: 0;
+      font-size: 14px;
     }
 
     #wingie-config .wg-badge {
       display: inline-flex;
       align-items: center;
-      min-height: 25px;
-      padding: 0 8px;
+      min-height: 26px;
+      padding: 0 9px;
       border: 1px solid var(--wg-line-strong);
       border-radius: 999px;
       color: var(--wg-muted);
       font-size: 11px;
-      font-weight: 720;
+      font-weight: 760;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       white-space: nowrap;
     }
@@ -273,143 +316,45 @@
       background: rgba(255, 180, 92, 0.07);
     }
 
-    #wingie-config .wg-readouts {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 7px;
-      margin-bottom: 16px;
+    #wingie-config .wg-badge[data-kind="draft"] {
+      color: var(--wg-accent);
+      border-color: rgba(215, 255, 79, 0.42);
+      background: rgba(215, 255, 79, 0.07);
     }
 
-    #wingie-config .wg-readout {
-      min-width: 0;
-      padding: 8px 9px;
+    #wingie-config .wg-note-state {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      min-width: min(340px, 100%);
+    }
+
+    #wingie-config .wg-note {
+      padding: 9px 11px;
       border: 1px solid var(--wg-line);
-      border-radius: 7px;
+      border-radius: 9px;
       background: rgba(0, 0, 0, 0.14);
     }
 
-    #wingie-config .wg-readout-label {
+    #wingie-config .wg-note-label {
       display: block;
       margin-bottom: 2px;
       color: var(--wg-muted);
-      font-size: 10px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    #wingie-config .wg-readout-value {
+    #wingie-config .wg-note-value {
       display: block;
-      overflow: hidden;
       font-size: 13px;
-      text-overflow: ellipsis;
       white-space: nowrap;
-    }
-
-    #wingie-config .wg-fields {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 11px 14px;
-    }
-
-    #wingie-config .wg-field {
-      min-width: 0;
-    }
-
-    #wingie-config .wg-field > label {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 5px;
-      color: var(--wg-muted);
-      font-size: 12px;
-    }
-
-    #wingie-config .wg-control-pair {
-      display: grid;
-      grid-template-columns: minmax(60px, 1fr) 82px;
-      gap: 8px;
-      align-items: center;
-    }
-
-    #wingie-config input[type="range"] {
-      width: 100%;
-      accent-color: var(--wg-accent);
-    }
-
-    #wingie-config .wg-number,
-    #wingie-config .wg-select,
-    #wingie-config .wg-ratio-input,
-    #wingie-config .wg-frequency-input {
-      width: 100%;
-      min-height: 36px;
-      padding: 0 9px;
-      border: 1px solid var(--wg-line-strong);
-      border-radius: 7px;
-      color: var(--wg-text);
-      background: #111411;
-    }
-
-    #wingie-config .wg-number,
-    #wingie-config .wg-ratio-input,
-    #wingie-config .wg-frequency-input {
-      text-align: right;
-    }
-
-    #wingie-config .wg-divider {
-      height: 1px;
-      margin: 18px 0;
-      background: var(--wg-line);
-    }
-
-    #wingie-config .wg-cave-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    #wingie-config .wg-bank-tabs {
-      gap: 4px;
-      padding: 4px;
-      border: 1px solid var(--wg-line);
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.16);
-    }
-
-    #wingie-config .wg-bank-button {
-      position: relative;
-      min-width: 68px;
-      min-height: 34px;
-      padding: 0 11px;
-      border: 0;
-      border-radius: 6px;
-      color: var(--wg-muted);
-      background: transparent;
-      cursor: pointer;
-    }
-
-    #wingie-config .wg-bank-button[aria-pressed="true"] {
-      color: var(--wg-text);
-      background: var(--wg-panel-raised);
-      box-shadow: inset 0 0 0 1px var(--wg-line);
-    }
-
-    #wingie-config .wg-bank-button[data-active="true"]::after {
-      content: "";
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--wg-cyan);
     }
 
     #wingie-config .wg-table-wrap {
       overflow-x: auto;
       border: 1px solid var(--wg-line);
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     #wingie-config table {
@@ -419,7 +364,7 @@
 
     #wingie-config th,
     #wingie-config td {
-      padding: 8px 9px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--wg-line);
       text-align: right;
       white-space: nowrap;
@@ -432,36 +377,105 @@
     #wingie-config th {
       color: var(--wg-muted);
       background: rgba(0, 0, 0, 0.14);
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 680;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
     }
 
     #wingie-config th:first-child,
     #wingie-config td:first-child {
-      width: 44px;
+      width: 54px;
       text-align: center;
       color: var(--wg-muted);
     }
 
+    #wingie-config .wg-ratio-input,
     #wingie-config .wg-frequency-input {
-      width: 116px;
+      width: 132px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 8px;
+      color: var(--wg-text);
+      background: #111411;
+      text-align: right;
     }
 
-    #wingie-config .wg-ratio-input {
-      width: 110px;
+    #wingie-config .wg-frequency-input {
+      width: 150px;
+    }
+
+    #wingie-config input:invalid {
+      border-color: var(--wg-red);
+    }
+
+    #wingie-config .wg-cent-value,
+    #wingie-config .wg-hz-value {
+      color: #d7ddd5;
+      font-size: 13px;
+    }
+
+    #wingie-config .wg-hz-clipped {
+      color: var(--wg-orange);
+    }
+
+    #wingie-config .wg-actions {
+      margin-top: 16px;
+    }
+
+    #wingie-config .wg-meta {
+      margin-left: auto;
+      color: var(--wg-muted);
+      font-size: 12px;
+    }
+
+    #wingie-config .wg-selector-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    #wingie-config .wg-segments {
+      display: inline-grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(82px, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--wg-line);
+      border-radius: 11px;
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    #wingie-config .wg-segment {
+      position: relative;
+      min-width: 0;
+    }
+
+    #wingie-config .wg-segment[data-active="true"]::after {
+      content: "";
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--wg-cyan);
     }
 
     #wingie-config .wg-mute-cell {
-      width: 76px;
+      width: 130px;
       text-align: center;
     }
 
     #wingie-config .wg-switch {
       position: relative;
       display: inline-block;
-      width: 42px;
-      height: 24px;
+      width: 46px;
+      height: 26px;
       vertical-align: middle;
     }
 
@@ -479,15 +493,16 @@
       border-radius: 999px;
       background: #111411;
       cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease;
     }
 
     #wingie-config .wg-switch-track::after {
       content: "";
       position: absolute;
-      top: 3px;
       left: 3px;
-      width: 16px;
-      height: 16px;
+      top: 3px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #8b928a;
       transition: transform 120ms ease, background 120ms ease;
@@ -499,124 +514,66 @@
     }
 
     #wingie-config .wg-switch input:checked + .wg-switch-track::after {
-      transform: translateX(18px);
+      transform: translateX(20px);
       background: var(--wg-red);
     }
 
-    #wingie-config .wg-ratio-layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 290px;
-      gap: 18px;
-      align-items: start;
-    }
-
-    #wingie-config .wg-ratio-notes {
-      display: grid;
-      gap: 8px;
-    }
-
-    #wingie-config .wg-ratio-note {
-      padding: 10px;
-      border: 1px solid var(--wg-line);
-      border-radius: 7px;
-      background: rgba(0, 0, 0, 0.14);
-    }
-
-    #wingie-config .wg-ratio-note strong {
-      display: block;
-      margin-bottom: 3px;
-      font-size: 12px;
-    }
-
-    #wingie-config .wg-cent,
-    #wingie-config .wg-hz {
-      color: #d7ddd5;
-      font-size: 12px;
-    }
-
-    #wingie-config .wg-hz[data-clipped="true"] {
-      color: var(--wg-orange);
-    }
-
-    #wingie-config .wg-shared-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px 14px;
-    }
-
-    #wingie-config .wg-span-2 {
-      grid-column: span 2;
+    #wingie-config .wg-switch input:focus-visible + .wg-switch-track {
+      outline: 2px solid var(--wg-accent);
+      outline-offset: 2px;
     }
 
     #wingie-config .wg-data-card {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
+      gap: 20px;
       align-items: center;
     }
 
     #wingie-config .wg-data-card .wg-actions {
+      margin-top: 0;
       justify-content: flex-end;
     }
 
     #wingie-config .wg-state-summary {
-      margin: 5px 0 0;
+      margin: 6px 0 0;
       color: var(--wg-muted);
       font-size: 13px;
     }
 
-    #wingie-config .wg-meta {
-      margin-left: auto;
-      font-size: 12px;
-    }
-
     #wingie-config .wg-footer {
-      padding: 2px 2px 16px;
+      padding: 4px 2px 18px;
       color: #798078;
       font-size: 12px;
     }
 
-    @media (max-width: 980px) {
-      #wingie-config .wg-channel-grid,
-      #wingie-config .wg-ratio-layout {
-        grid-template-columns: 1fr;
-      }
-
-      #wingie-config .wg-shared-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 700px) {
+    @media (max-width: 760px) {
       #wingie-config {
-        padding: 14px;
+        padding: 16px;
       }
 
       #wingie-config .wg-header,
+      #wingie-config .wg-card-head,
       #wingie-config .wg-data-card {
         grid-template-columns: 1fr;
+      }
+
+      #wingie-config .wg-header {
         align-items: start;
       }
 
-      #wingie-config h1 {
-        font-size: 31px;
-      }
-
-      #wingie-config .wg-fields,
-      #wingie-config .wg-shared-grid {
-        grid-template-columns: 1fr;
-      }
-
-      #wingie-config .wg-span-2 {
-        grid-column: auto;
-      }
-
-      #wingie-config .wg-readouts {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
+      #wingie-config .wg-connect-cluster,
       #wingie-config .wg-data-card .wg-actions {
         justify-content: flex-start;
+      }
+
+      #wingie-config .wg-note-state {
+        min-width: 0;
+      }
+
+      #wingie-config .wg-meta {
+        width: 100%;
+        margin-left: 0;
       }
     }
 
@@ -624,6 +581,7 @@
       #wingie-config *,
       #wingie-config *::before,
       #wingie-config *::after {
+        scroll-behavior: auto !important;
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -637,8 +595,8 @@
       <header class="wg-header">
         <div>
           <p class="wg-eyebrow">Wingie2 Configuration</p>
-          <h1>实时配置</h1>
-          <p class="wg-subtitle">网页、硬件与 MIDI 共用设备运行状态；Save 才写入 flash。</p>
+          <h1>Ratio / Cave</h1>
+          <p class="wg-subtitle">通过 USB 串口编辑共鸣器比例与 Cave bank。编辑先进入运行状态，只有 Save 才写入 flash。</p>
         </div>
         <div class="wg-connect-cluster">
           <div id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">
@@ -652,235 +610,108 @@
 
       <div id="wg-alert" class="wg-alert" data-visible="false" data-kind="info" role="status" aria-live="polite"></div>
 
-      <section class="wg-channel-grid" aria-label="左右通道">
-        <article class="wg-card wg-channel" data-side-panel="left">
+      <nav class="wg-tabs" role="tablist" aria-label="配置区域">
+        <button id="wg-tab-ratio" class="wg-tab" type="button" role="tab" aria-selected="true" aria-controls="wg-panel-ratio">Ratio Mode</button>
+        <button id="wg-tab-cave" class="wg-tab" type="button" role="tab" aria-selected="false" aria-controls="wg-panel-cave">Cave Mode</button>
+      </nav>
+
+      <section id="wg-panel-ratio" class="wg-panel" role="tabpanel" aria-labelledby="wg-tab-ratio">
+        <div class="wg-card">
           <div class="wg-card-head">
             <div>
-              <h2>Left Channel</h2>
-              <p class="wg-help">硬件左侧</p>
-            </div>
-            <span class="wg-badge" data-channel-badge="left">等待设备</span>
-          </div>
-          <div class="wg-readouts">
-            <div class="wg-readout"><span class="wg-readout-label">Note</span><span id="wg-left-note" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Fundamental</span><span id="wg-left-fundamental" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Octave</span><span id="wg-left-octave" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Active Cave</span><span id="wg-left-active-bank" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Trigger</span><span id="wg-left-trigger" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Origin</span><span id="wg-left-origin" class="wg-readout-value">-</span></div>
-          </div>
-          <div class="wg-fields">
-            <div class="wg-field">
-              <label for="wg-left-mode">Mode</label>
-              <select id="wg-left-mode" class="wg-select" data-value-key="param:left:mode" disabled>
-                <option value="0">Poly</option>
-                <option value="1">String</option>
-                <option value="2">Bar</option>
-                <option value="3">Cave</option>
-                <option value="4">Ratio</option>
-              </select>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-threshold">Input Threshold</label>
-              <input id="wg-left-threshold" class="wg-number" data-value-key="param:left:threshold" type="text" inputmode="decimal" disabled>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-mix-number">Mix</label>
-              <div class="wg-control-pair">
-                <input id="wg-left-mix-range" data-range-key="param:left:mix" type="range" disabled>
-                <input id="wg-left-mix-number" class="wg-number" data-value-key="param:left:mix" type="text" inputmode="decimal" disabled>
+              <div class="wg-inline">
+                <h2>共享 Ratio Profile</h2>
+                <span id="wg-ratio-badge" class="wg-badge">等待设备</span>
               </div>
+              <p class="wg-help">左右声道共用这 9 个比例。Ratio 可低于 1；键盘与 MIDI 改变基频。</p>
             </div>
-            <div class="wg-field">
-              <label for="wg-left-decay-number">Decay</label>
-              <div class="wg-control-pair">
-                <input id="wg-left-decay-range" data-range-key="param:left:decay" type="range" disabled>
-                <input id="wg-left-decay-number" class="wg-number" data-value-key="param:left:decay" type="text" inputmode="decimal" disabled>
+            <div class="wg-note-state" aria-label="当前基频">
+              <div class="wg-note">
+                <span class="wg-note-label">Left Fundamental</span>
+                <span id="wg-left-note" class="wg-note-value">—</span>
               </div>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-volume-number">Volume</label>
-              <div class="wg-control-pair">
-                <input id="wg-left-volume-range" data-range-key="param:left:volume" type="range" disabled>
-                <input id="wg-left-volume-number" class="wg-number" data-value-key="param:left:volume" type="text" inputmode="decimal" disabled>
+              <div class="wg-note">
+                <span class="wg-note-label">Right Fundamental</span>
+                <span id="wg-right-note" class="wg-note-value">—</span>
               </div>
             </div>
           </div>
-          <div class="wg-divider"></div>
-          <div class="wg-cave-head">
-            <h3>Cave Banks</h3>
-            <div class="wg-bank-tabs" data-bank-tabs="left" aria-label="Left Cave bank">
-              <button class="wg-bank-button" data-side="left" data-bank="0" type="button" aria-pressed="true">Bank 1</button>
-              <button class="wg-bank-button" data-side="left" data-bank="1" type="button" aria-pressed="false">Bank 2</button>
-              <button class="wg-bank-button" data-side="left" data-bank="2" type="button" aria-pressed="false">Bank 3</button>
-            </div>
-          </div>
-          <div class="wg-table-wrap">
-            <table aria-label="Left Cave bank">
-              <thead><tr><th>Res.</th><th>Frequency Hz</th><th class="wg-mute-cell">Mute</th></tr></thead>
-              <tbody id="wg-left-cave-rows"></tbody>
-            </table>
-          </div>
-          <p id="wg-left-cave-meta" class="wg-help" style="margin-top:9px">范围由设备提供</p>
-        </article>
 
-        <article class="wg-card wg-channel" data-side-panel="right">
-          <div class="wg-card-head">
-            <div>
-              <h2>Right Channel</h2>
-              <p class="wg-help">硬件右侧</p>
-            </div>
-            <span class="wg-badge" data-channel-badge="right">等待设备</span>
-          </div>
-          <div class="wg-readouts">
-            <div class="wg-readout"><span class="wg-readout-label">Note</span><span id="wg-right-note" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Fundamental</span><span id="wg-right-fundamental" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Octave</span><span id="wg-right-octave" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Active Cave</span><span id="wg-right-active-bank" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Trigger</span><span id="wg-right-trigger" class="wg-readout-value">-</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Origin</span><span id="wg-right-origin" class="wg-readout-value">-</span></div>
-          </div>
-          <div class="wg-fields">
-            <div class="wg-field">
-              <label for="wg-right-mode">Mode</label>
-              <select id="wg-right-mode" class="wg-select" data-value-key="param:right:mode" disabled>
-                <option value="0">Poly</option>
-                <option value="1">String</option>
-                <option value="2">Bar</option>
-                <option value="3">Cave</option>
-                <option value="4">Ratio</option>
-              </select>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-threshold">Input Threshold</label>
-              <input id="wg-right-threshold" class="wg-number" data-value-key="param:right:threshold" type="text" inputmode="decimal" disabled>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-mix-number">Mix</label>
-              <div class="wg-control-pair">
-                <input id="wg-right-mix-range" data-range-key="param:right:mix" type="range" disabled>
-                <input id="wg-right-mix-number" class="wg-number" data-value-key="param:right:mix" type="text" inputmode="decimal" disabled>
-              </div>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-decay-number">Decay</label>
-              <div class="wg-control-pair">
-                <input id="wg-right-decay-range" data-range-key="param:right:decay" type="range" disabled>
-                <input id="wg-right-decay-number" class="wg-number" data-value-key="param:right:decay" type="text" inputmode="decimal" disabled>
-              </div>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-volume-number">Volume</label>
-              <div class="wg-control-pair">
-                <input id="wg-right-volume-range" data-range-key="param:right:volume" type="range" disabled>
-                <input id="wg-right-volume-number" class="wg-number" data-value-key="param:right:volume" type="text" inputmode="decimal" disabled>
-              </div>
-            </div>
-          </div>
-          <div class="wg-divider"></div>
-          <div class="wg-cave-head">
-            <h3>Cave Banks</h3>
-            <div class="wg-bank-tabs" data-bank-tabs="right" aria-label="Right Cave bank">
-              <button class="wg-bank-button" data-side="right" data-bank="0" type="button" aria-pressed="true">Bank 1</button>
-              <button class="wg-bank-button" data-side="right" data-bank="1" type="button" aria-pressed="false">Bank 2</button>
-              <button class="wg-bank-button" data-side="right" data-bank="2" type="button" aria-pressed="false">Bank 3</button>
-            </div>
-          </div>
-          <div class="wg-table-wrap">
-            <table aria-label="Right Cave bank">
-              <thead><tr><th>Res.</th><th>Frequency Hz</th><th class="wg-mute-cell">Mute</th></tr></thead>
-              <tbody id="wg-right-cave-rows"></tbody>
-            </table>
-          </div>
-          <p id="wg-right-cave-meta" class="wg-help" style="margin-top:9px">范围由设备提供</p>
-        </article>
-      </section>
-
-      <section class="wg-card" aria-labelledby="wg-ratio-title">
-        <div class="wg-card-head">
-          <div>
-            <div class="wg-inline">
-              <h2 id="wg-ratio-title">共享 Ratio Profile</h2>
-              <span id="wg-ratio-badge" class="wg-badge">等待设备</span>
-            </div>
-            <p class="wg-help">左右共用 9 个频率比。</p>
-          </div>
-          <button id="wg-reset-ratio" class="wg-button" type="button" disabled>Factory Ratio</button>
-        </div>
-        <div class="wg-ratio-layout">
           <div class="wg-table-wrap">
             <table aria-label="Ratio profile">
-              <thead><tr><th>Res.</th><th>Ratio</th><th>Interval</th><th>Left Hz</th><th>Right Hz</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Res.</th>
+                  <th>Ratio</th>
+                  <th>Interval</th>
+                  <th>Left Hz</th>
+                  <th>Right Hz</th>
+                </tr>
+              </thead>
               <tbody id="wg-ratio-rows"></tbody>
             </table>
           </div>
-          <div class="wg-ratio-notes">
-            <div class="wg-ratio-note"><strong>Left Fundamental</strong><span id="wg-ratio-left-note">-</span></div>
-            <div class="wg-ratio-note"><strong>Right Fundamental</strong><span id="wg-ratio-right-note">-</span></div>
-            <p id="wg-ratio-meta" class="wg-help">范围由设备提供</p>
+
+          <div class="wg-actions">
+            <button id="wg-apply-ratio" class="wg-button wg-button-primary" type="button" disabled>Apply Ratio</button>
+            <button id="wg-reset-ratio" class="wg-button" type="button" disabled>恢复 Factory Ratio</button>
+            <span id="wg-ratio-meta" class="wg-meta">范围由设备连接后提供</span>
           </div>
         </div>
       </section>
 
-      <section class="wg-card" aria-labelledby="wg-shared-title">
-        <div class="wg-card-head">
-          <div>
-            <h2 id="wg-shared-title">共享设置</h2>
-            <p class="wg-help">全局调律、增益与 MIDI 路由。</p>
+      <section id="wg-panel-cave" class="wg-panel" role="tabpanel" aria-labelledby="wg-tab-cave" hidden>
+        <div class="wg-card">
+          <div class="wg-card-head">
+            <div>
+              <div class="wg-inline">
+                <h2>Cave Banks</h2>
+                <span id="wg-cave-badge" class="wg-badge">等待设备</span>
+              </div>
+              <p class="wg-help">左右各有 3 个 bank。当前 active bank 的修改立即作用于声音，其他 bank 在八度开关选中后生效。</p>
+            </div>
           </div>
-          <span id="wg-source-badge" class="wg-badge">Input -</span>
-        </div>
-        <div class="wg-shared-grid">
-          <div class="wg-field">
-            <label for="wg-a3">A3 Frequency Hz</label>
-            <input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled>
+
+          <div class="wg-selector-row">
+            <div id="wg-side-selector" class="wg-segments" aria-label="Cave 声道">
+              <button class="wg-segment" type="button" data-side="left" aria-pressed="true">Left</button>
+              <button class="wg-segment" type="button" data-side="right" aria-pressed="false">Right</button>
+            </div>
+            <div id="wg-bank-selector" class="wg-segments" aria-label="Cave bank">
+              <button class="wg-segment" type="button" data-bank="0" aria-pressed="true">Bank 1</button>
+              <button class="wg-segment" type="button" data-bank="1" aria-pressed="false">Bank 2</button>
+              <button class="wg-segment" type="button" data-bank="2" aria-pressed="false">Bank 3</button>
+            </div>
           </div>
-          <div class="wg-field wg-span-2">
-            <label for="wg-tuning">Tuning</label>
-            <select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled>
-              <option value="-1">Standard</option>
-              <option value="0">Centaur</option>
-              <option value="1">Harp of New Albion</option>
-              <option value="2">Wendy Carlos Harmonic</option>
-              <option value="3">Well Tuned Piano</option>
-              <option value="4">Meta Slendro</option>
-              <option value="5">Bihexany</option>
-              <option value="6">Hexachordal Dodecaphonic</option>
-              <option value="7">Augmented[12]</option>
-            </select>
+
+          <div class="wg-table-wrap">
+            <table aria-label="Cave bank">
+              <thead>
+                <tr>
+                  <th>Res.</th>
+                  <th>Frequency Hz</th>
+                  <th class="wg-mute-cell">Mute</th>
+                </tr>
+              </thead>
+              <tbody id="wg-cave-rows"></tbody>
+            </table>
           </div>
-          <div class="wg-field">
-            <label for="wg-pre-clip">Pre Clip Gain</label>
-            <input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled>
-          </div>
-          <div class="wg-field">
-            <label for="wg-post-clip">Post Clip Gain</label>
-            <input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled>
-          </div>
-          <div></div>
-          <div class="wg-field">
-            <label for="wg-midi-left">MIDI Left Channel</label>
-            <input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled>
-          </div>
-          <div class="wg-field">
-            <label for="wg-midi-right">MIDI Right Channel</label>
-            <input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled>
-          </div>
-          <div class="wg-field">
-            <label for="wg-midi-both">MIDI Both Channel</label>
-            <input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled>
+
+          <div class="wg-actions">
+            <button id="wg-apply-cave" class="wg-button wg-button-primary" type="button" disabled>Apply This Bank</button>
+            <span id="wg-cave-meta" class="wg-meta">范围由设备连接后提供</span>
           </div>
         </div>
-        <p class="wg-help" style="margin-top:12px">MIDI 1-16 均可演奏 Note；13-16 同时保留该通道定义的额外 CC 控制。</p>
       </section>
 
       <section class="wg-card wg-data-card" aria-labelledby="wg-data-title">
         <div>
           <h2 id="wg-data-title">配置状态</h2>
-          <p id="wg-state-summary" class="wg-state-summary">连接设备后读取运行配置。</p>
+          <p id="wg-state-summary" class="wg-state-summary">连接设备后可应用、保存、导入或导出完整 Ratio / Cave 配置。</p>
         </div>
         <div class="wg-actions">
-          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled>Save to Flash</button>
+          <button id="wg-apply-all" class="wg-button" type="button" disabled>Apply All Edits</button>
+          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled>Save to Wingie2</button>
           <button id="wg-refresh" class="wg-button" type="button" disabled>重新读取</button>
           <button id="wg-export" class="wg-button" type="button" disabled>Export JSON</button>
           <button id="wg-import" class="wg-button" type="button" disabled>Import JSON</button>
@@ -888,7 +719,7 @@
         </div>
       </section>
 
-      <footer class="wg-footer">桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求</footer>
+      <footer class="wg-footer">需要桌面版 Chromium 浏览器与 HTTPS 安全上下文；页面不会使用 Wi‑Fi、网络请求或外部资源。</footer>
     </div>
   </main>
 
@@ -910,74 +741,43 @@
         disconnect: root.querySelector("#wg-disconnect"),
         alert: root.querySelector("#wg-alert"),
         ratioRows: root.querySelector("#wg-ratio-rows"),
+        caveRows: root.querySelector("#wg-cave-rows"),
         ratioBadge: root.querySelector("#wg-ratio-badge"),
+        caveBadge: root.querySelector("#wg-cave-badge"),
         ratioMeta: root.querySelector("#wg-ratio-meta"),
-        ratioLeftNote: root.querySelector("#wg-ratio-left-note"),
-        ratioRightNote: root.querySelector("#wg-ratio-right-note"),
+        caveMeta: root.querySelector("#wg-cave-meta"),
+        leftNote: root.querySelector("#wg-left-note"),
+        rightNote: root.querySelector("#wg-right-note"),
+        applyRatio: root.querySelector("#wg-apply-ratio"),
         resetRatio: root.querySelector("#wg-reset-ratio"),
-        sourceBadge: root.querySelector("#wg-source-badge"),
+        applyCave: root.querySelector("#wg-apply-cave"),
+        applyAll: root.querySelector("#wg-apply-all"),
         save: root.querySelector("#wg-save"),
         refresh: root.querySelector("#wg-refresh"),
         export: root.querySelector("#wg-export"),
         import: root.querySelector("#wg-import"),
         importFile: root.querySelector("#wg-import-file"),
         stateSummary: root.querySelector("#wg-state-summary"),
-        caveRows: {
-          left: root.querySelector("#wg-left-cave-rows"),
-          right: root.querySelector("#wg-right-cave-rows")
-        },
-        caveMeta: {
-          left: root.querySelector("#wg-left-cave-meta"),
-          right: root.querySelector("#wg-right-cave-meta")
-        }
-      };
-
-      const parameterSpecs = {
-        "param:left:mode": {target: "left", name: "mode", min: 0, max: 4, step: 1, path: ["left", "mode"]},
-        "param:left:mix": {target: "left", name: "mix", min: 0, max: 1, step: 0.001, path: ["left", "mix"], persistent: false},
-        "param:left:decay": {target: "left", name: "decay", min: 0.1, max: 10, step: 0.01, path: ["left", "decay"], persistent: false},
-        "param:left:volume": {target: "left", name: "volume", min: 0, max: 1, step: 0.001, path: ["left", "volume"], persistent: false},
-        "param:left:threshold": {target: "left", name: "threshold", min: 0.0825, max: 0.99, step: 0.0825, path: ["left", "threshold"]},
-        "param:right:mode": {target: "right", name: "mode", min: 0, max: 4, step: 1, path: ["right", "mode"]},
-        "param:right:mix": {target: "right", name: "mix", min: 0, max: 1, step: 0.001, path: ["right", "mix"], persistent: false},
-        "param:right:decay": {target: "right", name: "decay", min: 0.1, max: 10, step: 0.01, path: ["right", "decay"], persistent: false},
-        "param:right:volume": {target: "right", name: "volume", min: 0, max: 1, step: 0.001, path: ["right", "volume"], persistent: false},
-        "param:right:threshold": {target: "right", name: "threshold", min: 0.0825, max: 0.99, step: 0.0825, path: ["right", "threshold"]},
-        "param:shared:a3_hz": {target: "shared", name: "a3_hz", min: 358.08, max: 521.91, step: 0.01, path: ["shared", "a3_hz"]},
-        "param:shared:tuning": {target: "shared", name: "tuning", min: -1, max: 7, step: 1, path: ["shared", "tuning"]},
-        "param:shared:pre_clip_gain": {target: "shared", name: "pre_clip_gain", min: 0.0825, max: 0.99, step: 0.0825, path: ["shared", "pre_clip_gain"]},
-        "param:shared:post_clip_gain": {target: "shared", name: "post_clip_gain", min: 0.385, max: 0.99, step: 0.055, path: ["shared", "post_clip_gain"]},
-        "param:shared:midi_left": {target: "shared", name: "midi_left", min: 1, max: 16, step: 1, path: ["shared", "midi", "left"]},
-        "param:shared:midi_right": {target: "shared", name: "midi_right", min: 1, max: 16, step: 1, path: ["shared", "midi", "right"]},
-        "param:shared:midi_both": {target: "shared", name: "midi_both", min: 1, max: 16, step: 1, path: ["shared", "midi", "both"]}
+        sideSelector: root.querySelector("#wg-side-selector"),
+        bankSelector: root.querySelector("#wg-bank-selector")
       };
 
       const state = {
         port: null,
         reader: null,
         readTask: null,
-        transportWriteChain: Promise.resolve(),
-        liveWriteChain: Promise.resolve(),
+        writeChain: Promise.resolve(),
         inputBuffer: "",
         pending: new Map(),
         nextId: 1,
         connected: false,
         closing: false,
-        heartbeatTimer: null,
-        refreshTimer: null,
-        refreshInFlight: false,
-        refreshAgain: false,
-        saving: false,
-        runtime: null,
+        pollTimer: null,
         ratio: null,
         cave: {left: [null, null, null], right: [null, null, null]},
-        selectedBank: {left: 0, right: 0},
-        observedActiveBank: {left: null, right: null},
-        edits: new Map(),
-        liveWriteErrors: new Map(),
-        bootId: null,
-        observedRevision: 0,
-        lastOrigin: "startup"
+        status: null,
+        selectedSide: "left",
+        selectedBank: 0
       };
 
       class ProtocolError extends Error {
@@ -1004,13 +804,12 @@
       }
 
       function formatError(error) {
-        if (error && error.code === "invalid_parameter") return "设备拒绝了参数值，已重新读取设备状态。";
-        if (error && error.code === "invalid_ratio") return "设备拒绝了 Ratio 值，已重新读取设备状态。";
-        if (error && error.code === "invalid_cave_frequency") return "设备拒绝了 Cave 频率，已重新读取设备状态。";
-        if (error && error.code === "revision_conflict") return "设备状态刚被硬件、MIDI 或另一页面更新；本次旧值未覆盖设备，已重新同步。";
+        if (error && error.code === "revision_conflict") return "设备配置已被其他操作修改。保留了本地编辑，请重新读取后再确认覆盖。";
+        if (error && error.code === "invalid_ratio") return "Ratio 超出设备范围或精度不符合设备要求。";
+        if (error && error.code === "invalid_cave_bank") return "Cave bank 中有频率超出设备范围。";
         if (error && error.name === "NotFoundError") return "没有选择串口设备。";
-        if (error && error.name === "SecurityError") return "浏览器拒绝串口权限。请使用 HTTPS 页面并允许 Web Serial。";
-        if (error && error.name === "NetworkError") return "串口被占用，或设备在连接过程中断开。关闭其他串口程序后重试。";
+        if (error && error.name === "SecurityError") return "浏览器拒绝串口权限。请使用 HTTPS 页面，并确认 iframe 允许 serial。";
+        if (error && error.name === "NetworkError") return "串口已被占用，或设备在连接过程中断开。";
         return error && error.message ? error.message : "发生未知错误。";
       }
 
@@ -1022,117 +821,37 @@
         if (!Array.isArray(value) || value.length !== length) throw new Error(`${name} 数据格式不兼容。`);
       }
 
-      function decimalPlaces(step) {
-        const text = String(step);
-        if (text.includes("e-")) return Number(text.split("e-")[1]);
-        return text.includes(".") ? text.length - text.indexOf(".") - 1 : 0;
-      }
-
-      function formatNumber(value, step = 0.001) {
-        if (!Number.isFinite(Number(value))) return "";
-        const places = Math.min(6, decimalPlaces(step));
-        return Number(Number(value).toFixed(places)).toString();
-      }
-
-      function canonicalize(raw, spec) {
-        if (typeof raw === "string" && raw.trim() === "") return null;
-        const value = typeof raw === "number" ? raw : Number(String(raw).trim());
-        if (!Number.isFinite(value)) return null;
-        const clipped = Math.min(spec.max, Math.max(spec.min, value));
-        const steps = Math.round((clipped - spec.min) / spec.step);
-        const canonical = Math.min(spec.max, Math.max(spec.min, spec.min + steps * spec.step));
-        return Number(canonical.toFixed(Math.min(6, decimalPlaces(spec.step))));
-      }
-
-      function getPath(object, path) {
-        let value = object;
-        for (const part of path) value = value && value[part];
-        return value;
-      }
-
-      function setPath(object, path, value) {
-        let target = object;
-        for (let index = 0; index < path.length - 1; index += 1) target = target[path[index]];
-        target[path[path.length - 1]] = value;
-      }
-
-      function ratioSpec() {
-        return state.ratio ? state.ratio.limits : {min: 0.125, max: 32, step: 0.001};
-      }
-
-      function caveSpec(side, bank) {
-        const current = state.cave[side][bank];
-        return current ? current.limits : {min: 16, max: 15999.99, step: 0.01};
-      }
-
-      function specForKey(key) {
-        if (parameterSpecs[key]) return parameterSpecs[key];
-        if (key.startsWith("ratio:")) return ratioSpec();
-        if (key.startsWith("cave:")) {
-          const parts = key.split(":");
-          return caveSpec(parts[1], Number(parts[2]));
+      function createRatioRows() {
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < ratioCount; index += 1) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><input class="wg-ratio-input" data-index="${index}" type="number" inputmode="decimal" aria-label="Resonator ${index + 1} ratio" disabled></td>
+            <td><span class="wg-cent-value" data-cents="${index}">—</span></td>
+            <td><span class="wg-hz-value" data-side="left" data-hz="${index}">—</span></td>
+            <td><span class="wg-hz-value" data-side="right" data-hz="${index}">—</span></td>`;
+          fragment.appendChild(row);
         }
-        return null;
+        elements.ratioRows.appendChild(fragment);
       }
 
-      function modelValueForKey(key) {
-        if (parameterSpecs[key]) return state.runtime ? getPath(state.runtime, parameterSpecs[key].path) : null;
-        const parts = key.split(":");
-        if (parts[0] === "ratio") return state.ratio ? state.ratio.values[Number(parts[1])] : null;
-        if (parts[0] === "cave") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          return bank ? bank.frequencies[Number(parts[3])] : null;
+      function createCaveRows() {
+        const fragment = document.createDocumentFragment();
+        for (let index = 0; index < ratioCount; index += 1) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td><input class="wg-frequency-input" data-index="${index}" type="number" inputmode="numeric" step="1" aria-label="Resonator ${index + 1} frequency" disabled></td>
+            <td class="wg-mute-cell">
+              <label class="wg-switch" aria-label="Mute resonator ${index + 1}">
+                <input class="wg-mute-input" data-index="${index}" type="checkbox" disabled>
+                <span class="wg-switch-track"></span>
+              </label>
+            </td>`;
+          fragment.appendChild(row);
         }
-        if (parts[0] === "mute") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          return bank ? bank.mute[Number(parts[3])] : null;
-        }
-        return null;
-      }
-
-      function setModelValueForKey(key, value) {
-        if (parameterSpecs[key]) {
-          if (state.runtime) setPath(state.runtime, parameterSpecs[key].path, value);
-          return;
-        }
-        const parts = key.split(":");
-        if (parts[0] === "ratio" && state.ratio) {
-          state.ratio.values[Number(parts[1])] = value;
-          state.ratio.dirty = true;
-        }
-        if (parts[0] === "cave") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          if (bank) {
-            bank.frequencies[Number(parts[3])] = value;
-            bank.dirty = true;
-          }
-        }
-        if (parts[0] === "mute") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          if (bank) {
-            bank.mute[Number(parts[3])] = Boolean(value);
-            bank.dirty = true;
-          }
-        }
-      }
-
-      function editFor(key) {
-        if (!state.edits.has(key)) {
-          state.edits.set(key, {
-            raw: formatNumber(Number(modelValueForKey(key)), (specForKey(key) || {step: 0.001}).step),
-            version: 0,
-            sentVersion: -1,
-            focused: false,
-            pending: false,
-            timer: null
-          });
-        }
-        return state.edits.get(key);
-      }
-
-      function clearEditTimer(edit) {
-        if (edit && edit.timer) window.clearTimeout(edit.timer);
-        if (edit) edit.timer = null;
+        elements.caveRows.appendChild(fragment);
       }
 
       function rejectPending(error) {
@@ -1153,14 +872,6 @@
           setAlert("设备返回了无法解析的协议响应。", "error");
           return;
         }
-        if (response.event === "changed") {
-          state.lastOrigin = response.origin || "unknown";
-          if (Number.isInteger(Number(response.revision))) {
-            state.observedRevision = Math.max(state.observedRevision, Number(response.revision));
-          }
-          scheduleStateRefresh(30);
-          return;
-        }
         const pending = state.pending.get(response.id);
         if (!pending) return;
         state.pending.delete(response.id);
@@ -1177,7 +888,7 @@
             const {value, done} = await reader.read();
             if (done) break;
             state.inputBuffer += decoder.decode(value, {stream: true});
-            if (state.inputBuffer.length > 16384) state.inputBuffer = state.inputBuffer.slice(-8192);
+            if (state.inputBuffer.length > 8192) state.inputBuffer = state.inputBuffer.slice(-4096);
             let newline = state.inputBuffer.indexOf("\n");
             while (newline >= 0) {
               const line = state.inputBuffer.slice(0, newline);
@@ -1196,7 +907,7 @@
       }
 
       function sendLine(line) {
-        const operation = state.transportWriteChain.then(async () => {
+        const operation = state.writeChain.then(async () => {
           if (!state.port || !state.port.writable) throw new Error("串口未连接。");
           const writer = state.port.writable.getWriter();
           try {
@@ -1205,7 +916,7 @@
             writer.releaseLock();
           }
         });
-        state.transportWriteChain = operation.catch(() => undefined);
+        state.writeChain = operation.catch(() => undefined);
         return operation;
       }
 
@@ -1239,14 +950,14 @@
         if (!values.every(Number.isFinite) || !factory.every(Number.isFinite)) throw new Error("设备返回了无效的 Ratio 数据。");
         const limits = response.limits || {};
         const required = [limits.min, limits.max, limits.step, limits.frequency_min, limits.frequency_max];
-        if (!required.every(Number.isFinite)) throw new Error("设备没有返回完整 Ratio limits。");
-        const revision = Number(response.profile.revision);
-        if (state.ratio && revision < state.ratio.revision) return false;
+        if (!required.every(Number.isFinite)) throw new Error("设备没有返回完整的 Ratio limits。请更新固件。");
         state.ratio = {
           values,
-          factory,
-          revision,
+          draft: values.map(String),
+          revision: Number(response.profile.revision),
           dirty: Boolean(response.profile.dirty),
+          local: false,
+          factory,
           limits: {
             min: Number(limits.min),
             max: Number(limits.max),
@@ -1255,83 +966,31 @@
             frequencyMax: Number(limits.frequency_max)
           }
         };
-        return true;
       }
 
       function applyCavePayload(response) {
         if (!sides.includes(response.side) || !Number.isInteger(response.bank) || response.bank < 0 || response.bank >= caveBankCount) {
-          throw new Error("设备返回了无效 Cave bank 标识。");
+          throw new Error("设备返回了无效的 Cave bank 标识。");
         }
         assertArray(response.frequencies, ratioCount, "Cave frequency");
         assertArray(response.mute, ratioCount, "Cave mute");
         const frequencies = response.frequencies.map(Number);
-        if (!frequencies.every(Number.isFinite) || !response.mute.every((value) => typeof value === "boolean")) {
-          throw new Error("设备返回了无效 Cave bank 数据。");
+        if (!frequencies.every(Number.isInteger) || !response.mute.every((value) => typeof value === "boolean")) {
+          throw new Error("设备返回了无效的 Cave bank 数据。");
         }
         const limits = response.limits || {};
-        if (![limits.min, limits.max, limits.step].every(Number.isFinite)) throw new Error("设备没有返回完整 Cave limits。");
-        const revision = Number(response.revision);
-        const current = state.cave[response.side][response.bank];
-        if (current && revision < current.revision) return false;
+        if (!Number.isFinite(limits.min) || !Number.isFinite(limits.max)) throw new Error("设备没有返回 Cave limits。");
         state.cave[response.side][response.bank] = {
           frequencies,
+          draftFrequencies: frequencies.map(String),
           mute: response.mute.slice(),
-          revision,
-          dirty: Boolean(response.dirty),
-          active: Boolean(response.active),
-          limits: {min: Number(limits.min), max: Number(limits.max), step: Number(limits.step)}
-        };
-        return true;
-      }
-
-      function normalizeRuntime(response) {
-        for (const side of sides) {
-          const channel = response[side];
-          if (!channel || !Array.isArray(channel.cave_revisions) || channel.cave_revisions.length !== caveBankCount) {
-            throw new Error("设备状态缺少通道数据。");
-          }
-        }
-        if (!response.shared || !response.shared.midi) throw new Error("设备状态缺少共享设置。");
-        return {
+          draftMute: response.mute.slice(),
           revision: Number(response.revision),
           dirty: Boolean(response.dirty),
-          source: response.source,
-          shared: {
-            a3_hz: Number(response.shared.a3_hz),
-            tuning: Number(response.shared.tuning),
-            pre_clip_gain: Number(response.shared.pre_clip_gain),
-            post_clip_gain: Number(response.shared.post_clip_gain),
-            midi: {
-              left: Number(response.shared.midi.left),
-              right: Number(response.shared.midi.right),
-              both: Number(response.shared.midi.both)
-            }
-          },
-          left: {...response.left, cave_revisions: response.left.cave_revisions.map(Number)},
-          right: {...response.right, cave_revisions: response.right.cave_revisions.map(Number)},
-          ratio_revision: Number(response.ratio_revision)
+          local: false,
+          active: Boolean(response.active),
+          limits: {min: Number(limits.min), max: Number(limits.max)}
         };
-      }
-
-      function applyRuntimePayload(response) {
-        const bootId = Number(response.boot_id);
-        if (!Number.isSafeInteger(bootId) || bootId <= 0) throw new Error("设备状态缺少有效 boot_id。");
-        if (state.bootId !== null && bootId !== state.bootId) {
-          resetDeviceModel();
-          state.lastOrigin = "restart";
-        }
-        state.bootId = bootId;
-        const next = normalizeRuntime(response);
-        const knownRevision = state.runtime ? Math.max(state.runtime.revision, state.observedRevision) : -1;
-        if (next.revision < knownRevision) return false;
-        for (const side of sides) {
-          const active = Number(next[side].active_cave_bank);
-          if (state.observedActiveBank[side] !== active) state.selectedBank[side] = active;
-          state.observedActiveBank[side] = active;
-        }
-        state.runtime = next;
-        state.observedRevision = Math.max(state.observedRevision, next.revision);
-        return true;
       }
 
       async function loadRatio() {
@@ -1342,67 +1001,21 @@
         applyCavePayload(await request("get_cave", {side, bank}));
       }
 
-      async function refreshFull(announce = false) {
-        const runtimeResponse = await request("get_state", {}, 2500);
-        if (!applyRuntimePayload(runtimeResponse)) {
-          scheduleStateRefresh(0);
-          return;
-        }
+      async function refreshStatus() {
+        const response = await request("status", {}, 2500);
+        state.status = response;
+        renderStatus();
+        renderSelectors();
+        renderEffectiveFrequencies();
+      }
+
+      async function refreshAll() {
+        setAlert("正在读取 Ratio 与 6 个 Cave banks…", "info");
         await loadRatio();
-        for (const side of sides) {
-          for (let bank = 0; bank < caveBankCount; bank += 1) await loadCaveBank(side, bank);
-        }
-        state.liveWriteErrors.clear();
+        await Promise.all(sides.flatMap((side) => [0, 1, 2].map((bank) => loadCaveBank(side, bank))));
+        await refreshStatus();
         renderAll();
-        if (announce) setAlert("已读取设备当前运行配置。", "success");
-      }
-
-      async function refreshRuntime() {
-        if (!state.connected) return;
-        if (state.refreshInFlight) {
-          state.refreshAgain = true;
-          return;
-        }
-        state.refreshInFlight = true;
-        try {
-          const response = await request("get_state", {}, 2500);
-          const previousRatioRevision = state.ratio ? state.ratio.revision : null;
-          const previousCaveRevisions = {};
-          for (const side of sides) {
-            previousCaveRevisions[side] = state.cave[side].map((bank) => bank ? bank.revision : null);
-          }
-          if (!applyRuntimePayload(response)) {
-            state.refreshAgain = true;
-            return;
-          }
-          if (!state.ratio || previousRatioRevision !== state.runtime.ratio_revision) await loadRatio();
-          for (const side of sides) {
-            for (let bank = 0; bank < caveBankCount; bank += 1) {
-              if (!state.cave[side][bank] || previousCaveRevisions[side][bank] !== state.runtime[side].cave_revisions[bank]) {
-                await loadCaveBank(side, bank);
-              }
-            }
-          }
-          state.liveWriteErrors.clear();
-          renderAll();
-        } catch (error) {
-          if (state.connected) setAlert(`状态同步失败：${formatError(error)}`, "error");
-        } finally {
-          state.refreshInFlight = false;
-          if (state.refreshAgain) {
-            state.refreshAgain = false;
-            scheduleStateRefresh(0);
-          }
-        }
-      }
-
-      function scheduleStateRefresh(delayMilliseconds = 0) {
-        if (!state.connected) return;
-        if (state.refreshTimer) return;
-        state.refreshTimer = window.setTimeout(() => {
-          state.refreshTimer = null;
-          refreshRuntime();
-        }, delayMilliseconds);
+        setAlert("已读取设备当前配置。", "success");
       }
 
       async function handshake() {
@@ -1410,13 +1023,11 @@
         for (let attempt = 0; attempt < 6; attempt += 1) {
           try {
             const hello = await request("hello", {}, 1300);
-            if (hello.device !== "Wingie2") throw new Error("所选串口不是 Wingie2。");
-            if (hello.config_schema !== 2) throw new Error("固件不支持实时配置 schema 2，请先升级固件。");
-            if (!Number.isSafeInteger(Number(hello.boot_id)) || Number(hello.boot_id) <= 0) throw new Error("固件没有提供有效 boot_id，请先升级固件。");
-            return hello;
+            if (hello.device !== "Wingie2" || hello.config_schema !== 1) throw new Error("所选设备不是兼容的 Wingie2 固件。");
+            return;
           } catch (error) {
             lastError = error;
-            await delay(450);
+            await delay(550);
           }
         }
         throw lastError || new Error("无法完成 Wingie2 握手。");
@@ -1424,78 +1035,51 @@
 
       async function connect() {
         if (!("serial" in navigator)) {
-          setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome 或 Edge。", "error");
+          setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome、Edge 或其他 Chromium 浏览器。", "error");
           return;
         }
         elements.connect.disabled = true;
-        setConnection("connecting", "正在连接...");
+        setConnection("connecting", "正在连接…");
         setAlert("请选择 Wingie2 的 USB 串口。", "info");
         try {
           state.port = await navigator.serial.requestPort();
           state.closing = false;
           state.inputBuffer = "";
-          await state.port.open({baudRate: 115200, bufferSize: 2048});
+          await state.port.open({baudRate: 115200, bufferSize: 1024});
           state.readTask = readLoop();
-          const hello = await handshake();
-          resetDeviceModel();
-          state.bootId = Number(hello.boot_id);
+          await handshake();
           state.connected = true;
           setConnection("connected", "Wingie2 已连接");
-          await refreshFull(false);
-          state.heartbeatTimer = window.setInterval(() => scheduleStateRefresh(0), 1000);
-          setAlert("实时同步已启动。", "success");
+          await refreshAll();
+          state.pollTimer = window.setInterval(() => {
+            if (state.connected && state.pending.size === 0) refreshStatus().catch(() => undefined);
+          }, 1500);
         } catch (error) {
           setAlert(formatError(error), "error");
           await disconnect(false);
         } finally {
           elements.connect.disabled = false;
-          renderAll();
+          updateControls();
         }
-      }
-
-      function stopTimers() {
-        if (state.heartbeatTimer) window.clearInterval(state.heartbeatTimer);
-        if (state.refreshTimer) window.clearTimeout(state.refreshTimer);
-        state.heartbeatTimer = null;
-        state.refreshTimer = null;
-      }
-
-      function clearLocalEdits() {
-        for (const edit of state.edits.values()) clearEditTimer(edit);
-        state.edits.clear();
-        state.liveWriteErrors.clear();
-      }
-
-      function resetDeviceModel() {
-        clearLocalEdits();
-        state.runtime = null;
-        state.ratio = null;
-        state.cave = {left: [null, null, null], right: [null, null, null]};
-        state.selectedBank = {left: 0, right: 0};
-        state.observedActiveBank = {left: null, right: null};
-        state.bootId = null;
-        state.observedRevision = 0;
-        state.lastOrigin = "startup";
       }
 
       function transportLost() {
         if (state.closing) return;
         state.connected = false;
-        stopTimers();
-        clearLocalEdits();
-        rejectPending(new Error("设备已断开。"));
         state.port = null;
         state.readTask = null;
+        if (state.pollTimer) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+        rejectPending(new Error("设备已断开。"));
         setConnection("disconnected", "设备已断开");
-        setAlert("设备已断开。重新连接后会读取设备当前状态。", "warning");
-        renderAll();
+        updateControls();
       }
 
       async function disconnect(showMessage = true) {
         state.closing = true;
         state.connected = false;
-        stopTimers();
-        clearLocalEdits();
+        if (state.pollTimer) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
         rejectPending(new Error("串口已关闭。"));
         try {
           if (state.reader) await state.reader.cancel();
@@ -1510,457 +1094,159 @@
           state.closing = false;
           setConnection("disconnected", "未连接");
           if (showMessage) setAlert("已断开 Wingie2。", "info");
-          renderAll();
+          updateControls();
         }
       }
 
-      function createRows() {
-        for (let index = 0; index < ratioCount; index += 1) {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td><input class="wg-ratio-input" data-value-key="ratio:${index}" type="text" inputmode="decimal" aria-label="Resonator ${index + 1} ratio" disabled></td>
-            <td><span class="wg-cent" data-ratio-cents="${index}">-</span></td>
-            <td><span class="wg-hz" data-ratio-hz="left:${index}">-</span></td>
-            <td><span class="wg-hz" data-ratio-hz="right:${index}">-</span></td>`;
-          elements.ratioRows.appendChild(row);
-        }
-        for (const side of sides) {
-          for (let index = 0; index < ratioCount; index += 1) {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-              <td>${index + 1}</td>
-              <td><input class="wg-frequency-input" data-cave-input="${side}:${index}" type="text" inputmode="decimal" aria-label="${side} resonator ${index + 1} frequency" disabled></td>
-              <td class="wg-mute-cell">
-                <label class="wg-switch" aria-label="${side} mute resonator ${index + 1}">
-                  <input class="wg-mute-input" data-cave-mute="${side}:${index}" type="checkbox" disabled>
-                  <span class="wg-switch-track"></span>
-                </label>
-              </td>`;
-            elements.caveRows[side].appendChild(row);
+      function readRatioDraft() {
+        if (!state.ratio) throw new Error("尚未读取 Ratio profile。");
+        const {min, max, step} = state.ratio.limits;
+        return state.ratio.draft.map((raw, index) => {
+          const value = Number(raw);
+          if (!Number.isFinite(value) || value < min || value > max) throw new Error(`Ratio ${index + 1} 必须在 ${min}–${max} 之间。`);
+          const canonical = Math.round(value / step) * step;
+          if (Math.abs(value - canonical) > step * 0.51) throw new Error(`Ratio ${index + 1} 的精度必须是 ${step}。`);
+          return Number(canonical.toFixed(6));
+        });
+      }
+
+      function currentCaveBank() {
+        return state.cave[state.selectedSide][state.selectedBank];
+      }
+
+      function readCaveDraft(bank = currentCaveBank()) {
+        if (!bank) throw new Error("尚未读取 Cave bank。");
+        const frequencies = bank.draftFrequencies.map((raw, index) => {
+          const value = Number(raw);
+          if (!Number.isInteger(value) || value < bank.limits.min || value > bank.limits.max) {
+            throw new Error(`Cave frequency ${index + 1} 必须是 ${bank.limits.min}–${bank.limits.max} Hz 的整数。`);
           }
-        }
-      }
-
-      function syncValueControl(control, key, value, spec) {
-        control.disabled = !state.connected || state.saving || value === null || value === undefined;
-        if (value === null || value === undefined) {
-          if (document.activeElement !== control) control.value = "";
-          return;
-        }
-        if (control.tagName === "SELECT") {
-          if (document.activeElement !== control && !(state.edits.get(key) || {}).pending) control.value = String(value);
-          return;
-        }
-        control.min = String(spec.min);
-        control.max = String(spec.max);
-        control.step = String(spec.step);
-        const edit = state.edits.get(key);
-        if (edit && (edit.focused || edit.pending)) {
-          if (document.activeElement !== control) control.value = edit.raw;
-        } else if (document.activeElement !== control) {
-          control.value = formatNumber(Number(value), spec.step);
-        }
-      }
-
-      function syncRangeControl(control, key, value, spec) {
-        control.disabled = !state.connected || state.saving || value === null || value === undefined;
-        control.min = String(spec.min);
-        control.max = String(spec.max);
-        control.step = String(spec.step);
-        const edit = state.edits.get(key);
-        const candidate = edit ? canonicalize(edit.raw, spec) : null;
-        if (document.activeElement !== control) control.value = String(candidate === null ? value : candidate);
-      }
-
-      function displayValueForKey(key) {
-        const edit = state.edits.get(key);
-        if (edit && (edit.focused || edit.pending)) {
-          const canonical = canonicalize(edit.raw, specForKey(key));
-          if (canonical !== null) return canonical;
-        }
-        return Number(modelValueForKey(key));
-      }
-
-      function renderParameterControls() {
-        for (const [key, spec] of Object.entries(parameterSpecs)) {
-          const value = modelValueForKey(key);
-          root.querySelectorAll(`[data-value-key="${key}"]`).forEach((control) => syncValueControl(control, key, value, spec));
-          root.querySelectorAll(`[data-range-key="${key}"]`).forEach((control) => syncRangeControl(control, key, value, spec));
-        }
-      }
-
-      function renderChannel(side) {
-        const channel = state.runtime && state.runtime[side];
-        const badge = root.querySelector(`[data-channel-badge="${side}"]`);
-        if (!channel) {
-          badge.textContent = "等待设备";
-          badge.dataset.kind = "";
-          renderCave(side);
-          return;
-        }
-        const modeNames = ["Poly", "String", "Bar", "Cave", "Ratio"];
-        badge.textContent = modeNames[Number(channel.mode)] || `Mode ${channel.mode}`;
-        badge.dataset.kind = "live";
-        root.querySelector(`#wg-${side}-note`).textContent = Number.isFinite(Number(channel.note)) ? `MIDI ${channel.note}` : "-";
-        root.querySelector(`#wg-${side}-fundamental`).textContent = Number.isFinite(Number(channel.fundamental_hz)) ? `${Number(channel.fundamental_hz).toFixed(3)} Hz` : "-";
-        root.querySelector(`#wg-${side}-octave`).textContent = Number.isFinite(Number(channel.octave)) ? String(channel.octave) : "-";
-        root.querySelector(`#wg-${side}-active-bank`).textContent = Number.isInteger(Number(channel.active_cave_bank)) ? `Bank ${Number(channel.active_cave_bank) + 1}` : "-";
-        root.querySelector(`#wg-${side}-trigger`).textContent = channel.trigger ? "On" : "Off";
-        root.querySelector(`#wg-${side}-origin`).textContent = state.lastOrigin;
-        renderCave(side);
-      }
-
-      function renderCave(side) {
-        const selected = state.selectedBank[side];
-        const active = state.runtime ? Number(state.runtime[side].active_cave_bank) : null;
-        root.querySelectorAll(`[data-bank-tabs="${side}"] [data-bank]`).forEach((button) => {
-          const bank = Number(button.dataset.bank);
-          button.setAttribute("aria-pressed", bank === selected ? "true" : "false");
-          button.dataset.active = bank === active ? "true" : "false";
-          button.disabled = !state.connected || state.saving;
+          return value;
         });
-        const bank = state.cave[side][selected];
-        elements.caveRows[side].querySelectorAll("[data-cave-input]").forEach((input, index) => {
-          const key = `cave:${side}:${selected}:${index}`;
-          input.dataset.valueKey = key;
-          syncValueControl(input, key, bank ? bank.frequencies[index] : null, bank ? bank.limits : caveSpec(side, selected));
-        });
-        elements.caveRows[side].querySelectorAll("[data-cave-mute]").forEach((input, index) => {
-          const key = `mute:${side}:${selected}:${index}`;
-          input.dataset.muteKey = key;
-          input.disabled = !state.connected || state.saving || !bank;
-          if (document.activeElement !== input && !(state.edits.get(key) || {}).pending) input.checked = bank ? Boolean(bank.mute[index]) : false;
-        });
-        if (!bank) {
-          elements.caveMeta[side].textContent = "范围由设备提供";
-        } else {
-          elements.caveMeta[side].textContent = `${bank.limits.min}-${bank.limits.max} Hz · step ${bank.limits.step} · revision ${bank.revision}${bank.dirty ? " · RAM unsaved" : ""}`;
-        }
+        return {frequencies, mute: bank.draftMute.map(Boolean)};
       }
 
-      function renderRatio() {
-        const ratio = state.ratio;
-        elements.ratioRows.querySelectorAll("[data-value-key]").forEach((input, index) => {
-          const key = `ratio:${index}`;
-          syncValueControl(input, key, ratio ? ratio.values[index] : null, ratio ? ratio.limits : ratioSpec());
-          const value = displayValueForKey(key);
-          const cents = elements.ratioRows.querySelector(`[data-ratio-cents="${index}"]`);
-          cents.textContent = Number.isFinite(value) && value > 0 ? `${1200 * Math.log2(value) >= 0 ? "+" : ""}${(1200 * Math.log2(value)).toFixed(1)} c` : "-";
-          for (const side of sides) {
-            const target = elements.ratioRows.querySelector(`[data-ratio-hz="${side}:${index}"]`);
-            const fundamental = state.runtime ? Number(state.runtime[side].fundamental_hz) : NaN;
-            if (!ratio || !Number.isFinite(value) || !Number.isFinite(fundamental)) {
-              target.textContent = "-";
-              target.dataset.clipped = "false";
-              continue;
-            }
-            const raw = fundamental * value;
-            const effective = Math.min(ratio.limits.frequencyMax, Math.max(ratio.limits.frequencyMin, raw));
-            target.textContent = `${effective.toFixed(2)}${raw !== effective ? raw < effective ? " MIN" : " MAX" : ""}`;
-            target.dataset.clipped = raw !== effective ? "true" : "false";
-          }
-        });
-        if (!ratio) {
-          elements.ratioBadge.textContent = "等待设备";
-          elements.ratioBadge.dataset.kind = "";
-          elements.ratioMeta.textContent = "范围由设备提供";
-        } else {
-          elements.ratioBadge.textContent = ratio.dirty ? "RAM Unsaved" : "Live";
-          elements.ratioBadge.dataset.kind = ratio.dirty ? "pending" : "live";
-          elements.ratioMeta.textContent = `Ratio ${ratio.limits.min}-${ratio.limits.max} · step ${ratio.limits.step} · revision ${ratio.revision}`;
-        }
-        for (const side of sides) {
-          const channel = state.runtime && state.runtime[side];
-          const target = side === "left" ? elements.ratioLeftNote : elements.ratioRightNote;
-          target.textContent = channel ? `${Number(channel.fundamental_hz).toFixed(3)} Hz · MIDI ${channel.note}` : "-";
-        }
-      }
-
-      function activeWriteCount() {
-        let count = 0;
-        for (const edit of state.edits.values()) if (edit.pending || edit.timer) count += 1;
-        return count;
-      }
-
-      function renderShared() {
-        if (state.runtime) {
-          elements.sourceBadge.textContent = `Input ${state.runtime.source === "line" ? "Line" : "Mic"}`;
-          elements.sourceBadge.dataset.kind = "live";
-        } else {
-          elements.sourceBadge.textContent = "Input -";
-          elements.sourceBadge.dataset.kind = "";
-        }
-      }
-
-      function updateControls() {
-        const ready = state.connected && state.runtime && state.ratio && sides.every((side) => state.cave[side].every(Boolean));
-        elements.resetRatio.disabled = !ready;
-        elements.save.disabled = !ready || state.saving;
-        elements.refresh.disabled = !ready || state.saving;
-        elements.export.disabled = !ready || state.saving;
-        elements.import.disabled = !ready || state.saving;
-        const writes = activeWriteCount();
-        if (!ready) {
-          elements.stateSummary.textContent = "连接设备后读取运行配置。";
-        } else if (writes) {
-          elements.stateSummary.textContent = `${writes} 项实时改动正在同步到设备。`;
-        } else if (state.runtime.dirty) {
-          elements.stateSummary.textContent = `RAM 配置尚未写入 flash · revision ${state.runtime.revision}`;
-        } else {
-          elements.stateSummary.textContent = `运行配置与 flash 已同步 · revision ${state.runtime.revision}`;
-        }
-      }
-
-      function renderAll() {
-        renderParameterControls();
-        for (const side of sides) renderChannel(side);
+      async function applyRatio(announce = true) {
+        const ratios = readRatioDraft();
+        const response = await request("set", {expected_revision: state.ratio.revision, ratios});
+        state.ratio.values = ratios;
+        state.ratio.draft = ratios.map(String);
+        state.ratio.revision = Number(response.revision);
+        state.ratio.dirty = true;
+        state.ratio.local = false;
         renderRatio();
-        renderShared();
         updateControls();
+        if (announce) setAlert("Ratio profile 已应用到左右声道的运行状态，尚未写入 flash。", "success");
       }
 
-      async function sendResourceValue(key, value) {
-        if (parameterSpecs[key]) {
-          const spec = parameterSpecs[key];
-          return request("set_param", {
-            target: spec.target,
-            name: spec.name,
-            value,
-            expected_revision: state.runtime.revision
-          });
-        }
-        const parts = key.split(":");
-        if (parts[0] === "ratio") {
-          return request("set_ratio_value", {
-            index: Number(parts[1]),
-            value,
-            expected_revision: state.ratio.revision
-          });
-        }
-        if (parts[0] === "cave") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          return request("set_cave_value", {
-            target: parts[1],
-            bank: Number(parts[2]),
-            index: Number(parts[3]),
-            value,
-            expected_revision: bank.revision
-          });
-        }
-        if (parts[0] === "mute") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          return request("set_cave_mute", {
-            target: parts[1],
-            bank: Number(parts[2]),
-            index: Number(parts[3]),
-            mute: Boolean(value),
-            expected_revision: bank.revision
-          });
-        }
-        throw new Error("未知配置字段。");
-      }
-
-      function responseValueForKey(key, response, fallback) {
-        return key.startsWith("mute:") ? Boolean(response.mute) : Number.isFinite(Number(response.value)) ? Number(response.value) : fallback;
-      }
-
-      function applyResourceRevision(key, response) {
-        if (!Number.isInteger(Number(response.resource_revision))) return;
-        const resourceRevision = Number(response.resource_revision);
-        if (Number.isInteger(Number(response.revision))) {
-          state.observedRevision = Math.max(state.observedRevision, Number(response.revision));
-        }
-        if (parameterSpecs[key] && state.runtime) {
-          state.runtime.revision = resourceRevision;
-          return;
-        }
-        const parts = key.split(":");
-        if (parts[0] === "ratio" && state.ratio) state.ratio.revision = resourceRevision;
-        if (parts[0] === "cave" || parts[0] === "mute") {
-          const bank = state.cave[parts[1]][Number(parts[2])];
-          if (bank) bank.revision = resourceRevision;
-        }
-      }
-
-      function enqueueLatestWrite(key, version, canonical) {
-        const queued = state.edits.get(key);
-        if (queued && queued.version === version) queued.pending = true;
-        const operation = state.liveWriteChain.then(async () => {
-          const edit = state.edits.get(key);
-          if (!state.connected || !edit || edit.version !== version) return;
-          renderAll();
-          try {
-            const response = await sendResourceValue(key, canonical);
-            applyResourceRevision(key, response);
-            state.liveWriteErrors.delete(key);
-            const current = state.edits.get(key);
-            if (!current || current.version !== version) return;
-            const acknowledged = responseValueForKey(key, response, canonical);
-            setModelValueForKey(key, acknowledged);
-            if (state.runtime && (!parameterSpecs[key] || parameterSpecs[key].persistent !== false)) state.runtime.dirty = true;
-            current.raw = key.startsWith("mute:") ? String(Boolean(acknowledged)) : formatNumber(Number(acknowledged), specForKey(key).step);
-            current.pending = false;
-            if (!current.focused) syncKeyControls(key);
-            renderAll();
-          } catch (error) {
-            const current = state.edits.get(key);
-            if (!current || current.version !== version) return;
-            current.pending = false;
-            state.liveWriteErrors.set(key, error);
-            current.raw = key.startsWith("mute:") ? String(Boolean(modelValueForKey(key))) : formatNumber(Number(modelValueForKey(key)), specForKey(key).step);
-            syncKeyControls(key);
-            setAlert(`实时写入失败：${formatError(error)}`, "error");
-            scheduleStateRefresh(0);
-          }
+      async function applyCave(side = state.selectedSide, bankIndex = state.selectedBank, announce = true) {
+        const bank = state.cave[side][bankIndex];
+        const values = readCaveDraft(bank);
+        const response = await request("set_cave", {
+          side,
+          bank: bankIndex,
+          expected_revision: bank.revision,
+          frequencies: values.frequencies,
+          mute: values.mute
         });
-        state.liveWriteChain = operation.catch(() => undefined);
-        return operation;
-      }
-
-      function syncKeyControls(key) {
-        const spec = specForKey(key);
-        const value = modelValueForKey(key);
-        root.querySelectorAll(`[data-value-key="${key}"]`).forEach((control) => syncValueControl(control, key, value, spec));
-        root.querySelectorAll(`[data-range-key="${key}"]`).forEach((control) => syncRangeControl(control, key, value, spec));
-        root.querySelectorAll(`[data-mute-key="${key}"]`).forEach((control) => {
-          if (document.activeElement !== control) control.checked = Boolean(value);
-        });
-      }
-
-      function commitEdit(key) {
-        const edit = state.edits.get(key);
-        if (!edit) return;
-        clearEditTimer(edit);
-        const spec = specForKey(key);
-        const canonical = canonicalize(edit.raw, spec);
-        if (canonical === null) {
-          edit.raw = formatNumber(Number(modelValueForKey(key)), spec.step);
-          edit.pending = false;
-          edit.sentVersion = edit.version;
-          syncKeyControls(key);
-          return;
-        }
-        if (!edit.focused) edit.raw = formatNumber(canonical, spec.step);
-        if (edit.sentVersion === edit.version) {
-          syncKeyControls(key);
-          return;
-        }
-        edit.sentVersion = edit.version;
-        enqueueLatestWrite(key, edit.version, canonical);
-      }
-
-      function scheduleEdit(key, raw, focused, immediate = false) {
-        const edit = editFor(key);
-        edit.version += 1;
-        edit.raw = String(raw);
-        edit.focused = focused;
-        clearEditTimer(edit);
-        if (immediate) commitEdit(key);
-        else edit.timer = window.setTimeout(() => commitEdit(key), 150);
-        renderAll();
-      }
-
-      function queueMuteWrite(key, value) {
-        const edit = editFor(key);
-        edit.version += 1;
-        edit.raw = String(Boolean(value));
-        edit.focused = false;
-        clearEditTimer(edit);
-        edit.sentVersion = edit.version;
-        enqueueLatestWrite(key, edit.version, Boolean(value));
-      }
-
-      function finalizeVisibleEdits() {
-        for (const [key, edit] of state.edits) {
-          if (!edit.timer) continue;
-          edit.focused = false;
-          commitEdit(key);
+        bank.frequencies = values.frequencies;
+        bank.draftFrequencies = values.frequencies.map(String);
+        bank.mute = values.mute;
+        bank.draftMute = values.mute.slice();
+        bank.revision = Number(response.revision);
+        bank.dirty = true;
+        bank.local = false;
+        if (side === state.selectedSide && bankIndex === state.selectedBank) renderCave();
+        updateControls();
+        if (announce) {
+          const active = activeBank(side) === bankIndex;
+          setAlert(active ? "Cave bank 已应用并立即作用于当前声音，尚未写入 flash。" : "Cave bank 已应用；该 bank 在八度开关选中后作用于声音，尚未写入 flash。", "success");
         }
       }
 
-      async function waitForLiveWrites() {
-        while (true) {
-          const chain = state.liveWriteChain;
-          await chain;
-          if (chain === state.liveWriteChain) {
-            if (state.liveWriteErrors.size) throw state.liveWriteErrors.values().next().value;
-            return;
-          }
+      async function applyAll() {
+        const localCaves = sides.flatMap((side) => [0, 1, 2]
+          .filter((bank) => state.cave[side][bank] && state.cave[side][bank].local)
+          .map((bank) => ({side, bank})));
+        const total = (state.ratio && state.ratio.local ? 1 : 0) + localCaves.length;
+        if (!total) return;
+        elements.applyAll.disabled = true;
+        setAlert(`正在应用 ${total} 组本地编辑…`, "info");
+        try {
+          if (state.ratio.local) await applyRatio(false);
+          for (const item of localCaves) await applyCave(item.side, item.bank, false);
+          setAlert("全部本地编辑已进入设备运行状态，尚未写入 flash。", "success");
+        } catch (error) {
+          setAlert(`部分编辑可能已经应用。${formatError(error)}`, "error");
+        } finally {
+          updateControls();
         }
       }
 
       async function resetRatio() {
+        if (!window.confirm("将运行中的 Ratio profile 恢复为 factory 值？此操作不会立即写入 flash。")) return;
         try {
-          finalizeVisibleEdits();
-          await waitForLiveWrites();
-          await request("reset", {expected_revision: state.ratio.revision});
-          await refreshRuntime();
-          setAlert("Factory Ratio 已进入设备 RAM；Save 才写入 flash。", "success");
+          await request("reset");
+          await loadRatio();
+          renderRatio();
+          updateControls();
+          setAlert("已恢复 factory Ratio。点击 Save 才会持久化。", "success");
         } catch (error) {
           setAlert(formatError(error), "error");
         }
       }
 
-      async function saveConfiguration() {
-        if (!window.confirm("将当前全部运行配置写入 Wingie2 flash？")) return;
-        state.saving = true;
-        renderAll();
-        setAlert("正在等待实时写入并保存 flash...", "info");
-        try {
-          finalizeVisibleEdits();
-          await waitForLiveWrites();
-          await request("save", {}, 7000);
-          await refreshFull(false);
-          setAlert("全部运行配置已保存到 Wingie2 flash。", "success");
-        } catch (error) {
-          setAlert(`保存失败：${formatError(error)}`, "error");
-        } finally {
-          state.saving = false;
-          renderAll();
+      function localEditCount() {
+        let count = state.ratio && state.ratio.local ? 1 : 0;
+        for (const side of sides) {
+          for (const bank of state.cave[side]) if (bank && bank.local) count += 1;
         }
+        return count;
       }
 
-      function exportObject() {
-        if (!state.runtime || !state.ratio || !sides.every((side) => state.cave[side].every(Boolean))) throw new Error("设备配置尚未读取完整。");
-        return {
-          format: "wingie2-config",
-          version: 2,
-          exported_at: new Date().toISOString(),
-          shared: {
-            a3_hz: state.runtime.shared.a3_hz,
-            tuning: state.runtime.shared.tuning,
-            pre_clip_gain: state.runtime.shared.pre_clip_gain,
-            post_clip_gain: state.runtime.shared.post_clip_gain,
-            midi: {...state.runtime.shared.midi}
-          },
-          channels: {
-            left: {
-              mode: state.runtime.left.mode,
-              mix: state.runtime.left.mix,
-              decay: state.runtime.left.decay,
-              volume: state.runtime.left.volume,
-              threshold: state.runtime.left.threshold
-            },
-            right: {
-              mode: state.runtime.right.mode,
-              mix: state.runtime.right.mix,
-              decay: state.runtime.right.decay,
-              volume: state.runtime.right.volume,
-              threshold: state.runtime.right.threshold
-            }
-          },
-          ratio: {ratios: state.ratio.values.slice()},
-          cave: {
-            left: state.cave.left.map((bank) => ({frequencies: bank.frequencies.slice(), mute: bank.mute.slice()})),
-            right: state.cave.right.map((bank) => ({frequencies: bank.frequencies.slice(), mute: bank.mute.slice()}))
+      function deviceDirtyCount() {
+        let count = state.ratio && state.ratio.dirty ? 1 : 0;
+        for (const side of sides) {
+          for (const bank of state.cave[side]) if (bank && bank.dirty) count += 1;
+        }
+        return count;
+      }
+
+      async function saveConfiguration() {
+        const local = localEditCount();
+        if (local && !window.confirm(`还有 ${local} 组本地编辑没有 Apply，它们不会被保存。仍保存设备当前运行配置？`)) return;
+        elements.save.disabled = true;
+        setAlert("正在写入 Wingie2 flash…", "info");
+        try {
+          await request("save", {}, 6000);
+          if (state.ratio) state.ratio.dirty = false;
+          for (const side of sides) {
+            for (const bank of state.cave[side]) if (bank) bank.dirty = false;
           }
-        };
+          renderAll();
+          setAlert("Ratio 与 Cave 运行配置已保存到 Wingie2。", "success");
+        } catch (error) {
+          setAlert(formatError(error), "error");
+        } finally {
+          updateControls();
+        }
       }
 
       function exportConfiguration() {
         try {
-          const blob = new Blob([`${JSON.stringify(exportObject(), null, 2)}\n`], {type: "application/json"});
+          const ratios = readRatioDraft();
+          const cave = {left: [], right: []};
+          for (const side of sides) {
+            cave[side] = state.cave[side].map((bank) => readCaveDraft(bank));
+          }
+          const output = {
+            format: "wingie2-ratio-cave",
+            version: 1,
+            exported_at: new Date().toISOString(),
+            ratio: {ratios},
+            cave
+          };
+          const blob = new Blob([`${JSON.stringify(output, null, 2)}\n`], {type: "application/json"});
           const url = URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
@@ -1969,164 +1255,270 @@
           link.click();
           link.remove();
           URL.revokeObjectURL(url);
-          setAlert("已导出全部可写配置。", "success");
+          setAlert("已导出当前页面中的完整 Ratio / Cave 配置。", "success");
         } catch (error) {
           setAlert(formatError(error), "error");
         }
       }
 
-      function finiteValue(value, label) {
-        if (value === null || value === "" || typeof value === "boolean" || !Number.isFinite(Number(value))) {
-          throw new Error(`${label} 必须是有限数值。`);
-        }
-        return Number(value);
-      }
-
-      function validateImport(parsed) {
-        if (!parsed || parsed.format !== "wingie2-config" || parsed.version !== 2) throw new Error("不是 Wingie2 全量配置 version 2。");
-        const writes = [];
+      function validateImportedConfiguration(parsed) {
+        if (!parsed || parsed.format !== "wingie2-ratio-cave" || parsed.version !== 1) throw new Error("不是兼容的 Wingie2 配置文件。");
+        assertArray(parsed.ratio && parsed.ratio.ratios, ratioCount, "Imported Ratio");
+        const ratioDraft = parsed.ratio.ratios.map(String);
+        const caveDraft = {left: [], right: []};
         for (const side of sides) {
-          const channel = parsed.channels && parsed.channels[side];
-          if (!channel) throw new Error(`缺少 ${side} 通道配置。`);
-          for (const name of ["mode", "mix", "decay", "volume", "threshold"]) {
-            const key = `param:${side}:${name}`;
-            writes.push([key, canonicalize(finiteValue(channel[name], key), parameterSpecs[key])]);
-          }
-        }
-        const shared = parsed.shared || {};
-        for (const name of ["a3_hz", "tuning", "pre_clip_gain", "post_clip_gain"]) {
-          const key = `param:shared:${name}`;
-          writes.push([key, canonicalize(finiteValue(shared[name], key), parameterSpecs[key])]);
-        }
-        for (const slot of ["left", "right", "both"]) {
-          const key = `param:shared:midi_${slot}`;
-          writes.push([key, canonicalize(finiteValue(shared.midi && shared.midi[slot], key), parameterSpecs[key])]);
-        }
-        assertArray(parsed.ratio && parsed.ratio.ratios, ratioCount, "Ratio");
-        parsed.ratio.ratios.forEach((value, index) => {
-          const key = `ratio:${index}`;
-          writes.push([key, canonicalize(finiteValue(value, key), ratioSpec())]);
-        });
-        for (const side of sides) {
-          assertArray(parsed.cave && parsed.cave[side], caveBankCount, `Cave ${side}`);
-          parsed.cave[side].forEach((bank, bankIndex) => {
-            assertArray(bank && bank.frequencies, ratioCount, `Cave ${side} bank ${bankIndex + 1}`);
-            assertArray(bank && bank.mute, ratioCount, `Cave mute ${side} bank ${bankIndex + 1}`);
-            if (!bank.mute.every((value) => typeof value === "boolean")) throw new Error("Cave mute 必须是布尔值。");
-            bank.frequencies.forEach((value, index) => {
-              const key = `cave:${side}:${bankIndex}:${index}`;
-              writes.push([key, canonicalize(finiteValue(value, key), caveSpec(side, bankIndex))]);
-              writes.push([`mute:${side}:${bankIndex}:${index}`, Boolean(bank.mute[index])]);
-            });
+          assertArray(parsed.cave && parsed.cave[side], caveBankCount, `Imported Cave ${side}`);
+          caveDraft[side] = parsed.cave[side].map((bank, bankIndex) => {
+            assertArray(bank && bank.frequencies, ratioCount, `Imported Cave ${side} bank ${bankIndex + 1}`);
+            assertArray(bank && bank.mute, ratioCount, `Imported Cave ${side} mute ${bankIndex + 1}`);
+            if (!bank.mute.every((value) => typeof value === "boolean")) throw new Error(`Imported Cave ${side} bank ${bankIndex + 1} mute 必须是布尔值。`);
+            return {frequencies: bank.frequencies.map(String), mute: bank.mute.slice()};
           });
         }
-        return writes;
-      }
-
-      async function importObject(parsed) {
-        const writes = validateImport(parsed);
-        const groups = [
-          writes.filter(([key]) => key.startsWith("param:")),
-          writes.filter(([key]) => !key.startsWith("param:"))
-        ];
-        for (const group of groups) {
-          for (const [key, value] of group) {
-            if (key.startsWith("mute:")) {
-              queueMuteWrite(key, value);
-            } else {
-              const edit = editFor(key);
-              edit.version += 1;
-              edit.raw = formatNumber(value, specForKey(key).step);
-              edit.focused = false;
-              clearEditTimer(edit);
-              edit.sentVersion = edit.version;
-              enqueueLatestWrite(key, edit.version, value);
-            }
-            await waitForLiveWrites();
-          }
-          await refreshFull(false);
+        const previousRatio = state.ratio.draft;
+        state.ratio.draft = ratioDraft;
+        try {
+          readRatioDraft();
+        } finally {
+          state.ratio.draft = previousRatio;
         }
+        for (const side of sides) {
+          caveDraft[side].forEach((draft, bankIndex) => {
+            const bank = state.cave[side][bankIndex];
+            const previousFrequencies = bank.draftFrequencies;
+            const previousMute = bank.draftMute;
+            bank.draftFrequencies = draft.frequencies;
+            bank.draftMute = draft.mute;
+            try {
+              readCaveDraft(bank);
+            } finally {
+              bank.draftFrequencies = previousFrequencies;
+              bank.draftMute = previousMute;
+            }
+          });
+        }
+        return {ratioDraft, caveDraft};
       }
 
       async function importConfiguration(file) {
-        elements.import.disabled = true;
-        setAlert("正在实时写入导入配置...", "info");
         try {
-          await importObject(JSON.parse(await file.text()));
-          setAlert("全部导入值已进入设备 RAM；Save 才写入 flash。", "success");
+          const imported = validateImportedConfiguration(JSON.parse(await file.text()));
+          state.ratio.draft = imported.ratioDraft;
+          state.ratio.local = true;
+          for (const side of sides) {
+            imported.caveDraft[side].forEach((draft, bankIndex) => {
+              const bank = state.cave[side][bankIndex];
+              bank.draftFrequencies = draft.frequencies;
+              bank.draftMute = draft.mute;
+              bank.local = true;
+            });
+          }
+          renderAll();
+          setAlert("配置已导入页面但尚未发送。检查后点击 Apply All Edits。", "warning");
         } catch (error) {
-          setAlert(`导入中断；此前成功项目可能已在 RAM 生效。${formatError(error)}`, "error");
+          setAlert(`导入失败：${formatError(error)}`, "error");
         } finally {
           elements.importFile.value = "";
-          updateControls();
         }
       }
 
-      root.addEventListener("focusin", (event) => {
-        const control = event.target.closest("[data-value-key], [data-range-key]");
-        if (!control) return;
-        const key = control.dataset.valueKey || control.dataset.rangeKey;
-        editFor(key).focused = true;
-      });
+      function activeBank(side) {
+        const active = state.status && state.status.cave_active_bank ? state.status.cave_active_bank[side] : null;
+        if (Number.isInteger(active)) return active;
+        const found = state.cave[side].findIndex((bank) => bank && bank.active);
+        return found >= 0 ? found : null;
+      }
 
-      root.addEventListener("focusout", (event) => {
-        const control = event.target.closest("[data-value-key], [data-range-key]");
-        if (!control) return;
-        const key = control.dataset.valueKey || control.dataset.rangeKey;
-        const edit = state.edits.get(key);
-        if (!edit) return;
-        edit.focused = false;
-        commitEdit(key);
-        syncKeyControls(key);
-      });
-
-      root.addEventListener("input", (event) => {
-        const valueControl = event.target.closest("[data-value-key]");
-        const rangeControl = event.target.closest("[data-range-key]");
-        if (valueControl && valueControl.tagName !== "SELECT") {
-          scheduleEdit(valueControl.dataset.valueKey, valueControl.value, true, false);
-          return;
+      function renderStatus() {
+        for (const side of sides) {
+          const target = side === "left" ? elements.leftNote : elements.rightNote;
+          const fundamental = state.status && state.status.fundamental_hz ? state.status.fundamental_hz[side] : null;
+          const note = state.status && state.status.note ? state.status.note[side] : null;
+          target.textContent = Number.isFinite(fundamental) && Number.isFinite(note) ? `${Number(fundamental).toFixed(3)} Hz · MIDI ${note}` : "—";
         }
-        if (rangeControl) {
-          const key = rangeControl.dataset.rangeKey;
-          scheduleEdit(key, rangeControl.value, true, false);
-          const number = root.querySelector(`[data-value-key="${key}"]`);
-          if (number && document.activeElement !== number) number.value = formatNumber(Number(rangeControl.value), specForKey(key).step);
+      }
+
+      function renderEffectiveFrequencies() {
+        const ratio = state.ratio;
+        for (let index = 0; index < ratioCount; index += 1) {
+          const value = ratio ? Number(ratio.draft[index]) : NaN;
+          const cents = elements.ratioRows.querySelector(`[data-cents="${index}"]`);
+          cents.textContent = Number.isFinite(value) && value > 0 ? `${1200 * Math.log2(value) >= 0 ? "+" : ""}${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
+          for (const side of sides) {
+            const target = elements.ratioRows.querySelector(`[data-side="${side}"][data-hz="${index}"]`);
+            const fundamental = state.status && state.status.fundamental_hz ? Number(state.status.fundamental_hz[side]) : NaN;
+            if (!ratio || !Number.isFinite(value) || !Number.isFinite(fundamental)) {
+              target.textContent = "—";
+              continue;
+            }
+            const raw = fundamental * value;
+            const effective = Math.min(ratio.limits.frequencyMax, Math.max(ratio.limits.frequencyMin, raw));
+            target.textContent = `${effective.toFixed(2)}${raw < ratio.limits.frequencyMin ? "  MIN" : raw > ratio.limits.frequencyMax ? "  MAX" : ""}`;
+            target.classList.toggle("wg-hz-clipped", raw < ratio.limits.frequencyMin || raw > ratio.limits.frequencyMax);
+          }
         }
-      });
+      }
 
-      root.addEventListener("change", (event) => {
-        const select = event.target.closest("select[data-value-key]");
-        if (select) {
-          scheduleEdit(select.dataset.valueKey, select.value, false, true);
-          return;
-        }
-        const mute = event.target.closest("[data-mute-key]");
-        if (mute) queueMuteWrite(mute.dataset.muteKey, mute.checked);
-      });
-
-      root.addEventListener("keydown", (event) => {
-        const input = event.target.closest("input[data-value-key]");
-        if (!input || event.key !== "Enter") return;
-        input.blur();
-      });
-
-      root.querySelectorAll("[data-bank-tabs] [data-bank]").forEach((button) => {
-        button.addEventListener("click", () => {
-          state.selectedBank[button.dataset.side] = Number(button.dataset.bank);
-          renderCave(button.dataset.side);
+      function renderRatio() {
+        const inputs = elements.ratioRows.querySelectorAll(".wg-ratio-input");
+        inputs.forEach((input, index) => {
+          input.disabled = !state.connected || !state.ratio;
+          if (!state.ratio) {
+            input.value = "";
+            return;
+          }
+          input.min = state.ratio.limits.min;
+          input.max = state.ratio.limits.max;
+          input.step = state.ratio.limits.step;
+          input.value = state.ratio.draft[index];
         });
-      });
+        if (!state.ratio) {
+          elements.ratioBadge.textContent = "等待设备";
+          elements.ratioBadge.dataset.kind = "";
+          elements.ratioMeta.textContent = "范围由设备连接后提供";
+        } else {
+          elements.ratioBadge.textContent = state.ratio.local ? "Local Edit" : state.ratio.dirty ? "RAM · Unsaved" : "Saved";
+          elements.ratioBadge.dataset.kind = state.ratio.local ? "draft" : state.ratio.dirty ? "pending" : "live";
+          elements.ratioMeta.textContent = `Ratio ${state.ratio.limits.min}–${state.ratio.limits.max} · step ${state.ratio.limits.step} · revision ${state.ratio.revision}`;
+        }
+        renderEffectiveFrequencies();
+      }
+
+      function renderSelectors() {
+        elements.sideSelector.querySelectorAll("[data-side]").forEach((button) => {
+          button.setAttribute("aria-pressed", button.dataset.side === state.selectedSide ? "true" : "false");
+        });
+        elements.bankSelector.querySelectorAll("[data-bank]").forEach((button) => {
+          const bank = Number(button.dataset.bank);
+          button.setAttribute("aria-pressed", bank === state.selectedBank ? "true" : "false");
+          button.dataset.active = activeBank(state.selectedSide) === bank ? "true" : "false";
+        });
+      }
+
+      function renderCave() {
+        renderSelectors();
+        const bank = currentCaveBank();
+        elements.caveRows.querySelectorAll(".wg-frequency-input").forEach((input, index) => {
+          input.disabled = !state.connected || !bank;
+          if (!bank) {
+            input.value = "";
+            return;
+          }
+          input.min = bank.limits.min;
+          input.max = bank.limits.max;
+          input.value = bank.draftFrequencies[index];
+        });
+        elements.caveRows.querySelectorAll(".wg-mute-input").forEach((input, index) => {
+          input.disabled = !state.connected || !bank;
+          input.checked = bank ? bank.draftMute[index] : false;
+        });
+        if (!bank) {
+          elements.caveBadge.textContent = "等待设备";
+          elements.caveBadge.dataset.kind = "";
+          elements.caveMeta.textContent = "范围由设备连接后提供";
+          return;
+        }
+        const isActive = activeBank(state.selectedSide) === state.selectedBank;
+        if (bank.local) {
+          elements.caveBadge.textContent = isActive ? "Edit · Apply Live" : "Edit · Apply Pending";
+          elements.caveBadge.dataset.kind = "draft";
+        } else {
+          elements.caveBadge.textContent = isActive ? "Live · Active Bank" : "Pending · Inactive Bank";
+          elements.caveBadge.dataset.kind = isActive ? "live" : "pending";
+        }
+        elements.caveMeta.textContent = `${bank.limits.min}–${bank.limits.max} Hz · revision ${bank.revision}${bank.dirty ? " · RAM unsaved" : " · saved"}`;
+      }
+
+      function updateControls() {
+        const ready = state.connected && Boolean(state.ratio) && sides.every((side) => state.cave[side].every(Boolean));
+        const local = localEditCount();
+        elements.applyRatio.disabled = !ready || !state.ratio.local;
+        elements.resetRatio.disabled = !ready;
+        elements.applyCave.disabled = !ready || !currentCaveBank() || !currentCaveBank().local;
+        elements.applyAll.disabled = !ready || local === 0;
+        elements.save.disabled = !ready;
+        elements.refresh.disabled = !ready;
+        elements.export.disabled = !ready;
+        elements.import.disabled = !ready;
+        const dirty = deviceDirtyCount();
+        if (!ready) {
+          elements.stateSummary.textContent = "连接设备后可应用、保存、导入或导出完整 Ratio / Cave 配置。";
+        } else if (local) {
+          elements.stateSummary.textContent = `${local} 组本地编辑尚未 Apply；${dirty} 组设备运行配置尚未 Save。`;
+        } else if (dirty) {
+          elements.stateSummary.textContent = `${dirty} 组运行配置尚未写入 flash。断电前请 Save。`;
+        } else {
+          elements.stateSummary.textContent = "页面、设备运行状态与 flash 已同步。";
+        }
+      }
+
+      function renderAll() {
+        renderRatio();
+        renderCave();
+        renderStatus();
+        updateControls();
+      }
+
+      function selectTab(name) {
+        const ratioSelected = name === "ratio";
+        root.querySelector("#wg-tab-ratio").setAttribute("aria-selected", ratioSelected ? "true" : "false");
+        root.querySelector("#wg-tab-cave").setAttribute("aria-selected", ratioSelected ? "false" : "true");
+        root.querySelector("#wg-panel-ratio").hidden = !ratioSelected;
+        root.querySelector("#wg-panel-cave").hidden = ratioSelected;
+      }
 
       elements.connect.addEventListener("click", connect);
       elements.disconnect.addEventListener("click", () => disconnect(true));
+      root.querySelector("#wg-tab-ratio").addEventListener("click", () => selectTab("ratio"));
+      root.querySelector("#wg-tab-cave").addEventListener("click", () => selectTab("cave"));
+
+      elements.ratioRows.addEventListener("input", (event) => {
+        const input = event.target.closest(".wg-ratio-input");
+        if (!input || !state.ratio) return;
+        state.ratio.draft[Number(input.dataset.index)] = input.value;
+        state.ratio.local = true;
+        renderEffectiveFrequencies();
+        renderRatio();
+        updateControls();
+      });
+
+      elements.caveRows.addEventListener("input", (event) => {
+        const bank = currentCaveBank();
+        if (!bank) return;
+        const frequency = event.target.closest(".wg-frequency-input");
+        const mute = event.target.closest(".wg-mute-input");
+        if (frequency) bank.draftFrequencies[Number(frequency.dataset.index)] = frequency.value;
+        if (mute) bank.draftMute[Number(mute.dataset.index)] = mute.checked;
+        bank.local = true;
+        renderCave();
+        updateControls();
+      });
+
+      elements.sideSelector.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-side]");
+        if (!button) return;
+        state.selectedSide = button.dataset.side;
+        renderCave();
+        updateControls();
+      });
+
+      elements.bankSelector.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-bank]");
+        if (!button) return;
+        state.selectedBank = Number(button.dataset.bank);
+        renderCave();
+        updateControls();
+      });
+
+      elements.applyRatio.addEventListener("click", () => applyRatio().catch((error) => setAlert(formatError(error), "error")));
       elements.resetRatio.addEventListener("click", resetRatio);
+      elements.applyCave.addEventListener("click", () => applyCave().catch((error) => setAlert(formatError(error), "error")));
+      elements.applyAll.addEventListener("click", applyAll);
       elements.save.addEventListener("click", saveConfiguration);
       elements.refresh.addEventListener("click", async () => {
+        if (localEditCount() && !window.confirm("重新读取会丢弃尚未 Apply 的本地编辑。继续？")) return;
         try {
-          finalizeVisibleEdits();
-          await waitForLiveWrites();
-          await refreshFull(true);
+          await refreshAll();
         } catch (error) {
           setAlert(formatError(error), "error");
         }
@@ -2144,22 +1536,11 @@
         });
       } else {
         elements.connect.disabled = true;
-        setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome 或 Edge。", "warning");
+        setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome、Edge 或其他 Chromium 浏览器。", "warning");
       }
 
-      window.__wingieConfigTest = {
-        applyRuntimePayload: (response) => {
-          const applied = applyRuntimePayload(response);
-          if (applied) renderAll();
-          return applied;
-        },
-        exportObject,
-        importObject,
-        refresh: refreshRuntime,
-        state: () => state
-      };
-
-      createRows();
+      createRatioRows();
+      createCaveRows();
       renderAll();
     })();
   </script>

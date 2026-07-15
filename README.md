@@ -6,7 +6,7 @@
 
 [**How to build programming environment**](https://github.com/mengqimusic/Wingie2#english) (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
 
-## Wingie2 USB 配置
+## Ratio / Cave USB 配置
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) 是可直接部署或植入现有网站的单文件
 配置页。CSS 与 JavaScript 全部内联，不需要 SoftAP、Wi‑Fi、CDN、Node 或 Python；浏览器
@@ -15,27 +15,23 @@
 1. 使用桌面版 Chrome、Edge 或其他支持 Web Serial 的 Chromium 浏览器，通过 HTTPS 打开页面；
 2. 关闭 Arduino Serial Monitor 等占用 Wingie2 串口的软件；
 3. 点击“连接 Wingie2”，选择对应的 USB 串口；
-4. 页面左右栏对应硬件左右声道；网页、面板或 MIDI 的修改会实时同步并立即作用于声音；
-5. 确认声音后点击“Save to Wingie2”并确认，才会写入 flash 并在重启后保留。
+4. Ratio 或 Cave 编辑完成后先点击 Apply，使它进入当前运行状态；
+5. 确认声音后点击“Save to Wingie2”，才会写入 flash 并在重启后保留。
 
-页面没有 Apply。Ratio profile 由左右声道共用，支持 `0.125–32.000`；Cave 保留左右各
-3 个 bank、逐共鸣器 mute 和 `0.01 Hz` 频率精度。Factory Ratio Reset、导入以及所有参数
-编辑都先实时改变运行状态，仍需另行 Save 才会写 flash。Mix、Decay、Volume 是实时演奏参数，
-不会写入 Preferences；物理滑杆重新移动后通过 soft takeover 接管左右声道。
+Ratio profile 由左右声道共用，Factory Ratio Reset 只改变运行状态，仍需另行 Save。
+Cave 保留左右各 3 个 bank、逐共鸣器 mute 与整数 Hz 频率；页面不提供 Cave factory reset。
 
 若页面放在 iframe 中，iframe 需要 `allow="serial"`，服务器也必须允许相应的
 `Permissions-Policy: serial=(self)`。Safari、Firefox、移动浏览器和非安全 HTTP 页面不在
 当前支持范围内。
 
-## Wingie2 USB Configuration
+## Ratio / Cave USB Configuration
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) is a self-contained page that can be deployed
 or embedded directly. It uses USB Web Serial and has no SoftAP, Wi-Fi, CDN, Node, or Python
 dependency. Open it from an HTTPS origin in a desktop Chromium browser, connect the Wingie2 port,
-and edit either channel in real time. Hardware, MIDI, and browser changes stay synchronized. There is
-no Apply step; use the confirmed Save action only when the current persistent settings should be
-written to flash. Ratio is shared by both channels, while Cave keeps three banks per channel with
-`0.01 Hz` resolution. Mix, Decay, and Volume remain runtime-only performance controls.
+Apply edits to the running configuration, then use Save to write Ratio and Cave settings to flash.
+Cave frequencies use integer Hz values.
 
 For an iframe, add `allow="serial"` and serve a compatible
 `Permissions-Policy: serial=(self)` header. Safari, Firefox, mobile browsers, and insecure HTTP

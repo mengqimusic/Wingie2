@@ -30,7 +30,7 @@ void handleNoteOff(byte channel, byte pitch, byte velocity) {
 void MIDISetPitch(int ch, int mode, int pitch) {
 
   if (mode == STRING_MODE || mode == BAR_MODE || mode == RATIO_MODE) {
-    set_channel_note(ch, pitch, CONFIG_ORIGIN_MIDI);
+    set_channel_note(ch, pitch);
   }
 
   else if (mode == POLY_MODE) {
@@ -55,7 +55,31 @@ void MIDISetPitch(int ch, int mode, int pitch) {
 
 void MIDISetTuning(byte cc, byte value) {
   if (cc == CC_TUNING) {
-    if (value < 9) set_tuning_index(value == 0 ? -1 : value - 1, CONFIG_ORIGIN_MIDI);
+    if (value == 0) {
+      use_alt_tuning = 0;
+      alt_tuning_index = -1;
+      alt_tuning_set(-1);
+      if (unq_caves_store) {
+        restore_caves_to_unq();
+        unq_caves_store = false;
+      }
+      dsp.setParamValue("use_alt_tuning", 0);
+      Serial.println("MIDI: Alt tuning disabled");
+    } else if (value < 9) {
+      int t = value - 1;
+      alt_tuning_index = t;
+      alt_tuning_set(alt_tuning_index);
+      if (!use_alt_tuning) {
+        use_alt_tuning = 1;
+        dsp.setParamValue("use_alt_tuning", 1);
+        store_unq_caves();
+        unq_caves_store = true;
+        store_unq_caves_to_prefs(false);
+      }
+      tune_caves();
+      Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
+    }
+    apply_note_profiles_to_dsp();
   }
 }
 
@@ -91,7 +115,9 @@ void handleControlChange (byte channel, byte number, byte value) {
             midi_value_14bit = max(midi_value_14bit, CAVE_LOWEST_FREQ);
             midi_value_14bit = min(midi_value_14bit, CAVE_HIGHEST_FREQ);
 
-            set_cave_frequency(ch, cave, v, midi_value_14bit, CONFIG_ORIGIN_MIDI);
+            cm_freq[ch][cave][v] = midi_value_14bit;
+            mark_cave_changed(ch, cave);
+            cm_freq_set(ch, v, cm_freq[ch][cave][v]);
             //cave_midi_set[ch] = true;
           }
         }
@@ -101,9 +127,9 @@ void handleControlChange (byte channel, byte number, byte value) {
 
   if (channel == 16) { // Global Settings
 
-    if (number == CC_MIDI_CH_L) set_midi_channel(0, value, CONFIG_ORIGIN_MIDI);
-    if (number == CC_MIDI_CH_R) set_midi_channel(1, value, CONFIG_ORIGIN_MIDI);
-    if (number == CC_MIDI_CH_BOTH) set_midi_channel(2, value, CONFIG_ORIGIN_MIDI);
+    if (number == CC_MIDI_CH_L) midi_ch_l = value; dirty[0] = true;
+    if (number == CC_MIDI_CH_R) midi_ch_r = value; dirty[1] = true;
+    if (number == CC_MIDI_CH_BOTH) midi_ch_both = value; dirty[2] = true;
 
     if (number == CC_A3_FREQ_MSB || number == CC_A3_FREQ_LSB) {
 
@@ -114,7 +140,10 @@ void handleControlChange (byte channel, byte number, byte value) {
         int midi_value_14bit = (a3_freq_midi_value[MSB] << 7) | a3_freq_midi_value[LSB];
         float freq_offset = midi_value_14bit / 100. - 81.92;
 
-        set_a3_frequency(440. + freq_offset, CONFIG_ORIGIN_MIDI);
+        a3_freq = 440. + freq_offset;
+        dsp.setParamValue("a3_freq", a3_freq);
+        apply_note_profiles_to_dsp();
+        dirty[3] = true;
       }
     }
   }
@@ -126,7 +155,8 @@ void MIDISetParam(int ch, byte number, byte value) {
   if (number == CC_MODE) {
     int modeFromMIDI = value == 127 ? RATIO_MODE : (value >> 5);
     if (modeFromMIDI <= RATIO_MODE && Mode[ch] != modeFromMIDI) {
-      set_channel_mode(ch, modeFromMIDI, CONFIG_ORIGIN_MIDI);
+      Mode[ch] = modeFromMIDI;
+      modeChangingFromMIDI[ch] = true;
     }
   }
 
@@ -140,7 +170,8 @@ void MIDISetParam(int ch, byte number, byte value) {
     if (number == CC_MIX) {
       int midiVal14Bit = (midiVal[ch][MIX][MSB] << 7) | midiVal[ch][MIX][LSB];
       float v = midiVal14Bit / 16383.;
-      set_channel_performance_parameter(ch, PERFORMANCE_MIX, v, CONFIG_ORIGIN_MIDI, false);
+      if (!ch) dsp.setParamValue("mix0", v);
+      if (ch) dsp.setParamValue("mix1", v);
     }
   }
 
@@ -155,7 +186,8 @@ void MIDISetParam(int ch, byte number, byte value) {
       int midiVal14Bit = (midiVal[ch][DECAY][MSB] << 7) | midiVal[ch][DECAY][LSB];
       float v = (midiVal14Bit / 16383.) * 9.9 + 0.1;
       v = fscale(0.1, 10., 0.1, 10., v, -3.25);
-      if (!startup) set_channel_performance_parameter(ch, PERFORMANCE_DECAY, v, CONFIG_ORIGIN_MIDI, false);
+      if (!ch && !startup) dsp.setParamValue("/Wingie/left/decay", v);
+      if (ch && !startup) dsp.setParamValue("/Wingie/right/decay", v);
     }
   }
 
@@ -169,7 +201,8 @@ void MIDISetParam(int ch, byte number, byte value) {
     if (number == CC_VOL) {
       int midiVal14Bit = (midiVal[ch][VOL][MSB] << 7) | midiVal[ch][VOL][LSB];
       float v = midiVal14Bit / 16383.;
-      set_channel_performance_parameter(ch, PERFORMANCE_VOLUME, v, CONFIG_ORIGIN_MIDI, false);
+      if (!ch) dsp.setParamValue("volume0", v);
+      if (ch) dsp.setParamValue("volume1", v);
     }
   }
 

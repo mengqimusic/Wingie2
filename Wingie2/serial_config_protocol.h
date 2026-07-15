@@ -13,7 +13,7 @@
 
 namespace wingie_serial {
 
-static const size_t kMaxFrameBytes = 1024;
+static const size_t kMaxFrameBytes = 512;
 
 enum Operation {
   kOperationInvalid,
@@ -24,12 +24,7 @@ enum Operation {
   kOperationReset,
   kOperationStatus,
   kOperationGetCave,
-  kOperationSetCave,
-  kOperationGetState,
-  kOperationSetParam,
-  kOperationSetRatioValue,
-  kOperationSetCaveValue,
-  kOperationSetCaveMute
+  kOperationSetCave
 };
 
 enum ParseErrorCode {
@@ -56,13 +51,8 @@ struct Request {
   char side[6];
   uint8_t bank;
   float ratios[wingie_config::kRatioCount];
-  float frequencies[wingie_config::kRatioCount];
+  uint16_t frequencies[wingie_config::kRatioCount];
   bool mute[wingie_config::kRatioCount];
-  char target[16];
-  char name[32];
-  uint8_t index;
-  float value;
-  bool muteValue;
 };
 
 inline void setError(ParseError &error, ParseErrorCode code, int index = -1) {
@@ -94,8 +84,7 @@ inline bool parseUnsigned(const char *cursor, uint32_t &value, const char *end =
   const unsigned long parsed = strtoul(cursor, &parsedEnd, 10);
   if (parsedEnd == cursor || parsed > UINT32_MAX) return false;
   if (end && parsedEnd > end) return false;
-  const char terminator = *skipWhitespace(parsedEnd);
-  if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
+  if (*skipWhitespace(parsedEnd) == '.' || *skipWhitespace(parsedEnd) == 'e' || *skipWhitespace(parsedEnd) == 'E') return false;
   value = static_cast<uint32_t>(parsed);
   return true;
 }
@@ -105,8 +94,6 @@ inline bool parseNumber(const char *cursor, float &value, const char **end = nul
   char *parsedEnd = nullptr;
   value = strtof(cursor, &parsedEnd);
   if (parsedEnd == cursor || !isfinite(value)) return false;
-  const char terminator = *skipWhitespace(parsedEnd);
-  if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
   if (end) *end = parsedEnd;
   return true;
 }
@@ -128,18 +115,12 @@ inline bool parseBoolean(const char *cursor, bool &value, const char **end = nul
   if (!cursor) return false;
   if (strncmp(cursor, "true", 4) == 0) {
     value = true;
-    const char *parsedEnd = cursor + 4;
-    const char terminator = *skipWhitespace(parsedEnd);
-    if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
-    if (end) *end = parsedEnd;
+    if (end) *end = cursor + 4;
     return true;
   }
   if (strncmp(cursor, "false", 5) == 0) {
     value = false;
-    const char *parsedEnd = cursor + 5;
-    const char terminator = *skipWhitespace(parsedEnd);
-    if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
-    if (end) *end = parsedEnd;
+    if (end) *end = cursor + 5;
     return true;
   }
   return false;
@@ -161,8 +142,14 @@ inline bool parseFloatArray(const char *cursor, float *values, size_t capacity, 
   return false;
 }
 
-inline bool parseFrequencyArray(const char *cursor, float *values, size_t capacity, size_t &count) {
-  return parseFloatArray(cursor, values, capacity, count);
+inline bool parseFrequencyArray(const char *cursor, uint16_t *values, size_t capacity, size_t &count) {
+  float parsed[wingie_config::kRatioCount];
+  if (!parseFloatArray(cursor, parsed, capacity, count)) return false;
+  for (size_t index = 0; index < count; index++) {
+    if (parsed[index] < 0 || parsed[index] > UINT16_MAX || floorf(parsed[index]) != parsed[index]) return false;
+    values[index] = static_cast<uint16_t>(parsed[index]);
+  }
+  return true;
 }
 
 inline bool parseBooleanArray(const char *cursor, bool *values, size_t capacity, size_t &count) {
@@ -190,11 +177,6 @@ inline Operation operationFromString(const char *value) {
   if (strcmp(value, "status") == 0) return kOperationStatus;
   if (strcmp(value, "get_cave") == 0) return kOperationGetCave;
   if (strcmp(value, "set_cave") == 0) return kOperationSetCave;
-  if (strcmp(value, "get_state") == 0) return kOperationGetState;
-  if (strcmp(value, "set_param") == 0) return kOperationSetParam;
-  if (strcmp(value, "set_ratio_value") == 0) return kOperationSetRatioValue;
-  if (strcmp(value, "set_cave_value") == 0) return kOperationSetCaveValue;
-  if (strcmp(value, "set_cave_mute") == 0) return kOperationSetCaveMute;
   return kOperationInvalid;
 }
 
@@ -229,7 +211,7 @@ inline bool parseRequestLine(const char *line, size_t length, Request &request, 
     setError(error, kParseInvalidField);
     return false;
   }
-  char operationName[24];
+  char operationName[16];
   if (!parseString(operationValue, operationName, sizeof(operationName))) {
     setError(error, kParseInvalidField);
     return false;
@@ -281,58 +263,6 @@ inline bool parseRequestLine(const char *line, size_t length, Request &request, 
         !parseFrequencyArray(frequencies, request.frequencies, wingie_config::kRatioCount, frequencyCount) ||
         !parseBooleanArray(mute, request.mute, wingie_config::kRatioCount, muteCount) ||
         frequencyCount != wingie_config::kRatioCount || muteCount != wingie_config::kRatioCount) {
-      setError(error, kParseInvalidField);
-      return false;
-    }
-  }
-
-  if (request.operation == kOperationSetParam) {
-    const char *target = findField(object, "target");
-    const char *name = findField(object, "name");
-    const char *value = findField(object, "value");
-    if (!target || !parseString(target, request.target, sizeof(request.target)) || request.target[0] == '\0' ||
-        !name || !parseString(name, request.name, sizeof(request.name)) || request.name[0] == '\0' ||
-        !value || !parseNumber(value, request.value)) {
-      setError(error, kParseInvalidField);
-      return false;
-    }
-  }
-
-  if (request.operation == kOperationSetRatioValue || request.operation == kOperationSetCaveValue ||
-      request.operation == kOperationSetCaveMute) {
-    const char *index = findField(object, "index");
-    uint32_t parsedIndex = 0;
-    if (!index || !parseUnsigned(index, parsedIndex) || parsedIndex >= wingie_config::kRatioCount) {
-      setError(error, kParseInvalidField);
-      return false;
-    }
-    request.index = static_cast<uint8_t>(parsedIndex);
-  }
-
-  if (request.operation == kOperationSetRatioValue || request.operation == kOperationSetCaveValue) {
-    const char *value = findField(object, "value");
-    if (!value || !parseNumber(value, request.value)) {
-      setError(error, kParseInvalidField);
-      return false;
-    }
-  }
-
-  if (request.operation == kOperationSetCaveValue || request.operation == kOperationSetCaveMute) {
-    const char *target = findField(object, "target");
-    const char *bank = findField(object, "bank");
-    uint32_t parsedBank = 0;
-    if (!target || !parseString(target, request.target, sizeof(request.target)) ||
-        (strcmp(request.target, "left") != 0 && strcmp(request.target, "right") != 0) ||
-        !bank || !parseUnsigned(bank, parsedBank) || parsedBank >= wingie_config::kCaveBankCount) {
-      setError(error, kParseInvalidField);
-      return false;
-    }
-    request.bank = static_cast<uint8_t>(parsedBank);
-  }
-
-  if (request.operation == kOperationSetCaveMute) {
-    const char *mute = findField(object, "mute");
-    if (!mute || !parseBoolean(mute, request.muteValue)) {
       setError(error, kParseInvalidField);
       return false;
     }
