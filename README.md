@@ -41,6 +41,20 @@ For an iframe, add `allow="serial"` and serve a compatible
 `Permissions-Policy: serial=(self)` header. Safari, Firefox, mobile browsers, and insecure HTTP
 origins are not supported.
 
+## 网页刷机 / Web Flasher
+
+[`Tools/wingie_flasher.html`](Tools/wingie_flasher.html) 是独立的发布刷机页，不与配置页共用
+Web Serial 状态机。它从 ESP32 ROM bootloader 识别芯片后，只写 `0x1000`、`0x8000`、
+`0xe000`、`0x10000` 四段；标准流程不整片擦除、不读取 app0，也不写 `0x9000` NVS。
+发布维护者使用 [`Tools/firmware_release/README.md`](Tools/firmware_release/README.md) 中的工具
+验证镜像、生成 manifest、SHA256SUMS 与中英文说明。支持范围是 HTTPS 上的桌面 Chrome/Edge。
+
+[`Tools/wingie_flasher.html`](Tools/wingie_flasher.html) is a separate release flasher. It identifies
+the chip through the ESP32 ROM bootloader and writes only the four fixed images at `0x1000`, `0x8000`,
+`0xe000`, and `0x10000`. The normal flow never performs a full-chip erase, reads app0, or writes the
+NVS region at `0x9000`. See [`Tools/firmware_release/README.md`](Tools/firmware_release/README.md) for
+the validated release-package workflow. Desktop Chrome/Edge over HTTPS is supported.
+
 ## 编译过程 Compiling
 
 安装 [Faust](https://faustide.grame.fr/)  并将路径加入 PATH（osx）Install [Faust](https://faustide.grame.fr/)  and add it to PATH (osx) 
