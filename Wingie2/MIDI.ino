@@ -28,8 +28,7 @@ void handleNoteOff(byte channel, byte pitch, byte velocity) {
 void MIDISetPitch(int ch, int mode, int pitch) {
 
   if (mode == STRING_MODE || mode == BAR_MODE) {
-    if (!ch) dsp.setParamValue("note0", pitch);
-    if (ch) dsp.setParamValue("note1", pitch);
+    set_channel_note(ch, pitch);
   }
 
   else if (mode == POLY_MODE) {
@@ -78,6 +77,7 @@ void MIDISetTuning(byte cc, byte value) {
       tune_caves();
       Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
     }
+    apply_note_profiles_to_dsp();
   }
 }
 
@@ -139,6 +139,7 @@ void handleControlChange (byte channel, byte number, byte value) {
 
         a3_freq = 440. + freq_offset;
         dsp.setParamValue("a3_freq", a3_freq);
+        apply_note_profiles_to_dsp();
         dirty[3] = true;
       }
     }
