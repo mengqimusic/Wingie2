@@ -130,6 +130,42 @@ class RatioModeReferenceTest(unittest.TestCase):
             control,
         )
 
+    def test_ratio_mode_cycles_all_led_colors(self):
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+        led_block = extract_braced_block(firmware, "void set_mode_led")
+        mode_change_block = extract_braced_block(
+            control,
+            "if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch])",
+        )
+        save_blink_end_block = extract_braced_block(control, "if (!led_blink)")
+        ratio_cycle_block = extract_braced_block(
+            control,
+            "if (!save_routine_flag && !led_blink)",
+        )
+
+        self.assertIn("#define RATIO_LED_INTERVAL 20", firmware)
+        self.assertIn("ledColor[4]", firmware)
+        self.assertIn("uint8_t ratio_led_phase[2] = {0, 0};", firmware)
+        self.assertIn("ledColor[ratio_led_phase[ch]]", led_block)
+        for reset_block in (mode_change_block, save_blink_end_block):
+            phase_reset = reset_block.index("ratio_led_phase[ch] = 0;")
+            timer_reset = reset_block.index("ratio_led_timer[ch] = currentMillis;")
+            render = reset_block.index("set_mode_led(ch);")
+            self.assertLess(phase_reset, render)
+            self.assertLess(timer_reset, render)
+        self.assertIn(
+            "currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL",
+            ratio_cycle_block,
+        )
+        self.assertIn("ratio_led_timer[ch] = currentMillis;", ratio_cycle_block)
+        self.assertIn(
+            "ratio_led_phase[ch] = (ratio_led_phase[ch] + 1) & 3;",
+            ratio_cycle_block,
+        )
+        self.assertIn("set_mode_led(ch);", ratio_cycle_block)
+        self.assertNotIn("ratio_led_on", firmware + control)
+
 
 if __name__ == "__main__":
     unittest.main()

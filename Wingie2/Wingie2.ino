@@ -220,10 +220,10 @@ float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
 bool save_routine_flag = false, stuff_saved = false, dirty[10];
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
-#define RATIO_LED_INTERVAL 500
+#define RATIO_LED_INTERVAL 20
 #define SAVE_DELAY 3000
 unsigned long save_routine_timer, led_flash_timer, ratio_led_timer[2] = {0, 0};
-bool ratio_led_on[2] = {true, true};
+uint8_t ratio_led_phase[2] = {0, 0};
 
 //
 // for Tap Sequencer
@@ -326,7 +326,9 @@ void unmute_channel_resonators(byte ch) {
 
 void set_mode_led(byte ch) {
   if (Mode[ch] == RATIO_MODE) {
-    for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], ratio_led_on[ch] ? LOW : HIGH);
+    for (int index = 0; index < 2; index++) {
+      digitalWrite(ledPin[ch][index], !bitRead(ledColor[ratio_led_phase[ch]], index));
+    }
     return;
   }
   for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], !bitRead(ledColor[Mode[ch]], index));

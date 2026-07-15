@@ -467,7 +467,7 @@ void control(void *pvParameters) {
         duck_env_triggered[ch] = true;
         duck_env_init_timer[ch] = currentMillis;
 
-        ratio_led_on[ch] = true;
+        ratio_led_phase[ch] = 0;
         ratio_led_timer[ch] = currentMillis;
         set_mode_led(ch);
 
@@ -768,6 +768,8 @@ void control(void *pvParameters) {
         led_blink -= 1;
         if (!led_blink) {
           for (int ch = 0; ch < 2; ch++) {
+            ratio_led_phase[ch] = 0;
+            ratio_led_timer[ch] = currentMillis;
             set_mode_led(ch);
           }
         }
@@ -778,7 +780,7 @@ void control(void *pvParameters) {
       for (int ch = 0; ch < 2; ch++) {
         if (Mode[ch] == RATIO_MODE && currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL) {
           ratio_led_timer[ch] = currentMillis;
-          ratio_led_on[ch] = !ratio_led_on[ch];
+          ratio_led_phase[ch] = (ratio_led_phase[ch] + 1) & 3;
           set_mode_led(ch);
         }
       }
