@@ -100,6 +100,14 @@
       log.push({type: "transport", tracing});
     }
 
+    async setDTR(value) {
+      log.push({type: "dtr", value});
+    }
+
+    async setRTS(value) {
+      log.push({type: "rts", value});
+    }
+
     async disconnect() {
       log.push({type: "disconnect"});
     }
