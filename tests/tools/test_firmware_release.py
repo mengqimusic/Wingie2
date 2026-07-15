@@ -42,10 +42,12 @@ class FirmwareReleaseTest(unittest.TestCase):
 
         self.flasher_page = self.root / "wingie_flasher.html"
         self.flasher_page.write_text(
-            "<!doctype html><title>Wingie2</title>\n"
+            "<!doctype html><title>Wingie2</title><body>\n"
+            "<h2>更新内容</h2><h2>操作说明</h2>\n"
+            "<h2>Changelog</h2><h2>Instructions</h2>\n"
             f"{RELEASE.STANDALONE_MARKER}\n"
-            f"<pre>{RELEASE.STANDALONE_LICENSE_MARKER}</pre>\n"
-            "<script>window.pageLoaded = true;</script>\n"
+            f"<template><pre>{RELEASE.STANDALONE_LICENSE_MARKER}</pre></template>\n"
+            "<script>window.pageLoaded = true;</script></body>\n"
         )
         self.esptool_bundle = self.root / "esptool-js.bundle.js"
         self.esptool_bundle.write_text(
@@ -212,8 +214,17 @@ class FirmwareReleaseTest(unittest.TestCase):
         self.assertIn("EmbeddedTransport", source)
         self.assertIn("window.md5", source)
         self.assertIn("Wingie2 web flasher third-party software notices", source)
+        for fragment in ("更新内容", "操作说明", "Changelog", "Instructions"):
+            self.assertIn(fragment, source)
         aggregate = (package_dir / "THIRD_PARTY_LICENSES.txt").read_text()
         self.assertIn(html.escape(aggregate), source)
+        license_template = re.search(
+            r"<template>\s*<pre>(?P<license>.*?)</pre>\s*</template>",
+            source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(license_template)
+        self.assertEqual(license_template.group("license"), html.escape(aggregate))
 
         match = re.search(
             r"window\.__WINGIE_EMBEDDED_RELEASE__ = (?P<payload>\{.*\});\n"
