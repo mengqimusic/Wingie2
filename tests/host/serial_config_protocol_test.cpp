@@ -41,15 +41,17 @@ static void testCaveCommands() {
   assert(strcmp(get.side, "right") == 0);
   assert(get.bank == 2);
 
-  Request set = parse("@{\"v\":1,\"id\":6,\"op\":\"set_cave\",\"side\":\"left\",\"bank\":0,\"frequencies\":[8,50,115,218,411,777,1500,5200,15999],\"mute\":[false,true,false,true,false,false,false,false,true]}");
+  Request set = parse("@{\"v\":1,\"id\":6,\"op\":\"set_cave\",\"side\":\"left\",\"bank\":0,\"frequencies\":[16.01,50.25,115.5,218.75,411,777,1500,5200,16000.00],\"mute\":[false,true,false,true,false,false,false,false,true]}");
   assert(set.operation == kOperationSetCave);
   assert(strcmp(set.side, "left") == 0);
   assert(set.bank == 0);
-  assert(set.frequencies[0] == 8);
-  assert(set.frequencies[8] == 15999);
+  assert(fabsf(set.frequencies[0] - 16.01f) < 1e-5f);
+  assert(fabsf(set.frequencies[1] - 50.25f) < 1e-5f);
+  assert(fabsf(set.frequencies[8] - 16000.0f) < 1e-3f);
   assert(!set.mute[0]);
   assert(set.mute[1]);
   assert(set.mute[8]);
+  assert(wingie_config::validateCaveBank(set.frequencies, set.mute, wingie_config::kRatioCount));
 }
 
 static void testInvalidRequests() {

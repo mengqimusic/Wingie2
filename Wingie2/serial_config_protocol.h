@@ -51,7 +51,7 @@ struct Request {
   char side[6];
   uint8_t bank;
   float ratios[wingie_config::kRatioCount];
-  uint16_t frequencies[wingie_config::kRatioCount];
+  float frequencies[wingie_config::kRatioCount];
   bool mute[wingie_config::kRatioCount];
 };
 
@@ -142,14 +142,8 @@ inline bool parseFloatArray(const char *cursor, float *values, size_t capacity, 
   return false;
 }
 
-inline bool parseFrequencyArray(const char *cursor, uint16_t *values, size_t capacity, size_t &count) {
-  float parsed[wingie_config::kRatioCount];
-  if (!parseFloatArray(cursor, parsed, capacity, count)) return false;
-  for (size_t index = 0; index < count; index++) {
-    if (parsed[index] < 0 || parsed[index] > UINT16_MAX || floorf(parsed[index]) != parsed[index]) return false;
-    values[index] = static_cast<uint16_t>(parsed[index]);
-  }
-  return true;
+inline bool parseFrequencyArray(const char *cursor, float *values, size_t capacity, size_t &count) {
+  return parseFloatArray(cursor, values, capacity, count);
 }
 
 inline bool parseBooleanArray(const char *cursor, bool *values, size_t capacity, size_t &count) {

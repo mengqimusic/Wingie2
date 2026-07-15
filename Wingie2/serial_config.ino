@@ -88,7 +88,7 @@ void appendRatioArray(JsonResponse &response, const float *ratios) {
 void appendCaveFrequencyArray(JsonResponse &response, byte ch, byte bank) {
   response.append("[");
   for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    response.append(index ? ",%d" : "%d", cm_freq[ch][bank][index]);
+    response.append(index ? ",%.2f" : "%.2f", cm_freq[ch][bank][index]);
   }
   response.append("]");
 }
@@ -107,6 +107,70 @@ byte caveSideIndex(const char *side) {
 
 byte activeCaveBank(byte ch) {
   return static_cast<byte>(max(0, min(2, oct[ch] + 1)));
+}
+
+void caveStorageKey(char *key, size_t capacity, byte ch, byte bank, bool unquantized) {
+  snprintf(key, capacity, unquantized ? "cu2_%c_%u" : "cv2_%c_%u", ch ? 'r' : 'l', bank);
+}
+
+bool loadCaveBankV2(Preferences &store, byte ch, byte bank, bool unquantized) {
+  char key[12];
+  caveStorageKey(key, sizeof(key), ch, bank, unquantized);
+  if (store.getBytesLength(key) != sizeof(wingie_config::CaveBankStorage)) return false;
+
+  wingie_config::CaveBankStorage storage;
+  if (store.getBytes(key, &storage, sizeof(storage)) != sizeof(storage)) return false;
+  wingie_config::CaveBankState decoded;
+  if (!wingie_config::decodeCaveBank(storage, decoded)) return false;
+
+  uint16_t legacyFrequencies[wingie_config::kRatioCount];
+  bool legacyMute[wingie_config::kRatioCount] = {};
+  for (byte index = 0; index < wingie_config::kRatioCount; index++) {
+    legacyFrequencies[index] = static_cast<uint16_t>(lroundf(
+        unquantized ? cm_freq_stored_unq[ch][bank][index] : cm_freq[ch][bank][index]));
+    if (!unquantized) legacyMute[index] = cm_ms[ch][bank][index];
+  }
+  if (!wingie_config::caveBankMatchesLegacy(
+          decoded, legacyFrequencies, legacyMute, wingie_config::kRatioCount)) return false;
+
+  for (byte index = 0; index < wingie_config::kRatioCount; index++) {
+    if (unquantized) {
+      cm_freq_stored_unq[ch][bank][index] = decoded.frequencies[index];
+    } else {
+      cm_freq[ch][bank][index] = decoded.frequencies[index];
+      cm_freq_prev[ch][bank][index] = decoded.frequencies[index];
+      cm_ms[ch][bank][index] = decoded.mute[index];
+      cm_ms_prev[ch][bank][index] = decoded.mute[index];
+    }
+  }
+  if (unquantized) {
+    unquantized_cave_config_dirty[ch][bank] = false;
+    unquantized_cave_storage_migration_pending[ch][bank] = false;
+  } else {
+    cave_config_revision[ch][bank] = decoded.revision;
+    cave_config_dirty[ch][bank] = false;
+    cave_storage_migration_pending[ch][bank] = false;
+  }
+  return true;
+}
+
+bool saveCaveBankV2(Preferences &store, byte ch, byte bank, bool unquantized,
+                    const wingie_config::CaveBankState &state) {
+  wingie_config::CaveBankStorage encoded;
+  if (!wingie_config::encodeCaveBank(state, encoded)) return false;
+  char key[12];
+  caveStorageKey(key, sizeof(key), ch, bank, unquantized);
+  if (store.putBytes(key, &encoded, sizeof(encoded)) != sizeof(encoded)) return false;
+
+  wingie_config::CaveBankStorage verified;
+  if (store.getBytes(key, &verified, sizeof(verified)) != sizeof(verified)) return false;
+  wingie_config::CaveBankState decoded;
+  if (!wingie_config::decodeCaveBank(verified, decoded) || decoded.revision != state.revision) return false;
+  for (byte index = 0; index < wingie_config::kRatioCount; index++) {
+    if (fabsf(decoded.frequencies[index] - state.frequencies[index]) > 0.0051f ||
+        decoded.mute[index] != state.mute[index]) return false;
+  }
+  return true;
 }
 
 void sendHello(uint32_t id) {
@@ -142,10 +206,11 @@ void sendCaveBank(uint32_t id, byte ch, byte bank) {
   appendCaveFrequencyArray(response, ch, bank);
   response.append(",\"mute\":");
   appendCaveMuteArray(response, ch, bank);
-  response.append(",\"revision\":%lu,\"dirty\":%s,\"limits\":{\"min\":%u,\"max\":%u}}",
+  response.append(",\"revision\":%lu,\"dirty\":%s,\"limits\":{\"min\":%.2f,\"max\":%.2f,\"step\":%.2f}}",
                   static_cast<unsigned long>(cave_config_revision[ch][bank]),
                   cave_config_dirty[ch][bank] ? "true" : "false",
-                  wingie_config::kCaveFrequencyMin, wingie_config::kCaveFrequencyMax);
+                  wingie_config::kCaveFrequencyMin, wingie_config::kCaveFrequencyMax,
+                  wingie_config::kCaveFrequencyStep);
   sendJson(response);
 }
 
@@ -235,7 +300,10 @@ void processSerialConfigFrame() {
         return;
       }
       for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-        cm_freq[ch][request.bank][index] = request.frequencies[index];
+        uint32_t frequencyCentiHz = 0;
+        wingie_config::caveFrequencyToCentiHz(request.frequencies[index], frequencyCentiHz);
+        cm_freq[ch][request.bank][index] =
+            static_cast<float>(frequencyCentiHz) / wingie_config::kCaveFrequencyScale;
         cm_ms[ch][request.bank][index] = request.mute[index];
       }
       mark_cave_changed(ch, request.bank);
@@ -271,6 +339,10 @@ void processSerialConfigFrame() {
 
 }  // namespace
 
+bool load_cave_bank_from_preferences(Preferences &store, byte ch, byte bank, bool unquantized) {
+  return loadCaveBankV2(store, ch, bank, unquantized);
+}
+
 void apply_ratio_profile_to_dsp() {
   for (byte ch = 0; ch < 2; ch++) {
     if (Mode[ch] == RATIO_MODE) {
@@ -291,6 +363,46 @@ void load_ratio_profile_from_preferences() {
   apply_ratio_profile_to_dsp();
 }
 
+bool save_unquantized_cave_preferences(Preferences &store) {
+  bool saved = true;
+  for (byte ch = 0; ch < 2; ch++) {
+    for (byte bank = 0; bank < wingie_config::kCaveBankCount; bank++) {
+      const bool shouldSave = unquantized_cave_config_dirty[ch][bank] ||
+                              unquantized_cave_storage_migration_pending[ch][bank];
+      if (!shouldSave) continue;
+
+      wingie_config::CaveBankState snapshot;
+      memset(&snapshot, 0, sizeof(snapshot));
+      for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+        snapshot.frequencies[voice] = cm_freq_stored_unq[ch][bank][voice];
+      }
+
+      bool bankSaved = true;
+      for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+        char key[20];
+        snprintf(key, sizeof(key), ch ? "r_cf_unq_%u_%u" : "l_cf_unq_%u_%u", bank, voice);
+        const uint16_t legacyFrequency = static_cast<uint16_t>(lroundf(snapshot.frequencies[voice]));
+        if (!store.putUShort(key, legacyFrequency)) bankSaved = false;
+      }
+      if (bankSaved && !saveCaveBankV2(store, ch, bank, true, snapshot)) bankSaved = false;
+
+      bool unchanged = true;
+      for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+        if (fabsf(cm_freq_stored_unq[ch][bank][voice] - snapshot.frequencies[voice]) > 0.0001f) {
+          unchanged = false;
+        }
+      }
+      if (bankSaved && unchanged) {
+        unquantized_cave_config_dirty[ch][bank] = false;
+        unquantized_cave_storage_migration_pending[ch][bank] = false;
+      } else {
+        saved = false;
+      }
+    }
+  }
+  return saved;
+}
+
 bool save_ratio_and_cave_preferences(Preferences &store) {
   bool saved = true;
   if (ratio_profile.dirty) {
@@ -305,38 +417,56 @@ bool save_ratio_and_cave_preferences(Preferences &store) {
 
   for (byte ch = 0; ch < 2; ch++) {
     for (byte bank = 0; bank < wingie_config::kCaveBankCount; bank++) {
+      const bool shouldSave = cave_config_dirty[ch][bank] || cave_storage_migration_pending[ch][bank];
+      if (!shouldSave) continue;
+
+      wingie_config::CaveBankState snapshot;
+      memset(&snapshot, 0, sizeof(snapshot));
+      for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+        snapshot.frequencies[voice] = cm_freq[ch][bank][voice];
+        snapshot.mute[voice] = cm_ms[ch][bank][voice];
+      }
+      snapshot.revision = cave_config_revision[ch][bank];
+
       bool bankSaved = true;
       for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
-        if (cm_freq[ch][bank][voice] != cm_freq_prev[ch][bank][voice]) {
-          char key[16];
-          snprintf(key, sizeof(key), ch ? "r_cf_%u_%u" : "l_cf_%u_%u", bank, voice);
-          if (!store.putUShort(key, cm_freq[ch][bank][voice])) {
-            saved = false;
-            bankSaved = false;
-          } else {
-            cm_freq_prev[ch][bank][voice] = cm_freq[ch][bank][voice];
-          }
-        }
-        if (cm_ms[ch][bank][voice] != cm_ms_prev[ch][bank][voice]) {
-          char key[16];
-          snprintf(key, sizeof(key), ch ? "r_cms_%u_%u" : "l_cms_%u_%u", bank, voice);
-          if (!store.putBool(key, cm_ms[ch][bank][voice])) {
-            saved = false;
-            bankSaved = false;
-          } else {
-            cm_ms_prev[ch][bank][voice] = cm_ms[ch][bank][voice];
-          }
+        char key[16];
+        snprintf(key, sizeof(key), ch ? "r_cf_%u_%u" : "l_cf_%u_%u", bank, voice);
+        const uint16_t legacyFrequency = static_cast<uint16_t>(lroundf(snapshot.frequencies[voice]));
+        if (!store.putUShort(key, legacyFrequency)) bankSaved = false;
+        snprintf(key, sizeof(key), ch ? "r_cms_%u_%u" : "l_cms_%u_%u", bank, voice);
+        if (!store.putBool(key, snapshot.mute[voice])) bankSaved = false;
+      }
+      if (bankSaved && !saveCaveBankV2(store, ch, bank, false, snapshot)) bankSaved = false;
+
+      bool unchanged = cave_config_revision[ch][bank] == snapshot.revision;
+      for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+        if (fabsf(cm_freq[ch][bank][voice] - snapshot.frequencies[voice]) > 0.0001f ||
+            cm_ms[ch][bank][voice] != snapshot.mute[voice]) {
+          unchanged = false;
         }
       }
-      if (bankSaved) cave_config_dirty[ch][bank] = false;
+      if (bankSaved && unchanged) {
+        for (byte voice = 0; voice < wingie_config::kRatioCount; voice++) {
+          cm_freq_prev[ch][bank][voice] = snapshot.frequencies[voice];
+          cm_ms_prev[ch][bank][voice] = snapshot.mute[voice];
+        }
+        cave_config_dirty[ch][bank] = false;
+        cave_storage_migration_pending[ch][bank] = false;
+      } else {
+        saved = false;
+      }
     }
   }
+
   return saved;
 }
 
 bool save_serial_configuration() {
   prefs.begin("settings", RW_MODE);
-  const bool saved = save_ratio_and_cave_preferences(prefs);
+  bool saved = save_ratio_and_cave_preferences(prefs);
+  const bool unquantizedSaved = !unq_caves_store || save_unquantized_cave_preferences(prefs);
+  if (!unquantizedSaved || !prefs.putBool("unq_caves_store", unq_caves_store)) saved = false;
   prefs.end();
   return saved;
 }

@@ -46,8 +46,8 @@
 #define MIC_BOOST 0xAAC4 // 0xFFC4 = 48dB, 0x99C4 = 30dB, 0x88C4 = 0dB
 #define DAC_VOL 0xA2A2 // 左右通道输出音量 A0 = 0dB, A2 = 1.5dB, A4 = 3dB
 
-#define CAVE_LOWEST_FREQ 8
-#define CAVE_HIGHEST_FREQ 15999
+#define CAVE_LOWEST_FREQ 16
+#define CAVE_HIGHEST_FREQ 16000
 
 #define CC_MODE 0
 #define CC_MIX 11
@@ -141,8 +141,8 @@ bool unq_caves_store = false;
 //
 // cave mode
 //
-int cm_freq[2][3][9]; // channel, cave_number, voice
-int cm_freq_prev[2][3][9] = {
+float cm_freq[2][3][9]; // channel, cave_number, voice
+float cm_freq_prev[2][3][9] = {
   {
     {62, 115, 218, 411, 777, 1500, 2800, 5200, 11000},
     {205, 304, 370, 523, 540, 800, 913, 1568, 2400},
@@ -154,7 +154,7 @@ int cm_freq_prev[2][3][9] = {
     {212, 425, 531, 637, 1062, 2017, 2336, 2654, 3693}
   }
 };
-int cm_freq_stored_unq[2][3][9] = {
+float cm_freq_stored_unq[2][3][9] = {
   { 
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
     {0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -182,9 +182,15 @@ bool cm_ms_prev[2][3][9] = {
 bool cave_midi_set[2] = {false, false};
 uint32_t cave_config_revision[2][3] = {};
 bool cave_config_dirty[2][3] = {};
+bool cave_storage_migration_pending[2][3] = {};
+bool unquantized_cave_config_dirty[2][3] = {};
+bool unquantized_cave_storage_migration_pending[2][3] = {};
 
 wingie_config::RatioProfileState ratio_profile;
 volatile bool serial_config_ready = false;
+
+bool load_cave_bank_from_preferences(Preferences &store, byte ch, byte bank, bool unquantized);
+bool save_unquantized_cave_preferences(Preferences &store);
 
 // alternate tunings
 static const float alt_tunings[8][12] = {
@@ -487,8 +493,7 @@ void build_freq_table() {
       base = c_freq[5];
     }
 
-    // caves use integer values
-    frequencies[i] = std::round(mtoq(note, base));
+    wingie_config::canonicalizeCaveFrequency(mtoq(note, base), frequencies[i]);
   }
 }
 
@@ -563,6 +568,7 @@ void store_unq_caves() {
       for (int v = 0; v < 9; v++) {
        cm_freq_stored_unq[ch][bank][v] = cm_freq[ch][bank][v];
        }
+      unquantized_cave_config_dirty[ch][bank] = true;
     }
   }
 

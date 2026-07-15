@@ -110,7 +110,7 @@ void control(void *pvParameters) {
           if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
           else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
           const char *addr = buff;
-          prefs.putUShort(addr, cm_freq_prev[ch][cave][v]);
+          prefs.putUShort(addr, static_cast<uint16_t>(lroundf(cm_freq_prev[ch][cave][v])));
 
           if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
           else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
@@ -150,27 +150,39 @@ void control(void *pvParameters) {
 
   for (int ch = 0; ch < 2; ch++) {
     for (int cave = 0; cave < 3; cave++) {
-      char str_cm_f[100];
-      char str_cm_ms[100];
-      sprintf(str_cm_f, "ch %d cave %d frequency  =", cave, ch);
-      sprintf(str_cm_ms, "ch %d cave %d mute state =", cave, ch);
       for (int v = 0; v < 9; v++) {
         char buff[100];
-        char tmp[100];
 
         if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
         else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
         const char *addr = buff;
         cm_freq[ch][cave][v] = prefs.getUShort(addr);
-        cm_freq_prev[ch][cave][v] = cm_freq[ch][cave][v];
-        sprintf(tmp, " %5d", cm_freq[ch][cave][v]);
-        strcat(str_cm_f, tmp);
 
         if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
         else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
         addr = buff;
         cm_ms[ch][cave][v] = prefs.getBool(addr);
         cm_ms_prev[ch][cave][v] = cm_ms[ch][cave][v];
+      }
+
+      if (!load_cave_bank_from_preferences(prefs, ch, cave, false)) {
+        cave_storage_migration_pending[ch][cave] = true;
+        for (int v = 0; v < 9; v++) {
+          float canonical = 0.0f;
+          wingie_config::canonicalizeCaveFrequency(cm_freq[ch][cave][v], canonical);
+          cm_freq[ch][cave][v] = canonical;
+          cm_freq_prev[ch][cave][v] = canonical;
+        }
+      }
+
+      char str_cm_f[160];
+      char str_cm_ms[100];
+      sprintf(str_cm_f, "ch %d cave %d frequency  =", cave, ch);
+      sprintf(str_cm_ms, "ch %d cave %d mute state =", cave, ch);
+      for (int v = 0; v < 9; v++) {
+        char tmp[20];
+        sprintf(tmp, " %8.2f", cm_freq[ch][cave][v]);
+        strcat(str_cm_f, tmp);
         sprintf(tmp, " %5d", cm_ms[ch][cave][v]);
         strcat(str_cm_ms, tmp);
       }
@@ -184,17 +196,29 @@ void control(void *pvParameters) {
   if (unq_caves_store) {
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
-        char str_cm_f[100];
-        sprintf(str_cm_f, "ch %d cave %d unquantized frequency  =", cave, ch);
         for (int v = 0; v < 9; v++) {
           char buff[100];
-          char tmp[100];
 
           if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
           else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
           const char *addr = buff;
           cm_freq_stored_unq[ch][cave][v] = prefs.getUShort(addr);
-          sprintf(tmp, " %5d", cm_freq_stored_unq[ch][cave][v]);
+        }
+
+        if (!load_cave_bank_from_preferences(prefs, ch, cave, true)) {
+          unquantized_cave_storage_migration_pending[ch][cave] = true;
+          for (int v = 0; v < 9; v++) {
+            float canonical = 0.0f;
+            wingie_config::canonicalizeCaveFrequency(cm_freq_stored_unq[ch][cave][v], canonical);
+            cm_freq_stored_unq[ch][cave][v] = canonical;
+          }
+        }
+
+        char str_cm_f[180];
+        sprintf(str_cm_f, "ch %d cave %d unquantized frequency  =", cave, ch);
+        for (int v = 0; v < 9; v++) {
+          char tmp[20];
+          sprintf(tmp, " %8.2f", cm_freq_stored_unq[ch][cave][v]);
           strcat(str_cm_f, tmp);
         }
         Serial.println(str_cm_f);
@@ -689,8 +713,8 @@ void control(void *pvParameters) {
               adj[ch] = adj[ch] * fscale(50, 16000, 1, 20, cm_freq[ch][cave][v], -0.85);  // 指数增长下降
 
               cm_freq[ch][cave][v] += adj[ch];
-              cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], CAVE_LOWEST_FREQ);
-              cm_freq[ch][cave][v] = min(cm_freq[ch][cave][v], CAVE_HIGHEST_FREQ);
+              cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], static_cast<float>(CAVE_LOWEST_FREQ));
+              cm_freq[ch][cave][v] = min(cm_freq[ch][cave][v], static_cast<float>(CAVE_HIGHEST_FREQ));
               mark_cave_changed(ch, cave);
               cm_freq_set(ch, v, cm_freq[ch][cave][v]);
             }
