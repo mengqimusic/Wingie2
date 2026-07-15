@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wingie2 Firmware Installer</title>
+  <style>
+    #wingie-flasher {
+      --wg-bg: #111311;
+      --wg-panel: #191c19;
+      --wg-panel-raised: #202420;
+      --wg-line: #343a34;
+      --wg-line-strong: #4a524a;
+      --wg-text: #f2f1e9;
+      --wg-muted: #a6ada4;
+      --wg-accent: #d7ff4f;
+      --wg-cyan: #70e6d3;
+      --wg-orange: #ffb45c;
+      --wg-red: #ff7d6e;
+      color: var(--wg-text);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(215, 255, 79, 0.08), transparent 28rem),
+        linear-gradient(180deg, #151815 0%, var(--wg-bg) 38rem);
+      min-height: 100vh;
+      padding: 24px;
+      box-sizing: border-box;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.45;
+    }
+
+    #wingie-flasher * {
+      box-sizing: border-box;
+    }
+
+    #wingie-flasher button {
+      color: inherit;
+      font: inherit;
+    }
+
+    #wingie-flasher .wg-shell {
+      width: min(960px, 100%);
+      margin: 0 auto;
+    }
+
+    #wingie-flasher .wg-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    #wingie-flasher .wg-eyebrow {
+      margin: 0 0 6px;
+      color: var(--wg-accent);
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    #wingie-flasher h1,
+    #wingie-flasher h2,
+    #wingie-flasher h3,
+    #wingie-flasher p {
+      margin-top: 0;
+    }
+
+    #wingie-flasher h1 {
+      margin-bottom: 7px;
+      font-size: clamp(29px, 5vw, 48px);
+      line-height: 1;
+      letter-spacing: -0.045em;
+      font-weight: 760;
+    }
+
+    #wingie-flasher h2 {
+      margin-bottom: 5px;
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+
+    #wingie-flasher h3 {
+      margin-bottom: 3px;
+      font-size: 15px;
+    }
+
+    #wingie-flasher .wg-subtitle,
+    #wingie-flasher .wg-help,
+    #wingie-flasher .wg-meta {
+      color: var(--wg-muted);
+    }
+
+    #wingie-flasher .wg-subtitle {
+      max-width: 660px;
+      margin-bottom: 0;
+    }
+
+    #wingie-flasher .wg-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid rgba(112, 230, 211, 0.38);
+      border-radius: 999px;
+      color: var(--wg-cyan);
+      background: rgba(112, 230, 211, 0.06);
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #wingie-flasher .wg-alert {
+      display: none;
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border: 1px solid var(--wg-line);
+      border-radius: 10px;
+      background: var(--wg-panel);
+      font-size: 14px;
+      white-space: pre-line;
+    }
+
+    #wingie-flasher .wg-alert[data-visible="true"] {
+      display: block;
+    }
+
+    #wingie-flasher .wg-alert[data-kind="success"] {
+      border-color: rgba(112, 230, 211, 0.42);
+      color: var(--wg-cyan);
+    }
+
+    #wingie-flasher .wg-alert[data-kind="warning"] {
+      border-color: rgba(255, 180, 92, 0.5);
+      color: #ffd19a;
+    }
+
+    #wingie-flasher .wg-alert[data-kind="error"] {
+      border-color: rgba(255, 125, 110, 0.52);
+      color: #ffc2ba;
+    }
+
+    #wingie-flasher .wg-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    #wingie-flasher .wg-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--wg-line);
+      border-radius: 16px;
+      background: rgba(25, 28, 25, 0.94);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.13);
+    }
+
+    #wingie-flasher .wg-card-wide {
+      grid-column: 1 / -1;
+    }
+
+    #wingie-flasher .wg-card-head,
+    #wingie-flasher .wg-actions,
+    #wingie-flasher .wg-status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    #wingie-flasher .wg-card-head {
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+
+    #wingie-flasher .wg-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--wg-line);
+      border-radius: 999px;
+      color: var(--wg-muted);
+      background: rgba(0, 0, 0, 0.16);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    #wingie-flasher .wg-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #656b65;
+      box-shadow: 0 0 0 4px rgba(101, 107, 101, 0.1);
+    }
+
+    #wingie-flasher .wg-status[data-state="working"] .wg-dot {
+      background: var(--wg-orange);
+      box-shadow: 0 0 0 4px rgba(255, 180, 92, 0.12);
+      animation: wg-pulse 1s ease-in-out infinite;
+    }
+
+    #wingie-flasher .wg-status[data-state="ready"] {
+      color: var(--wg-text);
+      border-color: rgba(112, 230, 211, 0.38);
+    }
+
+    #wingie-flasher .wg-status[data-state="ready"] .wg-dot {
+      background: var(--wg-cyan);
+      box-shadow: 0 0 0 4px rgba(112, 230, 211, 0.12);
+    }
+
+    #wingie-flasher .wg-status[data-state="error"] .wg-dot {
+      background: var(--wg-red);
+      box-shadow: 0 0 0 4px rgba(255, 125, 110, 0.12);
+    }
+
+    @keyframes wg-pulse {
+      50% { opacity: 0.35; }
+    }
+
+    #wingie-flasher .wg-button {
+      min-height: 40px;
+      padding: 0 15px;
+      border: 1px solid var(--wg-line-strong);
+      border-radius: 10px;
+      background: var(--wg-panel-raised);
+      cursor: pointer;
+      transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+    }
+
+    #wingie-flasher .wg-button:hover:not(:disabled) {
+      border-color: #6c766c;
+      background: #292e29;
+    }
+
+    #wingie-flasher .wg-button:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    #wingie-flasher .wg-button:focus-visible {
+      outline: 2px solid var(--wg-accent);
+      outline-offset: 2px;
+    }
+
+    #wingie-flasher .wg-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+
+    #wingie-flasher .wg-button-primary {
+      border-color: var(--wg-accent);
+      color: #151804;
+      background: var(--wg-accent);
+      font-weight: 720;
+    }
+
+    #wingie-flasher .wg-button-primary:hover:not(:disabled) {
+      border-color: #e3ff7e;
+      background: #e3ff7e;
+    }
+
+    #wingie-flasher .wg-safety {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    #wingie-flasher .wg-safety li {
+      position: relative;
+      margin: 0 0 9px;
+      padding-left: 23px;
+    }
+
+    #wingie-flasher .wg-safety li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--wg-cyan);
+      font-weight: 800;
+    }
+
+    #wingie-flasher .wg-safety li:last-child {
+      margin-bottom: 0;
+    }
+
+    #wingie-flasher .wg-parts {
+      display: grid;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    #wingie-flasher .wg-part {
+      display: grid;
+      grid-template-columns: minmax(105px, 0.7fr) minmax(0, 1.5fr) auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 48px;
+      padding: 8px 11px;
+      border: 1px solid var(--wg-line);
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    #wingie-flasher .wg-part-name {
+      font-weight: 700;
+    }
+
+    #wingie-flasher .wg-part-path {
+      min-width: 0;
+      overflow: hidden;
+      color: var(--wg-muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #wingie-flasher .wg-part-state {
+      color: var(--wg-muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    #wingie-flasher .wg-part[data-state="ready"] .wg-part-state {
+      color: var(--wg-cyan);
+    }
+
+    #wingie-flasher .wg-part[data-state="working"] .wg-part-state {
+      color: var(--wg-orange);
+    }
+
+    #wingie-flasher .wg-part[data-state="error"] .wg-part-state {
+      color: var(--wg-red);
+    }
+
+    #wingie-flasher .wg-progress {
+      width: 100%;
+      height: 10px;
+      margin: 15px 0 8px;
+      overflow: hidden;
+      border: 1px solid var(--wg-line);
+      border-radius: 999px;
+      background: #0e100e;
+    }
+
+    #wingie-flasher .wg-progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--wg-cyan), var(--wg-accent));
+      transition: width 100ms linear;
+    }
+
+    #wingie-flasher .wg-progress-label {
+      margin: 0 0 15px;
+      color: var(--wg-muted);
+      font-size: 12px;
+    }
+
+    #wingie-flasher details {
+      margin-top: 14px;
+      border-top: 1px solid var(--wg-line);
+      padding-top: 12px;
+    }
+
+    #wingie-flasher summary {
+      color: var(--wg-muted);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    #wingie-flasher .wg-log {
+      max-height: 210px;
+      margin: 11px 0 0;
+      padding: 12px;
+      overflow: auto;
+      border-radius: 9px;
+      color: #cfd5cd;
+      background: #0c0e0c;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    #wingie-flasher .wg-support {
+      margin: 14px 0 0;
+      color: var(--wg-muted);
+      font-size: 13px;
+    }
+
+    #wingie-flasher .wg-footer {
+      margin-top: 18px;
+      color: var(--wg-muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      #wingie-flasher {
+        padding: 16px;
+      }
+
+      #wingie-flasher .wg-header,
+      #wingie-flasher .wg-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #wingie-flasher .wg-header {
+        align-items: start;
+      }
+
+      #wingie-flasher .wg-card-wide {
+        grid-column: auto;
+      }
+
+      #wingie-flasher .wg-part {
+        grid-template-columns: 1fr auto;
+      }
+
+      #wingie-flasher .wg-part-path {
+        grid-column: 1 / -1;
+        grid-row: 2;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #wingie-flasher .wg-status[data-state="working"] .wg-dot {
+        animation: none;
+      }
+
+      #wingie-flasher .wg-progress-fill {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; background: #111311;">
+  <main id="wingie-flasher">
+    <div class="wg-shell">
+      <header class="wg-header">
+        <div>
+          <p class="wg-eyebrow">Wingie2 · USB Recovery</p>
+          <h1>固件安装器</h1>
+          <p class="wg-subtitle">适用于全新设备、旧版升级和应用损坏恢复。连接判断只使用 ESP32 ROM bootloader，不要求设备中的 Wingie2 固件能够启动。</p>
+        </div>
+        <span class="wg-badge">保留 MIDI、调律、Cave 与 Ratio 设置</span>
+      </header>
+
+      <div id="wg-alert" class="wg-alert" data-visible="false" data-kind="info" role="status" aria-live="polite"></div>
+
+      <div class="wg-grid">
+        <section class="wg-card" aria-labelledby="wg-safety-title">
+          <div class="wg-card-head">
+            <div>
+              <h2 id="wg-safety-title">安全边界</h2>
+              <p class="wg-help">标准安装只改写启动和应用镜像。</p>
+            </div>
+          </div>
+          <ul class="wg-safety">
+            <li>不执行整片擦除</li>
+            <li>不读取或备份现有 app0</li>
+            <li>不写入 <code>0x9000</code> 的 NVS 配置区</li>
+            <li>每段先校验 SHA-256，写入后再校验 MD5</li>
+          </ul>
+          <p class="wg-support">此页面不提供“擦除配置”。需要恢复出厂设置时，请使用独立的高级工具并确认警告。</p>
+        </section>
+
+        <section class="wg-card" aria-labelledby="wg-device-title">
+          <div class="wg-card-head">
+            <div>
+              <h2 id="wg-device-title">设备</h2>
+              <p id="wg-chip-detail" class="wg-help">等待固件包检查</p>
+            </div>
+            <span id="wg-device-status" class="wg-status" data-state="idle"><span class="wg-dot"></span><span id="wg-device-status-text">未连接</span></span>
+          </div>
+          <div class="wg-actions">
+            <button id="wg-connect" class="wg-button wg-button-primary" type="button" disabled>连接 Wingie2</button>
+            <button id="wg-disconnect" class="wg-button" type="button" hidden>断开</button>
+          </div>
+          <p class="wg-support">请选择连接 Wingie2 的 USB 串口。安装器会用 DTR/RTS 自动进入下载模式；无需先打开配置页。</p>
+        </section>
+
+        <section class="wg-card wg-card-wide" aria-labelledby="wg-package-title">
+          <div class="wg-card-head">
+            <div>
+              <h2 id="wg-package-title">发布固件</h2>
+              <p id="wg-package-detail" class="wg-help">正在读取 manifest.json…</p>
+            </div>
+            <span id="wg-package-status" class="wg-status" data-state="working"><span class="wg-dot"></span><span id="wg-package-status-text">检查中</span></span>
+          </div>
+          <div id="wg-parts" class="wg-parts" aria-live="polite"></div>
+          <div class="wg-actions" style="margin-top: 14px;">
+            <button id="wg-reload" class="wg-button" type="button">重新检查固件</button>
+          </div>
+        </section>
+
+        <section class="wg-card wg-card-wide" aria-labelledby="wg-install-title">
+          <div class="wg-card-head">
+            <div>
+              <h2 id="wg-install-title">安装</h2>
+              <p id="wg-install-detail" class="wg-help">先检查固件包，再连接设备。</p>
+            </div>
+            <span id="wg-install-status" class="wg-status" data-state="idle"><span class="wg-dot"></span><span id="wg-install-status-text">等待</span></span>
+          </div>
+          <div class="wg-progress" role="progressbar" aria-label="刷写进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="wg-progress-fill" class="wg-progress-fill"></div>
+          </div>
+          <p id="wg-progress-label" class="wg-progress-label">0%</p>
+          <div class="wg-actions">
+            <button id="wg-flash" class="wg-button wg-button-primary" type="button" disabled>开始安装</button>
+          </div>
+          <details>
+            <summary>查看技术日志</summary>
+            <pre id="wg-log" class="wg-log" aria-live="polite"></pre>
+          </details>
+        </section>
+      </div>
+
+      <footer class="wg-footer">支持桌面版 Chrome / Edge 与 HTTPS。请保持 USB 连接，刷写过程中不要关闭页面。</footer>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const MANIFEST_URL = "./manifest.json";
+      const ESPTOOL_VENDOR_URL = "./vendor/esptool-js.bundle.js";
+      const MD5_VENDOR_URL = "./vendor/md5.min.js";
+      const ESPTOOL_JS_VERSION = "0.6.0";
+      const EXPECTED_CHIP = "ESP32";
+      const FLASH_SECTOR_SIZE = 0x1000;
+      const NVS_OFFSET = 0x9000;
+      const NVS_SIZE = 0x5000;
+      const MAX_APP_SIZE = 0x140000;
+      const BAUDRATE = 460800;
+      const EXPECTED_PARTS = [
+        {name: "bootloader", offset: 0x1000, label: "Bootloader"},
+        {name: "partitions", offset: 0x8000, label: "Partition Table"},
+        {name: "boot_app0", offset: 0xe000, label: "Boot App0"},
+        {name: "app", offset: 0x10000, label: "Wingie2 App"}
+      ];
+
+      const root = document.querySelector("#wingie-flasher");
+      const elements = {
+        alert: root.querySelector("#wg-alert"),
+        connect: root.querySelector("#wg-connect"),
+        disconnect: root.querySelector("#wg-disconnect"),
+        reload: root.querySelector("#wg-reload"),
+        flash: root.querySelector("#wg-flash"),
+        chipDetail: root.querySelector("#wg-chip-detail"),
+        packageDetail: root.querySelector("#wg-package-detail"),
+        installDetail: root.querySelector("#wg-install-detail"),
+        parts: root.querySelector("#wg-parts"),
+        progress: root.querySelector("[role='progressbar']"),
+        progressFill: root.querySelector("#wg-progress-fill"),
+        progressLabel: root.querySelector("#wg-progress-label"),
+        log: root.querySelector("#wg-log"),
+        packageStatus: root.querySelector("#wg-package-status"),
+        packageStatusText: root.querySelector("#wg-package-status-text"),
+        deviceStatus: root.querySelector("#wg-device-status"),
+        deviceStatusText: root.querySelector("#wg-device-status-text"),
+        installStatus: root.querySelector("#wg-install-status"),
+        installStatusText: root.querySelector("#wg-install-status-text")
+      };
+
+      const state = {
+        manifest: null,
+        images: [],
+        runtime: null,
+        port: null,
+        transport: null,
+        loader: null,
+        packageReady: false,
+        connected: false,
+        busy: false,
+        resumeIndex: 0,
+        completed: false
+      };
+
+      function setStatus(node, textNode, status, text) {
+        node.dataset.state = status;
+        textNode.textContent = text;
+      }
+
+      function showAlert(message, kind = "info") {
+        elements.alert.textContent = message;
+        elements.alert.dataset.kind = kind;
+        elements.alert.dataset.visible = message ? "true" : "false";
+      }
+
+      function appendLog(message) {
+        const timestamp = new Date().toLocaleTimeString("zh-CN", {hour12: false});
+        elements.log.textContent += `[${timestamp}] ${String(message).trim()}\n`;
+        elements.log.scrollTop = elements.log.scrollHeight;
+      }
+
+      function setProgress(percent, label) {
+        const clipped = Math.max(0, Math.min(100, Number(percent) || 0));
+        elements.progressFill.style.width = `${clipped}%`;
+        elements.progress.setAttribute("aria-valuenow", String(Math.round(clipped)));
+        elements.progressLabel.textContent = label || `${Math.round(clipped)}%`;
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+        return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
+      }
+
+      function hexadecimal(value) {
+        return `0x${value.toString(16)}`;
+      }
+
+      function flashSpanSize(size) {
+        return Math.ceil(size / FLASH_SECTOR_SIZE) * FLASH_SECTOR_SIZE;
+      }
+
+      function renderParts() {
+        elements.parts.replaceChildren();
+        const source = state.manifest ? state.manifest.parts : EXPECTED_PARTS;
+        source.forEach((part, index) => {
+          const expected = EXPECTED_PARTS[index];
+          const image = state.images[index];
+          const row = document.createElement("div");
+          row.className = "wg-part";
+          row.dataset.index = String(index);
+          let status = "等待";
+          let rowState = "idle";
+          if (image) {
+            status = `SHA-256 通过 · ${formatBytes(image.data.length)}`;
+            rowState = "ready";
+          }
+          if (state.resumeIndex > index) status = "写入及 MD5 通过";
+          if (state.busy && state.resumeIndex === index) {
+            status = "正在写入";
+            rowState = "working";
+          }
+          row.dataset.state = rowState;
+          const label = document.createElement("div");
+          label.className = "wg-part-name";
+          label.textContent = `${expected.label} · ${hexadecimal(expected.offset)}`;
+          const path = document.createElement("div");
+          path.className = "wg-part-path";
+          path.textContent = part.path || "等待 manifest";
+          const partState = document.createElement("div");
+          partState.className = "wg-part-state";
+          partState.textContent = status;
+          row.append(label, path, partState);
+          elements.parts.append(row);
+        });
+      }
+
+      function renderControls() {
+        elements.connect.disabled = !state.packageReady || state.connected || state.busy;
+        elements.connect.textContent = state.resumeIndex > 0 ? "重新连接并继续" : "连接 Wingie2";
+        elements.disconnect.hidden = !state.connected;
+        elements.disconnect.disabled = state.busy;
+        elements.reload.disabled = state.busy || state.connected;
+        elements.flash.disabled = !state.packageReady || !state.connected || state.busy || state.completed;
+        elements.flash.textContent = state.resumeIndex > 0 ? `从 ${EXPECTED_PARTS[state.resumeIndex]?.label || "当前段"} 继续` : "开始安装";
+      }
+
+      function requireObject(value, label) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          throw new Error(`${label} 格式不正确`);
+        }
+        return value;
+      }
+
+      function requireRelativePath(value, label) {
+        if (typeof value !== "string" || !value || value.startsWith("/") || value.includes("..") || value.includes(":") || value.includes("\\")) {
+          throw new Error(`${label} 必须是安全的相对路径`);
+        }
+        return value;
+      }
+
+      function validateManifest(input) {
+        const manifest = requireObject(input, "manifest");
+        if (manifest.schema !== 1) throw new Error("不支持此 manifest schema");
+        if (typeof manifest.name !== "string" || !manifest.name.trim()) throw new Error("manifest 缺少产品名称");
+        if (typeof manifest.version !== "string" || !manifest.version.trim()) throw new Error("manifest 缺少版本号");
+        if (manifest.chipFamily !== EXPECTED_CHIP) throw new Error("manifest 芯片必须为 ESP32");
+        if (manifest.esptoolJs !== ESPTOOL_JS_VERSION) throw new Error(`manifest 必须使用 esptool-js ${ESPTOOL_JS_VERSION}`);
+
+        const flash = requireObject(manifest.flash, "flash");
+        if (flash.mode !== "dio" || flash.frequency !== "80m" || flash.size !== "4MB" || flash.eraseAll !== false) {
+          throw new Error("manifest 的 flash 参数不符合 Wingie2 安全配置");
+        }
+
+        if (!Array.isArray(manifest.preserve) || manifest.preserve.length !== 1) {
+          throw new Error("manifest 必须明确声明唯一的 NVS 保留区");
+        }
+        const preserve = requireObject(manifest.preserve[0], "preserve[0]");
+        if (preserve.name !== "nvs" || preserve.offset !== NVS_OFFSET || preserve.size !== NVS_SIZE) {
+          throw new Error("manifest 的 NVS 保留区必须是 0x9000–0xdfff");
+        }
+
+        if (!Array.isArray(manifest.parts) || manifest.parts.length !== EXPECTED_PARTS.length) {
+          throw new Error("manifest 必须且只能包含四段 Wingie2 镜像");
+        }
+        const normalized = manifest.parts.map((part, index) => {
+          requireObject(part, `parts[${index}]`);
+          const expected = EXPECTED_PARTS[index];
+          if (part.name !== expected.name || part.offset !== expected.offset) {
+            throw new Error(`第 ${index + 1} 段必须是 ${expected.name} @ ${hexadecimal(expected.offset)}`);
+          }
+          if (part.offset % FLASH_SECTOR_SIZE !== 0) throw new Error(`${part.name} 的 offset 未按 4 KiB flash sector 对齐`);
+          if (!Number.isSafeInteger(part.size) || part.size <= 0) throw new Error(`${part.name} 的 size 无效`);
+          if (part.name === "app" && part.size > MAX_APP_SIZE) throw new Error("App 超过 0x140000 字节上限");
+          if (typeof part.sha256 !== "string" || !/^[0-9a-f]{64}$/i.test(part.sha256)) throw new Error(`${part.name} 的 SHA-256 无效`);
+          return {
+            name: part.name,
+            path: requireRelativePath(part.path, `${part.name}.path`),
+            offset: part.offset,
+            size: part.size,
+            sha256: part.sha256.toLowerCase()
+          };
+        });
+
+        normalized.forEach((part, index) => {
+          const next = normalized[index + 1];
+          const partEnd = part.offset + flashSpanSize(part.size);
+          if (next && partEnd > next.offset) throw new Error(`${part.name} 的 4 KiB 擦写范围与下一镜像区域重叠`);
+          const nvsEnd = NVS_OFFSET + NVS_SIZE;
+          if (part.offset < nvsEnd && partEnd > NVS_OFFSET) throw new Error(`${part.name} 的 4 KiB 擦写范围会进入 NVS 保留区`);
+        });
+        return {...manifest, parts: normalized};
+      }
+
+      async function sha256Hex(data) {
+        if (!globalThis.crypto || !crypto.subtle) throw new Error("浏览器缺少 SHA-256 支持，请使用最新版桌面 Chrome 或 Edge");
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, "0")).join("");
+      }
+
+      async function downloadImage(part, manifestResponseUrl) {
+        const imageUrl = new URL(part.path, manifestResponseUrl);
+        const response = await fetch(imageUrl.href, {cache: "no-store"});
+        if (!response.ok) throw new Error(`下载 ${part.path} 失败（HTTP ${response.status}）`);
+        const data = new Uint8Array(await response.arrayBuffer());
+        if (data.length !== part.size) throw new Error(`${part.name} 大小不符：manifest ${part.size}，实际 ${data.length}`);
+        const actual = await sha256Hex(data);
+        if (actual !== part.sha256) throw new Error(`${part.name} 的 SHA-256 不匹配，发布包可能损坏`);
+        return {part, data};
+      }
+
+      async function prepareFirmware() {
+        if (state.busy) return;
+        showAlert("");
+        state.packageReady = false;
+        state.completed = false;
+        state.resumeIndex = 0;
+        state.manifest = null;
+        state.images = [];
+        setProgress(0, "正在检查发布固件…");
+        setStatus(elements.packageStatus, elements.packageStatusText, "working", "检查中");
+        elements.packageDetail.textContent = "正在读取 manifest.json…";
+        renderParts();
+        renderControls();
+        try {
+          const response = await fetch(MANIFEST_URL, {cache: "no-store"});
+          if (!response.ok) throw new Error(`读取 manifest.json 失败（HTTP ${response.status}）`);
+          const manifest = validateManifest(await response.json());
+          state.manifest = manifest;
+          elements.packageDetail.textContent = `${manifest.name} ${manifest.version} · ESP32 · DIO 80 MHz · 4 MB`;
+          renderParts();
+          for (let index = 0; index < manifest.parts.length; index += 1) {
+            const part = manifest.parts[index];
+            setProgress((index / manifest.parts.length) * 100, `正在下载并校验 ${EXPECTED_PARTS[index].label}…`);
+            state.images[index] = await downloadImage(part, response.url || new URL(MANIFEST_URL, location.href).href);
+            renderParts();
+          }
+          state.packageReady = true;
+          setProgress(100, "四段镜像 SHA-256 校验全部通过");
+          setStatus(elements.packageStatus, elements.packageStatusText, "ready", "固件就绪");
+          elements.installDetail.textContent = "固件包已验证。连接 Wingie2 后会识别 ROM 芯片类型。";
+          appendLog(`固件包 ${manifest.version} 的四段 SHA-256 校验通过`);
+        } catch (error) {
+          setStatus(elements.packageStatus, elements.packageStatusText, "error", "检查失败");
+          elements.packageDetail.textContent = "发布包不可用";
+          showAlert(`固件包检查失败：${error.message}\n请确认 manifest、四个 bin 文件与 SHA256SUMS 来自同一 GitHub Release，然后点“重新检查固件”。`, "error");
+          appendLog(`固件包检查失败：${error.message}`);
+        } finally {
+          renderControls();
+        }
+      }
+
+      function loadClassicScript(url) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = url;
+          script.async = true;
+          script.addEventListener("load", resolve, {once: true});
+          script.addEventListener("error", () => reject(new Error(`无法加载 ${url}`)), {once: true});
+          document.head.append(script);
+        });
+      }
+
+      async function loadRuntime() {
+        if (state.runtime) return state.runtime;
+        const mock = window.__WINGIE_FLASH_MOCK__;
+        if (mock) {
+          if (!window.md5 && typeof mock.md5 === "function") window.md5 = mock.md5;
+          state.runtime = mock.esptool;
+        } else {
+          await loadClassicScript(MD5_VENDOR_URL);
+          state.runtime = await import(ESPTOOL_VENDOR_URL);
+        }
+        if (!state.runtime || typeof state.runtime.Transport !== "function" || typeof state.runtime.ESPLoader !== "function") {
+          throw new Error("esptool-js 0.6.0 未正确加载");
+        }
+        if (typeof window.md5 !== "function") throw new Error("MD5 校验组件未正确加载");
+        return state.runtime;
+      }
+
+      function terminal() {
+        return {
+          clean() {},
+          writeLine(data) { appendLog(data); },
+          write(data) { appendLog(data); }
+        };
+      }
+
+      async function disconnectDevice({quiet = false} = {}) {
+        const transport = state.transport;
+        state.connected = false;
+        state.loader = null;
+        state.transport = null;
+        state.port = null;
+        if (transport && typeof transport.disconnect === "function") {
+          try {
+            await transport.disconnect();
+          } catch (error) {
+            if (!quiet) appendLog(`断开串口时收到：${error.message}`);
+          }
+        }
+        setStatus(elements.deviceStatus, elements.deviceStatusText, "idle", "未连接");
+        if (!state.completed) elements.chipDetail.textContent = "请选择 Wingie2 的 USB 串口";
+        renderControls();
+      }
+
+      function connectionMessage(error) {
+        const name = error && error.name ? error.name : "";
+        const message = error && error.message ? error.message : String(error);
+        const lower = message.toLowerCase();
+        if (name === "NotFoundError") return "没有选择串口。请重新点击“连接 Wingie2”，并在列表中选择设备的 USB 串口；如果列表为空，请更换支持数据的 USB 线、换一个 USB 口并安装 USB 串口驱动。";
+        if (name === "SecurityError" || lower.includes("secure context")) return "浏览器阻止了串口访问。请用桌面版 Chrome / Edge 通过 HTTPS 打开此页面。";
+        if (name === "NetworkError" || lower.includes("busy") || lower.includes("already open") || lower.includes("access denied")) {
+          return "串口可能被占用。请关闭 Wingie2 配置页、串口监视器、Arduino IDE 等程序，拔插 USB 后重试。";
+        }
+        if (lower.includes("driver") || lower.includes("no device") || lower.includes("device unavailable")) {
+          return "系统没有识别 USB 串口。请更换支持数据的 USB 线、换一个 USB 口，并安装设备对应的 USB 串口驱动。";
+        }
+        if (lower.includes("wrong chip") || lower.includes("expected esp32")) return message;
+        return `自动进入 ESP32 ROM bootloader 失败：${message}\n请关闭占用串口的软件并拔插 USB 后重试；仍失败时，可按住设备 BOOT 键再点击连接。`;
+      }
+
+      async function connectDevice() {
+        if (!state.packageReady || state.busy) return;
+        if (!navigator.serial || typeof navigator.serial.requestPort !== "function") {
+          showAlert("当前浏览器不支持 Web Serial。请使用最新版桌面 Chrome 或 Edge，并通过 HTTPS 打开此页面。", "error");
+          return;
+        }
+        state.busy = true;
+        showAlert("");
+        setStatus(elements.deviceStatus, elements.deviceStatusText, "working", "选择串口");
+        elements.chipDetail.textContent = "等待选择 USB 串口…";
+        renderControls();
+        let selectedPort = null;
+        try {
+          selectedPort = await navigator.serial.requestPort();
+          const runtime = await loadRuntime();
+          const transport = new runtime.Transport(selectedPort, false);
+          const loader = new runtime.ESPLoader({
+            transport,
+            baudrate: BAUDRATE,
+            terminal: terminal(),
+            debugLogging: false
+          });
+          state.port = selectedPort;
+          state.transport = transport;
+          state.loader = loader;
+          setStatus(elements.deviceStatus, elements.deviceStatusText, "working", "识别 ROM");
+          elements.chipDetail.textContent = "正在通过 DTR/RTS 进入 ESP32 ROM bootloader…";
+          appendLog("开始 ROM bootloader 握手；不查询 Wingie2 firmware hello");
+          const description = await loader.main("default_reset");
+          const chipName = loader.chip && loader.chip.CHIP_NAME;
+          if (chipName !== EXPECTED_CHIP) {
+            const wrongChip = chipName || description || "未知芯片";
+            throw new Error(`错误芯片：检测到 ${wrongChip}，此固件只允许写入 ESP32（expected ESP32）。`);
+          }
+          state.connected = true;
+          setStatus(elements.deviceStatus, elements.deviceStatusText, "ready", "ESP32 已连接");
+          elements.chipDetail.textContent = `${description || chipName} · ROM bootloader · ${BAUDRATE} baud`;
+          elements.installDetail.textContent = state.resumeIndex > 0 ? "设备已重新连接，可从失败的镜像段继续。" : "芯片类型已确认。点击“开始安装”写入四段镜像。";
+          showAlert("已通过 ROM bootloader 确认为 ESP32。现有固件是否为空、损坏或版本较旧都不影响安装流程。", "success");
+        } catch (error) {
+          appendLog(`连接失败：${error.message || error}`);
+          if (state.transport && typeof state.transport.disconnect === "function") {
+            try { await state.transport.disconnect(); } catch (_) {}
+          }
+          state.port = null;
+          state.transport = null;
+          state.loader = null;
+          state.connected = false;
+          setStatus(elements.deviceStatus, elements.deviceStatusText, "error", "连接失败");
+          elements.chipDetail.textContent = "尚未确认 ESP32 ROM bootloader";
+          showAlert(connectionMessage(error), "error");
+        } finally {
+          state.busy = false;
+          renderControls();
+        }
+      }
+
+      function isMd5Mismatch(error) {
+        return /md5.*(does not match|mismatch)|不匹配/i.test(error && error.message ? error.message : String(error));
+      }
+
+      async function flashFirmware() {
+        if (!state.connected || !state.loader || !state.packageReady || state.busy || state.completed) return;
+        state.busy = true;
+        showAlert("");
+        setStatus(elements.installStatus, elements.installStatusText, "working", "写入中");
+        renderControls();
+        try {
+          for (let index = state.resumeIndex; index < state.images.length; index += 1) {
+            state.resumeIndex = index;
+            const image = state.images[index];
+            const expected = EXPECTED_PARTS[index];
+            const localMd5 = window.md5(image.data);
+            if (typeof localMd5 !== "string" || !/^[0-9a-f]{32}$/i.test(localMd5)) throw new Error("MD5 组件返回了无效结果");
+            renderParts();
+            appendLog(`写入 ${expected.label} @ ${hexadecimal(image.part.offset)}`);
+            await state.loader.writeFlash({
+              fileArray: [{data: image.data, address: image.part.offset}],
+              flashMode: "dio",
+              flashFreq: "80m",
+              flashSize: "4MB",
+              eraseAll: false,
+              compress: true,
+              calculateMD5Hash: window.md5,
+              reportProgress(_fileIndex, written, total) {
+                const withinPart = total ? written / total : 0;
+                const overall = ((index + withinPart) / state.images.length) * 100;
+                setProgress(overall, `${expected.label} · ${Math.round(withinPart * 100)}%`);
+              }
+            });
+            state.resumeIndex = index + 1;
+            renderParts();
+          }
+          setProgress(100, "四段镜像写入及 MD5 校验全部通过");
+          setStatus(elements.installStatus, elements.installStatusText, "ready", "安装完成");
+          elements.installDetail.textContent = "Wingie2 已完成安装并重新启动。NVS 设置保持不变。";
+          appendLog("全部镜像校验通过，执行 hard reset");
+          state.completed = true;
+          if (typeof state.loader.after === "function") {
+            try {
+              await state.loader.after("hard_reset");
+            } catch (resetError) {
+              appendLog(`镜像已验证，但自动重启未确认：${resetError.message || resetError}`);
+            }
+          }
+          showAlert("固件安装完成。可以拔下 USB；MIDI、调律、Cave 与 Ratio 设置已保留。", "success");
+        } catch (error) {
+          const failed = EXPECTED_PARTS[state.resumeIndex];
+          appendLog(`写入失败：${error.message || error}`);
+          setStatus(elements.installStatus, elements.installStatusText, "error", "需要重试");
+          if (isMd5Mismatch(error)) {
+            elements.installDetail.textContent = `${failed.label} 写入后的 MD5 不一致，已停在这一段。`;
+            showAlert(`${failed.label} 写入校验失败，未继续写后续镜像。请保持 USB 连接并点“从 ${failed.label} 继续”；若再次失败，请更换 USB 数据线或 USB 口。`, "error");
+          } else {
+            elements.installDetail.textContent = `${failed.label} 写入中断，重新连接后可从这一段继续。`;
+            showAlert(`${failed.label} 写入失败：${error.message || error}\n请拔插 USB，关闭占用串口的软件，重新连接后从当前段继续。`, "error");
+            await disconnectDevice({quiet: true});
+          }
+          renderParts();
+        } finally {
+          state.busy = false;
+          renderControls();
+        }
+      }
+
+      elements.connect.addEventListener("click", connectDevice);
+      elements.disconnect.addEventListener("click", () => disconnectDevice());
+      elements.reload.addEventListener("click", prepareFirmware);
+      elements.flash.addEventListener("click", flashFirmware);
+      if (navigator.serial && typeof navigator.serial.addEventListener === "function") {
+        navigator.serial.addEventListener("disconnect", event => {
+          if (state.port && event.target === state.port) {
+            showAlert("USB 串口已断开。请重新插好数据线；已通过 SHA-256 的固件包无需重新下载。", "warning");
+            disconnectDevice({quiet: true});
+          }
+        });
+      }
+
+      if (window.__WINGIE_FLASH_MOCK__) {
+        window.__WINGIE_FLASH_PAGE__ = {
+          connect: connectDevice,
+          flash: flashFirmware,
+          reload: prepareFirmware,
+          snapshot() {
+            return {
+              packageReady: state.packageReady,
+              connected: state.connected,
+              busy: state.busy,
+              resumeIndex: state.resumeIndex,
+              completed: state.completed
+            };
+          }
+        };
+      }
+
+      renderParts();
+      renderControls();
+      prepareFirmware();
+    })();
+  </script>
+</body>
+</html>
