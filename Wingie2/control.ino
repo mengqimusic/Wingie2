@@ -150,32 +150,20 @@ void control(void *pvParameters) {
 
   for (int ch = 0; ch < 2; ch++) {
     for (int cave = 0; cave < 3; cave++) {
-      char str_cm_f[100];
-      char str_cm_ms[100];
-      sprintf(str_cm_f, "ch %d cave %d frequency  =", cave, ch);
-      sprintf(str_cm_ms, "ch %d cave %d mute state =", cave, ch);
-      for (int v = 0; v < 9; v++) {
-        char buff[100];
-        char tmp[100];
-
-        if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
-        else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
-        const char *addr = buff;
-        cm_freq[ch][cave][v] = prefs.getUShort(addr);
-        cm_freq_prev[ch][cave][v] = cm_freq[ch][cave][v];
-        sprintf(tmp, " %5d", cm_freq[ch][cave][v]);
-        strcat(str_cm_f, tmp);
-
-        if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
-        else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
-        addr = buff;
-        cm_ms[ch][cave][v] = prefs.getBool(addr);
-        cm_ms_prev[ch][cave][v] = cm_ms[ch][cave][v];
-        sprintf(tmp, " %5d", cm_ms[ch][cave][v]);
-        strcat(str_cm_ms, tmp);
+      if (!load_cave_bank_from_preferences(prefs, ch, cave, false)) {
+        cave_storage_migration_pending = true;
+        for (int voice = 0; voice < 9; voice++) {
+          char key[16];
+          snprintf(key, sizeof(key), ch ? "r_cf_%d_%d" : "l_cf_%d_%d", cave, voice);
+          float canonical = 0.0f;
+          wingie_config::canonicalizeCaveFrequency(prefs.getUShort(key), canonical);
+          cm_freq[ch][cave][voice] = canonical;
+          cm_freq_prev[ch][cave][voice] = canonical;
+          snprintf(key, sizeof(key), ch ? "r_cms_%d_%d" : "l_cms_%d_%d", cave, voice);
+          cm_ms[ch][cave][voice] = prefs.getBool(key);
+          cm_ms_prev[ch][cave][voice] = cm_ms[ch][cave][voice];
+        }
       }
-      Serial.println(str_cm_f);
-      Serial.println(str_cm_ms);
     }
   }
 
@@ -184,20 +172,17 @@ void control(void *pvParameters) {
   if (unq_caves_store) {
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
-        char str_cm_f[100];
-        sprintf(str_cm_f, "ch %d cave %d unquantized frequency  =", cave, ch);
-        for (int v = 0; v < 9; v++) {
-          char buff[100];
-          char tmp[100];
-
-          if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
-          else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
-          const char *addr = buff;
-          cm_freq_stored_unq[ch][cave][v] = prefs.getUShort(addr);
-          sprintf(tmp, " %5d", cm_freq_stored_unq[ch][cave][v]);
-          strcat(str_cm_f, tmp);
+        if (!load_cave_bank_from_preferences(prefs, ch, cave, true)) {
+          cave_storage_migration_pending = true;
+          unquantized_caves_dirty = true;
+          for (int voice = 0; voice < 9; voice++) {
+            char key[16];
+            snprintf(key, sizeof(key), ch ? "r_cf_unq_%d_%d" : "l_cf_unq_%d_%d", cave, voice);
+            float canonical = 0.0f;
+            wingie_config::canonicalizeCaveFrequency(prefs.getUShort(key), canonical);
+            cm_freq_stored_unq[ch][cave][voice] = canonical;
+          }
         }
-        Serial.println(str_cm_f);
       }
     }
   }
@@ -277,31 +262,21 @@ void control(void *pvParameters) {
   } else if (!modeButtonState[0]) {
     // left button only
     Serial.printf("Enabling/resetting alt tuning\n");
-    if (use_alt_tuning == 0) {
-      dsp.setParamValue("use_alt_tuning", 1);
-      use_alt_tuning = 1;
-    }
-    alt_tuning_index = get_int_from_sliders();
+    set_tuning_index(get_int_from_sliders(), CONFIG_ORIGIN_HARDWARE);
   } else if (!modeButtonState[1]) {
     // right button only
-    if (use_alt_tuning != 0) {
-      Serial.printf("Disabling alt tuning\n");
-      dsp.setParamValue("use_alt_tuning", 0);
-      use_alt_tuning = 0;
-      alt_tuning_index = -1;
-      alt_tuning_set(-1);
-    }
+    set_tuning_index(-1, CONFIG_ORIGIN_HARDWARE);
   }
 
   if (use_alt_tuning != 0 && alt_tuning_index != -1) {
     alt_tuning_set(alt_tuning_index);
-    tune_caves();
+    tune_caves(CONFIG_ORIGIN_STARTUP);
   }
 
   Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");
 
-  set_channel_note(0, BASE_NOTE + oct[0] * 12);
-  set_channel_note(1, BASE_NOTE + oct[1] * 12 + 12);
+  set_channel_note(0, BASE_NOTE + oct[0] * 12, CONFIG_ORIGIN_STARTUP);
+  set_channel_note(1, BASE_NOTE + oct[1] * 12 + 12, CONFIG_ORIGIN_STARTUP);
   if (Mode[0] == CAVE_MODE || Mode[0] == RATIO_MODE) apply_current_mode_parameters(0);
   if (Mode[1] == CAVE_MODE || Mode[1] == RATIO_MODE) apply_current_mode_parameters(1);
 
@@ -360,21 +335,21 @@ void control(void *pvParameters) {
 
     float Mix = potValRealtime[0] / 4095.;
     if (realtime_value_valid[MIX]) {
-      dsp.setParamValue("mix0", Mix);
-      dsp.setParamValue("mix1", Mix);
+      set_channel_performance_parameter(0, PERFORMANCE_MIX, Mix, CONFIG_ORIGIN_HARDWARE, false);
+      set_channel_performance_parameter(1, PERFORMANCE_MIX, Mix, CONFIG_ORIGIN_HARDWARE, false);
     }
 
     float Decay = (potValRealtime[1] / 4095.) * 9.9 + 0.1;
     Decay = fscale(0.1, 10., 0.1, 10., Decay, -3.25);
     if (realtime_value_valid[DECAY] && !startup) {
-      dsp.setParamValue("/Wingie/left/decay", Decay);
-      dsp.setParamValue("/Wingie/right/decay", Decay);
+      set_channel_performance_parameter(0, PERFORMANCE_DECAY, Decay, CONFIG_ORIGIN_HARDWARE, false);
+      set_channel_performance_parameter(1, PERFORMANCE_DECAY, Decay, CONFIG_ORIGIN_HARDWARE, false);
     }
 
     float Volume = potValRealtime[2] / 4095.;
     if (realtime_value_valid[VOL]) {
-      dsp.setParamValue("volume0", Volume);
-      dsp.setParamValue("volume1", Volume);
+      set_channel_performance_parameter(0, PERFORMANCE_VOLUME, Volume, CONFIG_ORIGIN_HARDWARE, false);
+      set_channel_performance_parameter(1, PERFORMANCE_VOLUME, Volume, CONFIG_ORIGIN_HARDWARE, false);
     }
 
     bool sourceSwitchPos = !aw1.digitalRead(sourcePin);
@@ -385,6 +360,7 @@ void control(void *pvParameters) {
     //
     if (sourceSwitchPos != source) {
       source = sourceSwitchPos;
+      mark_config_state_changed(CONFIG_ORIGIN_HARDWARE);
       sourceChanged = true;
       ac.SetVolumeHeadphone(0);
       dsp.setParamValue("/Wingie/left/mode_changed", 1);
@@ -443,36 +419,10 @@ void control(void *pvParameters) {
     //
     for (int ch = 0; ch < 2; ch++) {
 
-      if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch]) {
-
-        if (modeChangingFromKeys[ch]) {
-          modeChangingFromKeys[ch] = false;
-          if (Mode[ch] < MODE_NUM) Mode[ch] += 1;
-          else Mode[ch] = 0;
-        }
-
-        if (modeChangingFromMIDI[ch]) {
-          modeChangingFromMIDI[ch] = false;
-        }
-
-        set_channel_dsp_mode(ch);
-        if (!ch) {
-          dsp.setParamValue("/Wingie/left/mode_changed", 1);
-          dirty[8] = true;
-        }
-        if (ch) {
-          dsp.setParamValue("/Wingie/right/mode_changed", 1);
-          dirty[9] = true;
-        }
-
-        duck_env_triggered[ch] = true;
-        duck_env_init_timer[ch] = currentMillis;
-
-        ratio_led_on[ch] = true;
-        ratio_led_timer[ch] = currentMillis;
-        set_mode_led(ch);
-
-        apply_current_mode_parameters(ch);
+      if (modeChangingFromKeys[ch]) {
+        modeChangingFromKeys[ch] = false;
+        const int nextMode = Mode[ch] < MODE_NUM ? Mode[ch] + 1 : 0;
+        set_channel_mode(ch, nextMode, CONFIG_ORIGIN_HARDWARE);
       }
 
       if (duck_env_triggered[ch] && currentMillis - duck_env_init_timer[ch] > 20) {
@@ -558,28 +508,20 @@ void control(void *pvParameters) {
               if (modeButtonPressed[0]) {  // Change threshold
                 threshChanged[0] = true;
                 if (!ch) {
-                  left_thresh = 0.0825 * i + 0.0825;
-                  dsp.setParamValue("left_thresh", left_thresh);
-                  dirty[4] = true;
+                  set_channel_threshold(0, 0.0825f * i + 0.0825f, CONFIG_ORIGIN_HARDWARE);
                 }
                 if (ch) {
-                  right_thresh = 0.0825 * i + 0.0825;
-                  dsp.setParamValue("right_thresh", right_thresh);
-                  dirty[5] = true;
+                  set_channel_threshold(1, 0.0825f * i + 0.0825f, CONFIG_ORIGIN_HARDWARE);
                 }
               }
 
               else if (modeButtonPressed[1]) {  // Change gain
                 threshChanged[1] = true;
                 if (!ch) {
-                  pre_clip_gain = 0.0825 * i + 0.0825;
-                  dsp.setParamValue("pre_clip_gain", pre_clip_gain);
-                  dirty[6] = true;
+                  set_clip_gain(false, 0.0825f * i + 0.0825f, CONFIG_ORIGIN_HARDWARE);
                 }
                 if (ch) {
-                  post_clip_gain = 0.055 * i + 0.385;
-                  dsp.setParamValue("post_clip_gain", post_clip_gain);
-                  dirty[7] = true;
+                  set_clip_gain(true, 0.055f * i + 0.385f, CONFIG_ORIGIN_HARDWARE);
                 }
               }
 
@@ -610,9 +552,7 @@ void control(void *pvParameters) {
                     if (i > 6) v = i - 3;
                     else v = i;
                     if (!(!key[ch][4] || !key[ch][5])) {
-                      cm_ms[ch][cave][v] = !cm_ms[ch][cave][v];
-                      mark_cave_changed(ch, cave);
-                      cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                      set_cave_mute(ch, cave, v, !cm_ms[ch][cave][v], CONFIG_ORIGIN_HARDWARE);
                     }
                   }
                   if (i == 6) {  // in CAVE MODE: hold E or F and press F# for "mute all" and "unmute all"
@@ -620,17 +560,13 @@ void control(void *pvParameters) {
                     switch (mute_unmute) {
                       case -1:
                         for (int v = 0; v < 9; v++) {
-                          cm_ms[ch][cave][v] = true;
-                          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                          set_cave_mute(ch, cave, v, true, CONFIG_ORIGIN_HARDWARE);
                         }
-                        mark_cave_changed(ch, cave);
                         break;
                       case 1:
                         for (int v = 0; v < 9; v++) {
-                          cm_ms[ch][cave][v] = false;
-                          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
+                          set_cave_mute(ch, cave, v, false, CONFIG_ORIGIN_HARDWARE);
                         }
-                        mark_cave_changed(ch, cave);
                         break;
                     }
                   }
@@ -689,11 +625,8 @@ void control(void *pvParameters) {
 
               adj[ch] = adj[ch] * fscale(50, 16000, 1, 20, cm_freq[ch][cave][v], -0.85);  // 指数增长下降
 
-              cm_freq[ch][cave][v] += adj[ch];
-              cm_freq[ch][cave][v] = max(cm_freq[ch][cave][v], CAVE_LOWEST_FREQ);
-              cm_freq[ch][cave][v] = min(cm_freq[ch][cave][v], CAVE_HIGHEST_FREQ);
-              mark_cave_changed(ch, cave);
-              cm_freq_set(ch, v, cm_freq[ch][cave][v]);
+              set_cave_frequency(ch, cave, v, cm_freq[ch][cave][v] + adj[ch],
+                                 CONFIG_ORIGIN_HARDWARE);
             }
           }
         }
@@ -708,6 +641,10 @@ void control(void *pvParameters) {
     trig[1] = dsp.getParamValue("/Wingie/right_trig");
 
     for (int ch = 0; ch < 2; ch++) {
+      if (trig[ch] != trigStatePrev[ch]) {
+        trigStatePrev[ch] = trig[ch];
+        mark_config_state_changed(CONFIG_ORIGIN_HARDWARE);
+      }
       if (tapSequence[ch].hasCycle()) {
         if (trig[ch] && !trigged[ch]) {
           trigged[ch] = true;
@@ -769,6 +706,8 @@ void control(void *pvParameters) {
         led_blink -= 1;
         if (!led_blink) {
           for (int ch = 0; ch < 2; ch++) {
+            ratio_led_phase[ch] = 0;
+            ratio_led_timer[ch] = currentMillis;
             set_mode_led(ch);
           }
         }
@@ -779,7 +718,7 @@ void control(void *pvParameters) {
       for (int ch = 0; ch < 2; ch++) {
         if (Mode[ch] == RATIO_MODE && currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL) {
           ratio_led_timer[ch] = currentMillis;
-          ratio_led_on[ch] = !ratio_led_on[ch];
+          ratio_led_phase[ch] = (ratio_led_phase[ch] + 1) & 3;
           set_mode_led(ch);
         }
       }

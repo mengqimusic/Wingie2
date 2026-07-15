@@ -1,94 +1,173 @@
-void save_stuff() {
-  //
-  // save settings
-  //
-  Serial.printf("Saving prefs\n");
-  prefs.begin("settings", RW_MODE);
-  save_ratio_and_cave_preferences(prefs);
+namespace {
 
-  if (dirty[0]) {
-    dirty[0] = false;
-    if (prefs.putUChar("midi_ch_l", midi_ch_l)) Serial.printf("midi_ch_l is saved, value is %d.\n", midi_ch_l);
-  }
-  if (dirty[1]) {
-    dirty[1] = false;
-    if (prefs.putUChar("midi_ch_r", midi_ch_r)) Serial.printf("midi_ch_r is saved, value is %d.\n", midi_ch_r);
-  }
-  if (dirty[2]) {
-    dirty[2] = false;
-    if (prefs.putUChar("midi_ch_both", midi_ch_both)) Serial.printf("midi_ch_both is saved, value is %d.\n", midi_ch_both);
-  }
+bool configurationSaveInProgress = false;
 
-  if (dirty[3]) {
-    dirty[3] = false;
-    float freq_offset = a3_freq - 440.;
-    if (prefs.putFloat("a3_freq_offset", freq_offset)) Serial.printf("a3_freq_offset (%.2fHz) is saved. a3 = %.2fHz.\n", freq_offset, a3_freq);
-  }
+void finishConfigurationSave() {
+  lock_config_state();
+  configurationSaveInProgress = false;
+  unlock_config_state();
+}
 
-  if (dirty[4]) {
-    dirty[4] = false;
-    if (prefs.putFloat("left_thresh", left_thresh)) Serial.printf("left_thresh is saved, value is %.4f\n", left_thresh);
+}  // namespace
+
+bool save_all_configuration() {
+  lock_config_state();
+  if (configurationSaveInProgress) {
+    unlock_config_state();
+    return false;
   }
-  if (dirty[5]) {
-    dirty[5] = false;
-    if (prefs.putFloat("right_thresh", right_thresh)) Serial.printf("right_thresh is saved, value is %.4f\n", right_thresh);
-  }
-  if (dirty[6]) {
-    dirty[6] = false;
-    if (prefs.putFloat("pre_clip_gain", pre_clip_gain)) Serial.printf("pre_clip_gain is saved, value is %.4f\n", pre_clip_gain);
-  }
-  if (dirty[7]) {
-    dirty[7] = false;
-    if (prefs.putFloat("post_clip_gain", post_clip_gain)) Serial.printf("post_clip_gain is saved, value is %.4f\n", post_clip_gain);
+  configurationSaveInProgress = true;
+
+  const bool tuningDirtyAtStart = tuning_dirty;
+  const uint32_t tuningRevision = tuning_revision;
+  const int tuningEnabled = use_alt_tuning;
+  const int tuningIndex = alt_tuning_index;
+  const bool unquantizedStored = unq_caves_store;
+  const bool saveUnquantizedBanks = unquantizedStored &&
+                                      (unquantized_caves_dirty || cave_storage_migration_pending);
+  unlock_config_state();
+
+  Serial.println("Saving prefs");
+  if (!prefs.begin("settings", RW_MODE)) {
+    finishConfigurationSave();
+    return false;
   }
 
-  if (dirty[8]) {
-    dirty[8] = false;
-    if (prefs.putUChar("left_mode", Mode[0])) Serial.printf("left_mode is saved, value is %d.\n", Mode[0]);
-  }
-  if (dirty[9]) {
-    dirty[9] = false;
-    if (prefs.putUChar("right_mode", Mode[1])) Serial.printf("right_mode is saved, value is %d.\n", Mode[1]);
+  bool currentCavesSaved = true;
+  bool unquantizedCavesSaved = true;
+  bool saved = save_ratio_and_cave_preferences(
+      prefs, saveUnquantizedBanks, tuningRevision, currentCavesSaved, unquantizedCavesSaved);
+
+  const char *midiKeys[3] = {"midi_ch_l", "midi_ch_r", "midi_ch_both"};
+  int *midiChannels[3] = {&midi_ch_l, &midi_ch_r, &midi_ch_both};
+  for (uint8_t index = 0; index < 3; index++) {
+    lock_config_state();
+    const bool shouldSave = dirty[index];
+    const int value = *midiChannels[index];
+    unlock_config_state();
+    if (!shouldSave) continue;
+    if (prefs.putUChar(midiKeys[index], value)) {
+      lock_config_state();
+      if (*midiChannels[index] == value) dirty[index] = false;
+      else {
+        saved = false;
+      }
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
   }
 
-  if (prefs.putUChar("use_alt_tuning", use_alt_tuning)) {
-    Serial.printf("use_alt_tuning is saved, value is %d.\n", use_alt_tuning);
-  }
-  if (prefs.putChar("alt_tuning_idx", alt_tuning_index)) {
-    Serial.printf("alt_tuning_index is saved, value is %d.\n", alt_tuning_index);
+  lock_config_state();
+  const bool saveA3 = dirty[3];
+  const float a3Value = a3_freq;
+  unlock_config_state();
+  if (saveA3) {
+    if (prefs.putFloat("a3_freq_offset", a3Value - 440.0f)) {
+      lock_config_state();
+      if (a3_freq == a3Value) dirty[3] = false;
+      else saved = false;
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
   }
 
-  if (prefs.putBool("unq_caves_store", unq_caves_store)) {
-    Serial.printf("unq_caves_store is saved, value is %d\n", unq_caves_store);
+  const char *thresholdKeys[2] = {"left_thresh", "right_thresh"};
+  float *thresholds[2] = {&left_thresh, &right_thresh};
+  for (uint8_t channel = 0; channel < 2; channel++) {
+    lock_config_state();
+    const bool shouldSave = dirty[4 + channel];
+    const float value = *thresholds[channel];
+    unlock_config_state();
+    if (!shouldSave) continue;
+    if (prefs.putFloat(thresholdKeys[channel], value)) {
+      lock_config_state();
+      if (*thresholds[channel] == value) dirty[4 + channel] = false;
+      else saved = false;
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
   }
-  if (unq_caves_store) {
-    store_unq_caves_to_prefs(true);
+
+  lock_config_state();
+  const bool savePreGain = dirty[6];
+  const float preGainValue = pre_clip_gain;
+  unlock_config_state();
+  if (savePreGain) {
+    if (prefs.putFloat("pre_clip_gain", preGainValue)) {
+      lock_config_state();
+      if (pre_clip_gain == preGainValue) dirty[6] = false;
+      else saved = false;
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
+  }
+  lock_config_state();
+  const bool savePostGain = dirty[7];
+  const float postGainValue = post_clip_gain;
+  unlock_config_state();
+  if (savePostGain) {
+    if (prefs.putFloat("post_clip_gain", postGainValue)) {
+      lock_config_state();
+      if (post_clip_gain == postGainValue) dirty[7] = false;
+      else saved = false;
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
+  }
+
+  const char *modeKeys[2] = {"left_mode", "right_mode"};
+  for (uint8_t channel = 0; channel < 2; channel++) {
+    lock_config_state();
+    const bool shouldSave = dirty[8 + channel];
+    const int value = Mode[channel];
+    unlock_config_state();
+    if (!shouldSave) continue;
+    if (prefs.putUChar(modeKeys[channel], value)) {
+      lock_config_state();
+      if (Mode[channel] == value) dirty[8 + channel] = false;
+      else saved = false;
+      unlock_config_state();
+    } else {
+      saved = false;
+    }
+  }
+
+  if (tuningDirtyAtStart) {
+    const bool backupReady = !unquantizedStored || unquantizedCavesSaved;
+    bool tuningSaved = false;
+    if (backupReady) {
+      tuningSaved = prefs.putUChar("use_alt_tuning", tuningEnabled) &&
+                    prefs.putChar("alt_tuning_idx", tuningIndex) &&
+                    prefs.putBool("unq_caves_store", unquantizedStored);
+    }
+    lock_config_state();
+    const bool tuningUnchanged = use_alt_tuning == tuningEnabled &&
+                                 alt_tuning_index == tuningIndex &&
+                                 unq_caves_store == unquantizedStored &&
+                                 tuning_revision == tuningRevision;
+    if (tuningSaved && tuningUnchanged) {
+      tuning_dirty = false;
+    } else {
+      saved = false;
+    }
+    unlock_config_state();
+  } else {
+    lock_config_state();
+    if (tuning_dirty) saved = false;
+    unlock_config_state();
   }
 
   prefs.end();
+  finishConfigurationSave();
+  return saved;
 }
 
-void store_unq_caves_to_prefs(bool prefs_prepped) {
-  if (!prefs_prepped) {
-    prefs.begin("settings", RW_MODE);
-  }
-  for (int ch = 0; ch < 2; ch++) {
-    for (int cave = 0; cave < 3; cave++) {
-      for (int v = 0; v < 9; v++) {
-        char buff[100];
-        if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
-        else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
-        const char *addr = buff;
-        if (prefs.putUShort(addr, cm_freq_stored_unq[ch][cave][v])) Serial.printf("ch %d cave %d voice %d unquantized frequency (%d) is saved.\n", ch, cave, v, cm_freq_stored_unq[ch][cave][v]);
-      }
-    }
-  }
-  if (!prefs_prepped) {
-    if (prefs.putBool("unq_caves_store", unq_caves_store)) {
-      Serial.printf("unq_caves_store is saved, value is %d\n", unq_caves_store);
-    } else {
-      Serial.println("Failed to save unq_caves_store to prefs");
-    }
-   prefs.end();
-  }
+void save_stuff() {
+  if (save_all_configuration()) mark_config_state_changed(CONFIG_ORIGIN_HARDWARE);
+  else Serial.println("Failed to save one or more preferences");
 }
