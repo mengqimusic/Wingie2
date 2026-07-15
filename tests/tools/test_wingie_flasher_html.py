@@ -88,6 +88,11 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn('await loader.main("default_reset")', self.source)
         self.assertIn("loader.chip && loader.chip.CHIP_NAME", self.source)
         self.assertIn("chipName !== EXPECTED_CHIP", self.source)
+        self.assertIn("await transport.setDTR(false)", self.source)
+        self.assertIn("await transport.setRTS(true)", self.source)
+        self.assertIn("await transport.setRTS(false)", self.source)
+        self.assertIn("await disconnectDevice({quiet: true})", self.source)
+        self.assertNotIn('state.loader.after("hard_reset")', self.source)
         self.assertNotIn("readFlash", self.source)
         self.assertNotRegex(self.source, r'\{\s*op:\s*["\']hello["\']')
 

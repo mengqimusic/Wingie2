@@ -635,6 +635,18 @@
         }
       }
 
+      async function hardResetToApplication(transport) {
+        if (!transport || typeof transport.setDTR !== "function" || typeof transport.setRTS !== "function") {
+          throw new Error("串口 transport 不支持 DTR/RTS 硬件复位");
+        }
+        await transport.setDTR(false);
+        await transport.setRTS(true);
+        await new Promise(resolve => window.setTimeout(resolve, 100));
+        await transport.setRTS(false);
+        await new Promise(resolve => window.setTimeout(resolve, 200));
+        await transport.setDTR(false);
+      }
+
       function flashSpanSize(size) {
         return Math.ceil(size / FLASH_SECTOR_SIZE) * FLASH_SECTOR_SIZE;
       }
@@ -1031,17 +1043,25 @@
           }
           setProgress(100, "四段镜像写入及 MD5 校验全部通过");
           setStatus(elements.installStatus, elements.installStatusText, "ready", "安装完成");
-          elements.installDetail.textContent = "Wingie2 已完成安装并重新启动。NVS 设置保持不变。";
-          appendLog("全部镜像校验通过，执行 hard reset");
+          elements.installDetail.textContent = "四段镜像已经写入并校验，正在复位到应用固件。";
+          appendLog("全部镜像校验通过，执行 DTR/RTS 硬件复位");
           state.completed = true;
-          if (typeof state.loader.after === "function") {
-            try {
-              await state.loader.after("hard_reset");
-            } catch (resetError) {
-              appendLog(`镜像已验证，但自动重启未确认：${resetError.message || resetError}`);
-            }
+          let resetCompleted = false;
+          try {
+            await hardResetToApplication(state.transport);
+            resetCompleted = true;
+            appendLog("硬件复位完成，释放 Web Serial 串口");
+          } catch (resetError) {
+            appendLog(`镜像已验证，但自动重启未确认：${resetError.message || resetError}`);
           }
-          showAlert("固件安装完成。可以拔下 USB；MIDI、调律、Cave 与 Ratio 设置已保留。", "success");
+          await disconnectDevice({quiet: true});
+          elements.installDetail.textContent = resetCompleted
+            ? "Wingie2 已完成安装、硬件复位并释放串口。NVS 设置保持不变。"
+            : "镜像已完成安装，但自动复位未确认；请拔插 USB 重新启动。";
+          showAlert(resetCompleted
+            ? "固件安装完成，Wingie2 已重新启动。MIDI、调律、Cave 与 Ratio 设置已保留。"
+            : "固件安装与校验完成，但自动重启未确认。请拔插 USB；NVS 设置已保留。",
+            resetCompleted ? "success" : "warning");
         } catch (error) {
           const failed = EXPECTED_PARTS[state.resumeIndex];
           appendLog(`写入失败：${error.message || error}`);

@@ -173,6 +173,15 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                           throw new Error("Unsafe flash options");
                         }
                       });
+                      const reset = log.filter(entry => entry.type === "dtr" || entry.type === "rts");
+                      const expectedReset = [
+                        {type: "dtr", value: false},
+                        {type: "rts", value: true},
+                        {type: "rts", value: false},
+                        {type: "dtr", value: false}
+                      ];
+                      if (JSON.stringify(reset) !== JSON.stringify(expectedReset)) throw new Error("Wrong application reset sequence");
+                      if (log.filter(entry => entry.type === "disconnect").length !== 1) throw new Error("Web Serial port was not released");
                       return "PASS";
                     })()
                     """
