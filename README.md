@@ -47,13 +47,17 @@ origins are not supported.
 Web Serial 状态机。它从 ESP32 ROM bootloader 识别芯片后，只写 `0x1000`、`0x8000`、
 `0xe000`、`0x10000` 四段；标准流程不整片擦除、不读取 app0，也不写 `0x9000` NVS。
 发布维护者使用 [`Tools/firmware_release/README.md`](Tools/firmware_release/README.md) 中的工具
-验证镜像、生成 manifest、SHA256SUMS 与中英文说明。支持范围是 HTTPS 上的桌面 Chrome/Edge。
+验证镜像、生成 manifest、SHA256SUMS、中英文说明及内嵌全部固件的 standalone HTML。
+Squarespace 应使用按钮打开部署在 GitHub Pages 等静态 HTTPS 主机上的 standalone 页面，
+不要使用 iframe 或 Code Block。支持范围是 HTTPS 上的桌面 Chrome/Edge。
 
 [`Tools/wingie_flasher.html`](Tools/wingie_flasher.html) is a separate release flasher. It identifies
 the chip through the ESP32 ROM bootloader and writes only the four fixed images at `0x1000`, `0x8000`,
 `0xe000`, and `0x10000`. The normal flow never performs a full-chip erase, reads app0, or writes the
 NVS region at `0x9000`. See [`Tools/firmware_release/README.md`](Tools/firmware_release/README.md) for
-the validated release-package workflow. Desktop Chrome/Edge over HTTPS is supported.
+the validated release-package workflow and generated single-file flasher. Squarespace should link to
+the standalone page as a top-level HTTPS navigation rather than embedding an iframe. Desktop
+Chrome/Edge over HTTPS is supported.
 
 ## 编译过程 Compiling
 

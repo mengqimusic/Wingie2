@@ -1,5 +1,7 @@
 from functools import partial
+import hashlib
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import importlib.util
 from pathlib import Path
 import os
 import shutil
@@ -7,14 +9,30 @@ import subprocess
 import tempfile
 import threading
 import unittest
+from urllib.parse import urlsplit
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HTML_PATH = REPO_ROOT / "Tools/wingie_flasher.html"
 MOCK_PATH = REPO_ROOT / "tests/tools/wingie_flasher_mock.js"
+RELEASE_SCRIPT = REPO_ROOT / "Tools/firmware_release/build_release.py"
+
+RELEASE_SPEC = importlib.util.spec_from_file_location(
+    "wingie2_firmware_release_browser", RELEASE_SCRIPT
+)
+RELEASE = importlib.util.module_from_spec(RELEASE_SPEC)
+RELEASE_SPEC.loader.exec_module(RELEASE)
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
+    requests = []
+    request_lock = threading.Lock()
+
+    def do_GET(self):
+        with self.request_lock:
+            self.requests.append(self.path)
+        super().do_GET()
+
     def log_message(self, format, *args):
         pass
 
@@ -29,22 +47,63 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         cls.temporary = tempfile.TemporaryDirectory()
         cls.web_root = Path(cls.temporary.name)
         source = HTML_PATH.read_text(encoding="utf-8")
+        mock_source = MOCK_PATH.read_text(encoding="utf-8")
         marker = "  <script>\n    (() => {"
         if marker not in source:
             raise AssertionError("Unable to inject the flasher mock before the page script")
         source = source.replace(
             marker,
-            '  <script src="./wingie_flasher_mock.js"></script>\n' + marker,
+            "  <script>\n" + mock_source + "\n  </script>\n" + marker,
             1,
         )
         (cls.web_root / "wingie_flasher.html").write_text(source, encoding="utf-8")
-        shutil.copyfile(MOCK_PATH, cls.web_root / "wingie_flasher_mock.js")
+
+        image_specs = (
+            ("bootloader", "Wingie2-browser.bootloader.bin", 0x1000, b"BOOT"),
+            ("partitions", "Wingie2-browser.partitions.bin", 0x8000, b"PART"),
+            ("boot_app0", "Wingie2-browser.boot_app0.bin", 0xE000, b"BOOT_APP0"),
+            ("app", "Wingie2-browser.app.bin", 0x10000, b"APP"),
+        )
+        image_data = {name: data for name, _path, _offset, data in image_specs}
+        manifest = {
+            "schema": 1,
+            "name": "Wingie2 Browser Test",
+            "version": "browser-test",
+            "chipFamily": "ESP32",
+            "esptoolJs": "0.6.0",
+            "flash": {"mode": "dio", "frequency": "80m", "size": "4MB", "eraseAll": False},
+            "preserve": [{"name": "nvs", "offset": 0x9000, "size": 0x5000}],
+            "parts": [
+                {
+                    "name": name,
+                    "path": path,
+                    "offset": offset,
+                    "size": len(data),
+                    "sha256": hashlib.sha256(data).hexdigest(),
+                }
+                for name, path, offset, data in image_specs
+            ],
+        }
+        standalone = RELEASE.build_standalone_html(
+            source,
+            manifest,
+            image_data,
+            "class EmbeddedTransport {}\n"
+            "class EmbeddedLoader {}\n"
+            "export {EmbeddedTransport as Transport, EmbeddedLoader as ESPLoader};\n",
+            "window.md5 = value => String(value.length).padStart(32, '0');",
+            "Browser test third-party licenses",
+        )
+        (cls.web_root / "wingie_standalone.html").write_text(
+            standalone, encoding="utf-8"
+        )
 
         handler = partial(QuietHandler, directory=str(cls.web_root))
         cls.server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         cls.server_thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.server_thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_port}/wingie_flasher.html"
+        cls.standalone_url = f"http://127.0.0.1:{cls.server.server_port}/wingie_standalone.html"
         cls.session = f"wingie-flasher-test-{os.getpid()}"
 
     @classmethod
@@ -170,6 +229,57 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                     }})()
                     """
                 )
+
+    def test_standalone_loads_without_manifest_image_or_vendor_requests(self):
+        with QuietHandler.request_lock:
+            QuietHandler.requests.clear()
+        self.browser("open", f"{self.standalone_url}?scenario=current")
+        self.browser(
+            "wait",
+            "--fn",
+            "window.__WINGIE_FLASH_PAGE__ && window.__WINGIE_FLASH_PAGE__.snapshot().packageReady",
+        )
+        self.evaluate(
+            """
+            (async () => {
+              const page = window.__WINGIE_FLASH_PAGE__;
+              if (!page.snapshot().embedded) throw new Error("Standalone mode was not detected");
+              const runtime = await window.__WINGIE_ESPTOOL_READY__;
+              if (typeof runtime.Transport !== "function" || typeof runtime.ESPLoader !== "function") {
+                throw new Error("Standalone runtime constructors were not initialized");
+              }
+              if (typeof window.md5 !== "function") throw new Error("Standalone MD5 was not initialized");
+              const initialLog = window.__WINGIE_FLASH_MOCK__.snapshot().log;
+              if (initialLog.some(entry => entry.type === "fetch-manifest" || entry.type === "fetch-image")) {
+                throw new Error("Standalone page fetched adjacent firmware assets");
+              }
+              const partStates = Array.from(document.querySelectorAll(".wg-part-state"), node => node.textContent);
+              if (partStates.length !== 4 || partStates.some(value => !value.includes("SHA-256 通过"))) {
+                throw new Error("Standalone images did not pass SHA-256 verification");
+              }
+              await page.connect();
+              await page.flash();
+              if (!page.snapshot().completed) throw new Error("Standalone flash flow did not complete");
+              const writes = window.__WINGIE_FLASH_MOCK__.snapshot().log.filter(entry => entry.type === "write");
+              if (writes.length !== 4 || writes.some(entry => entry.eraseAll !== false)) {
+                throw new Error("Standalone flow changed safe flash behavior");
+              }
+              if (writes.some(entry => entry.fileCount !== 1 || entry.flashMode !== "dio" ||
+                  entry.flashFreq !== "80m" || entry.flashSize !== "4MB")) {
+                throw new Error("Standalone flow changed fixed flash options");
+              }
+              const addresses = writes.map(entry => entry.address);
+              const expectedAddresses = [0x1000, 0x8000, 0xe000, 0x10000];
+              if (JSON.stringify(addresses) !== JSON.stringify(expectedAddresses)) {
+                throw new Error(`Unexpected standalone offsets: ${JSON.stringify(addresses)}`);
+              }
+              return "PASS";
+            })()
+            """
+        )
+        with QuietHandler.request_lock:
+            requested_paths = [urlsplit(path).path for path in QuietHandler.requests]
+        self.assertEqual(requested_paths, ["/wingie_standalone.html"])
 
 
 if __name__ == "__main__":

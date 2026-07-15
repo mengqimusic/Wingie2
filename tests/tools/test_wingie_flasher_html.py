@@ -29,7 +29,7 @@ class DocumentParser(HTMLParser):
                 self.external_assets.append(values["src"])
         if tag == "style":
             self.style_count += 1
-        if tag == "link" and values.get("href"):
+        if tag == "link" and values.get("href") and not values["href"].startswith("data:"):
             self.external_assets.append(values["href"])
 
 
@@ -46,6 +46,8 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertEqual(self.parser.style_count, 1)
         self.assertEqual(self.parser.external_assets, [])
         self.assertEqual(len(self.parser.ids), len(set(self.parser.ids)))
+        self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_BUNDLE -->"), 1)
+        self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_LICENSES -->"), 1)
 
     def test_uses_strict_wingie_manifest_and_fixed_offsets(self):
         for field in (
@@ -67,6 +69,20 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn("actual !== part.sha256", self.source)
         self.assertIn("state.images[index] = await downloadImage", self.source)
         self.assertIn("elements.connect.disabled = !state.packageReady", self.source)
+
+    def test_generated_standalone_uses_embedded_images_and_runtime(self):
+        for fragment in (
+            "window.__WINGIE_EMBEDDED_RELEASE__",
+            "window.__WINGIE_ESPTOOL_READY__",
+            "decodeBase64Image(part, images[part.name])",
+            "await loadEmbeddedImages(manifest)",
+            "state.runtime = await withTimeout(runtimeReady",
+            "withTimeout(runtimeReady, 5000",
+            'embeddedRelease ? "正在读取内嵌固件…"',
+            "如果只部署一个文件，请改用发布包中的 standalone HTML",
+            "当前静态主机可能阻止了页面内嵌的 JavaScript module",
+        ):
+            self.assertIn(fragment, self.source)
 
     def test_rom_chip_check_does_not_depend_on_installed_firmware(self):
         self.assertIn('await loader.main("default_reset")', self.source)
