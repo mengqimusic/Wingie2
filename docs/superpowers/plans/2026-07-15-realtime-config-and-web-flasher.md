@@ -19,7 +19,8 @@
    `esptool-js 0.6.0` 与 MD5 实现。
 2. 严格校验 manifest、四 offset、NVS preserve、SHA-256、芯片类型和 flash 参数。
 3. normal path 不引用 `eraseFlash`，固定 `eraseAll:false`，逐段启用 ROM flash MD5。
-4. 建立发布打包器，要求显式版本和四个构建输入，生成版本化目录、manifest、SHA 与双语说明。
+4. 建立发布打包器，要求显式版本和四个构建输入，生成版本化目录、manifest、SHA、双语说明，
+   以及内嵌全部固件和 vendor 的 standalone HTML。
 5. 添加 image_info、partition、app size、offset、4 KiB NVS overlap、vendor SHA 和禁止 erase 自动测试。
 6. 用可重复浏览器 mock 覆盖空白、v1.x、v3.1、当前、app 损坏、错误芯片、端口占用、ROM 失败、
    下载/SHA/写入/MD5 失败与重试。

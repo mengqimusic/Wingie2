@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
+import base64
 from dataclasses import dataclass
 import hashlib
+import html
 import json
 from pathlib import Path
 import re
@@ -23,6 +25,51 @@ NVS_OFFSET = 0x9000
 NVS_SIZE = 0x5000
 PACKAGE_PREFIX = "wingie2-firmware-"
 VERSION_PATTERN = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._+-]*$")
+STANDALONE_MARKER = "  <!-- WINGIE_STANDALONE_BUNDLE -->"
+STANDALONE_LICENSE_MARKER = (
+    "<!-- WINGIE_STANDALONE_LICENSES -->"
+    "完整许可证文本位于发布包的 licenses/ 目录。"
+)
+ES_MODULE_EXPORT_PATTERN = re.compile(r"export\s*\{(?P<body>[^{}]+)\}\s*;?\s*$", re.DOTALL)
+LICENSE_DIRECTORY = Path(__file__).resolve().parent / "licenses"
+LICENSE_FILES = (
+    (
+        "esptool-js 0.6.0",
+        "Apache-2.0",
+        "esptool-js-0.6.0-LICENSE.txt",
+        "07581e541ae9573a409a50800bed0452a309100b20ce12428df22e76ae049384",
+    ),
+    (
+        "atob-lite 2.0.0",
+        "MIT",
+        "atob-lite-2.0.0-LICENSE.md",
+        "435a6722c786b0a56fbe7387028f1d9d3f3a2d0fb615bb8fee118727c3f59b7b",
+    ),
+    (
+        "pako 2.1.0",
+        "MIT",
+        "pako-2.1.0-LICENSE.txt",
+        "a04665b3b2de56c66730c1f720f528175739e4104f79073614aa611da1e85539",
+    ),
+    (
+        "pako 2.1.0 zlib-derived sources",
+        "Zlib",
+        "pako-2.1.0-zlib-README.txt",
+        "d8b499598e43d755ea8918448128259ff01820c50d94d5a48c8883d0a594ddb1",
+    ),
+    (
+        "tslib 2.4.1",
+        "0BSD",
+        "tslib-2.4.1-LICENSE.txt",
+        "5989359645911c04a140c49d89496b13feca980bbf36d2250a12d3b9d06250d6",
+    ),
+    (
+        "js-md5 0.8.0",
+        "MIT",
+        "js-md5-0.8.0-LICENSE.txt",
+        "ac52bd3e7b6e3155c416a6d875c5738fa2c315015fca5a70b21b6863662abd67",
+    ),
+)
 
 
 EXPECTED_PARTITIONS = (
@@ -73,6 +120,44 @@ def require_file(path, label):
         raise ReleaseError(f"{label} 不存在或不是文件：{path}")
     if path.stat().st_size == 0:
         raise ReleaseError(f"{label} 是空文件：{path}")
+
+
+def load_third_party_licenses():
+    licenses = []
+    for component, license_name, filename, expected_hash in LICENSE_FILES:
+        path = LICENSE_DIRECTORY / filename
+        require_file(path, f"{component} license")
+        if sha256_file(path) != expected_hash:
+            raise ReleaseError(f"{component} license SHA256 与固定来源不符")
+        licenses.append(
+            {
+                "component": component,
+                "license": license_name,
+                "filename": filename,
+                "path": path,
+                "text": path.read_text(encoding="utf-8"),
+            }
+        )
+    return licenses
+
+
+def third_party_license_text(licenses):
+    sections = [
+        "Wingie2 web flasher third-party software notices\n"
+        "The complete notice texts are reproduced below; whitespace formatting may be normalized.\n"
+    ]
+    for license_record in licenses:
+        sections.append(
+            "=" * 80
+            + f"\n{license_record['component']}\n"
+            + f"License: {license_record['license']}\n"
+            + f"Source notice: licenses/{license_record['filename']}\n"
+            + "=" * 80
+            + "\n\n"
+            + license_record["text"].rstrip()
+            + "\n"
+        )
+    return "\n".join(sections)
 
 
 def run_validator(command, label):
@@ -223,6 +308,85 @@ def validate_manifest(manifest):
             raise ReleaseError(f"manifest {part['name']} 的 4 KiB 擦写范围与 NVS 相交")
 
 
+def escape_inline_script(source):
+    return re.sub(r"</script", r"<\\/script", source, flags=re.IGNORECASE)
+
+
+def esptool_runtime_exports(source):
+    match = ES_MODULE_EXPORT_PATTERN.search(source)
+    if not match:
+        raise ReleaseError("esptool-js bundle 缺少可识别的 ES module exports")
+    exports = {}
+    for entry in match.group("body").split(","):
+        parts = re.split(r"\s+as\s+", entry.strip())
+        if len(parts) == 1:
+            local_name = exported_name = parts[0]
+        elif len(parts) == 2:
+            local_name, exported_name = parts
+        else:
+            raise ReleaseError("esptool-js bundle exports 格式无效")
+        if not re.fullmatch(r"[A-Za-z_$][0-9A-Za-z_$]*", local_name) or not re.fullmatch(
+            r"[A-Za-z_$][0-9A-Za-z_$]*", exported_name
+        ):
+            raise ReleaseError("esptool-js bundle exports 含无效标识符")
+        exports[exported_name] = local_name
+    for required in ("Transport", "ESPLoader"):
+        if required not in exports:
+            raise ReleaseError(f"esptool-js bundle 缺少 {required} export")
+    return exports
+
+
+def build_standalone_html(
+    flasher_source, manifest, image_data, esptool_source, md5_source, license_text
+):
+    validate_manifest(manifest)
+    if flasher_source.count(STANDALONE_MARKER) != 1:
+        raise ReleaseError("刷机页面缺少唯一 standalone 注入标记")
+    if flasher_source.count(STANDALONE_LICENSE_MARKER) != 1:
+        raise ReleaseError("刷机页面缺少唯一 standalone license 注入标记")
+
+    expected_names = [part["name"] for part in manifest["parts"]]
+    if sorted(image_data) != sorted(expected_names):
+        raise ReleaseError("standalone 镜像集合与 manifest 不一致")
+    encoded_images = {}
+    for part in manifest["parts"]:
+        data = image_data[part["name"]]
+        if len(data) != part["size"] or hashlib.sha256(data).hexdigest() != part["sha256"]:
+            raise ReleaseError(f"standalone {part['name']} 与 manifest 大小或 SHA256 不一致")
+        encoded_images[part["name"]] = base64.b64encode(data).decode("ascii")
+
+    exports = esptool_runtime_exports(esptool_source)
+    payload = json.dumps(
+        {"manifest": manifest, "images": encoded_images},
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
+    bootstrap = f"""  <script>
+    window.__WINGIE_EMBEDDED_RELEASE__ = {payload};
+    window.__WINGIE_ESPTOOL_READY__ = new Promise((resolve, reject) => {{
+      window.__WINGIE_RESOLVE_ESPTOOL__ = resolve;
+      window.__WINGIE_REJECT_ESPTOOL__ = reject;
+    }});
+  </script>
+  <script>
+{escape_inline_script(md5_source)}
+  </script>
+  <script type="module" onerror="window.__WINGIE_REJECT_ESPTOOL__(new Error('standalone esptool-js module 加载失败'))">
+{escape_inline_script(esptool_source)}
+    try {{
+      globalThis.__WINGIE_RESOLVE_ESPTOOL__({{
+        Transport: {exports['Transport']},
+        ESPLoader: {exports['ESPLoader']}
+      }});
+    }} catch (error) {{
+      globalThis.__WINGIE_REJECT_ESPTOOL__(error);
+    }}
+  </script>"""
+    return flasher_source.replace(
+        STANDALONE_LICENSE_MARKER, html.escape(license_text)
+    ).replace(STANDALONE_MARKER, bootstrap)
+
+
 def chinese_instructions(version, package_parts):
     part_lines = "\n".join(
         f"- `0x{part.offset:x}`：`{part.filename}`" for part in package_parts
@@ -230,6 +394,8 @@ def chinese_instructions(version, package_parts):
     return f"""# Wingie2 {version} 网页刷机说明
 
 本发布包面向桌面版 Chrome 或 Edge，并要求从 HTTPS 页面运行。刷机页直接连接 ESP32 ROM bootloader，不依赖 Wingie2 应用固件响应，因此支持空白 Flash、v1.0/v1.1、v3.1/当前固件，以及 app 损坏但 ROM bootloader 正常的设备。
+
+普通用户推荐直接打开单文件 `Wingie2-{version}.standalone.html`。它已经内嵌 manifest、四段固件和固定版本浏览器依赖，不需要选择固件包，也不会下载同目录资源。Squarespace 只放一个跳转到该 HTTPS 页面的按钮；不要把刷机页放进 iframe 或 Code Block。
 
 ## 安全边界
 
@@ -245,7 +411,7 @@ def chinese_instructions(version, package_parts):
 ## 安装步骤
 
 1. 关闭正在使用 Wingie2 串口的配置页、MIDI 工具和串口终端。
-2. 从 HTTPS 地址打开 `wingie_flasher.html`，点击“连接设备”。浏览器只会在用户选择端口后授权访问。
+2. 从 HTTPS 地址打开 `Wingie2-{version}.standalone.html`，点击“连接设备”。浏览器只会在用户选择端口后授权访问。
 3. 页面先进入 ROM bootloader 并确认芯片为 ESP32；芯片不符时禁止继续。
 4. 确认版本和四个写入地址后开始刷写。保持 USB 连接，直到四段写入和校验全部完成。
 5. 页面提示成功后重新启动 Wingie2，再使用配置页检查固件版本和原有设置。
@@ -272,6 +438,8 @@ def english_instructions(version, package_parts):
 
 This package supports desktop Chrome and Edge from an HTTPS page. The flasher connects directly to the ESP32 ROM bootloader and does not wait for a Wingie2 firmware greeting. It therefore supports blank flash, v1.0/v1.1, v3.1/current firmware, and a damaged app when the ROM bootloader still works.
 
+For normal users, open the single-file `Wingie2-{version}.standalone.html`. It embeds the manifest, all four images, and the pinned browser dependencies, so there is no firmware package picker and no adjacent asset download. Squarespace should contain a button that opens this HTTPS page as a top-level page; do not place the flasher in an iframe or Code Block.
+
 ## Safety boundaries
 
 - Standard installation writes only four fixed regions and never performs a full-chip erase.
@@ -286,7 +454,7 @@ This package supports desktop Chrome and Edge from an HTTPS page. The flasher co
 ## Installation
 
 1. Close every configuration page, MIDI utility, and serial terminal using the Wingie2 port.
-2. Open `wingie_flasher.html` from its HTTPS address and select “Connect device”. The browser grants access only after you choose a port.
+2. Open `Wingie2-{version}.standalone.html` from its HTTPS address and select “Connect device”. The browser grants access only after you choose a port.
 3. The page enters the ROM bootloader and confirms an ESP32 before enabling installation. A different chip must stop the process.
 4. Confirm the version and four addresses, then start. Keep USB connected until all four images are written and verified.
 5. Restart Wingie2 after success, then use the configuration page to check the firmware version and retained settings.
@@ -337,6 +505,8 @@ def build_release(inputs):
     }
     for label, path in required.items():
         require_file(path, label)
+    licenses = load_third_party_licenses()
+    license_text = third_party_license_text(licenses)
 
     boot_app0_hash = sha256_file(inputs.boot_app0)
     if boot_app0_hash != BOOT_APP0_SHA256:
@@ -406,6 +576,16 @@ def build_release(inputs):
         vendor_dir.mkdir()
         shutil.copyfile(inputs.esptool_bundle, vendor_dir / "esptool-js.bundle.js")
         shutil.copyfile(inputs.md5_script, vendor_dir / "md5.min.js")
+        packaged_license_dir = package_dir / "licenses"
+        packaged_license_dir.mkdir()
+        for license_record in licenses:
+            shutil.copyfile(
+                license_record["path"],
+                packaged_license_dir / license_record["filename"],
+            )
+        (package_dir / "THIRD_PARTY_LICENSES.txt").write_text(
+            license_text, encoding="utf-8"
+        )
 
         manifest_parts = []
         for part in parts:
@@ -437,6 +617,21 @@ def build_release(inputs):
         validate_manifest(manifest)
         (package_dir / "manifest.json").write_text(
             json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        )
+        image_data = {
+            part.name: (package_dir / part.filename).read_bytes() for part in parts
+        }
+        standalone_name = f"Wingie2-{version}.standalone.html"
+        (package_dir / standalone_name).write_text(
+            build_standalone_html(
+                inputs.flasher_page.read_text(encoding="utf-8"),
+                manifest,
+                image_data,
+                inputs.esptool_bundle.read_text(encoding="utf-8"),
+                inputs.md5_script.read_text(encoding="utf-8"),
+                license_text,
+            ),
+            encoding="utf-8",
         )
         (package_dir / "README.zh-CN.md").write_text(
             chinese_instructions(version, parts), encoding="utf-8"

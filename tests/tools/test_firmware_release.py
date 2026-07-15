@@ -1,10 +1,15 @@
+import base64
 import hashlib
+import html
 import importlib.util
 import json
 from pathlib import Path
+import re
+import shutil
 import tempfile
 import textwrap
 import unittest
+from unittest import mock
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -36,11 +41,20 @@ class FirmwareReleaseTest(unittest.TestCase):
         RELEASE.BOOT_APP0_SHA256 = self.sha256(self.boot_app0)
 
         self.flasher_page = self.root / "wingie_flasher.html"
-        self.flasher_page.write_text("<!doctype html><title>Wingie2</title>")
+        self.flasher_page.write_text(
+            "<!doctype html><title>Wingie2</title>\n"
+            f"{RELEASE.STANDALONE_MARKER}\n"
+            f"<pre>{RELEASE.STANDALONE_LICENSE_MARKER}</pre>\n"
+            "<script>window.pageLoaded = true;</script>\n"
+        )
         self.esptool_bundle = self.root / "esptool-js.bundle.js"
-        self.esptool_bundle.write_text("// esptool-js 0.6.0")
+        self.esptool_bundle.write_text(
+            "class EmbeddedTransport {}\n"
+            "class EmbeddedLoader {}\n"
+            "export {EmbeddedTransport as Transport, EmbeddedLoader as ESPLoader};\n"
+        )
         self.md5_script = self.root / "md5.min.js"
-        self.md5_script.write_text("// md5")
+        self.md5_script.write_text("window.md5 = value => String(value.length);")
         RELEASE.ESPTOOL_BUNDLE_SHA256 = self.sha256(self.esptool_bundle)
         RELEASE.MD5_SCRIPT_SHA256 = self.sha256(self.md5_script)
 
@@ -186,6 +200,86 @@ class FirmwareReleaseTest(unittest.TestCase):
         for relative_path, expected_hash in checksums.items():
             self.assertEqual(self.sha256(package_dir / relative_path), expected_hash)
 
+    def test_standalone_html_embeds_manifest_images_and_browser_dependencies(self):
+        package_dir = RELEASE.build_release(self.inputs("standalone"))
+        standalone = package_dir / "Wingie2-standalone.standalone.html"
+        source = standalone.read_text(encoding="utf-8")
+        self.assertNotIn(RELEASE.STANDALONE_MARKER, source)
+        self.assertNotIn(RELEASE.STANDALONE_LICENSE_MARKER, source)
+        self.assertIn("window.__WINGIE_EMBEDDED_RELEASE__", source)
+        self.assertIn("window.__WINGIE_ESPTOOL_READY__", source)
+        self.assertIn('type="module" onerror=', source)
+        self.assertIn("EmbeddedTransport", source)
+        self.assertIn("window.md5", source)
+        self.assertIn("Wingie2 web flasher third-party software notices", source)
+        aggregate = (package_dir / "THIRD_PARTY_LICENSES.txt").read_text()
+        self.assertIn(html.escape(aggregate), source)
+
+        match = re.search(
+            r"window\.__WINGIE_EMBEDDED_RELEASE__ = (?P<payload>\{.*\});\n"
+            r"\s*window\.__WINGIE_ESPTOOL_READY__",
+            source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(match)
+        payload = json.loads(match.group("payload"))
+        self.assertEqual(payload["manifest"], json.loads((package_dir / "manifest.json").read_text()))
+        self.assertEqual(
+            sorted(payload["images"]),
+            ["app", "boot_app0", "bootloader", "partitions"],
+        )
+        for part in payload["manifest"]["parts"]:
+            self.assertEqual(
+                base64.b64decode(payload["images"][part["name"]]),
+                (package_dir / part["path"]).read_bytes(),
+            )
+
+    def test_third_party_licenses_are_pinned_packaged_and_checksummed(self):
+        package_dir = RELEASE.build_release(self.inputs("licenses"))
+        aggregate = (package_dir / "THIRD_PARTY_LICENSES.txt").read_text()
+        checksum_source = (package_dir / "SHA256SUMS.txt").read_text()
+
+        for component, license_name, filename, expected_hash in RELEASE.LICENSE_FILES:
+            source = RELEASE.LICENSE_DIRECTORY / filename
+            packaged = package_dir / "licenses" / filename
+            self.assertEqual(self.sha256(source), expected_hash)
+            self.assertEqual(packaged.read_bytes(), source.read_bytes())
+            self.assertIn(component, aggregate)
+            self.assertIn(f"License: {license_name}", aggregate)
+            self.assertIn(f"licenses/{filename}", checksum_source)
+        self.assertIn("THIRD_PARTY_LICENSES.txt", checksum_source)
+
+    def test_missing_third_party_license_fails_closed(self):
+        missing_license_dir = self.root / "missing-licenses"
+        missing_license_dir.mkdir()
+        with mock.patch.object(RELEASE, "LICENSE_DIRECTORY", missing_license_dir):
+            with self.assertRaisesRegex(RELEASE.ReleaseError, "license 不存在"):
+                RELEASE.build_release(self.inputs("missing-license"))
+        self.assertFalse(
+            (self.output_root / "wingie2-firmware-missing-license").exists()
+        )
+
+    def test_substituted_third_party_license_fails_closed(self):
+        license_dir = self.root / "substituted-licenses"
+        shutil.copytree(RELEASE.LICENSE_DIRECTORY, license_dir)
+        filename = RELEASE.LICENSE_FILES[0][2]
+        (license_dir / filename).write_text("substituted license", encoding="utf-8")
+        with mock.patch.object(RELEASE, "LICENSE_DIRECTORY", license_dir):
+            with self.assertRaisesRegex(RELEASE.ReleaseError, "license SHA256"):
+                RELEASE.build_release(self.inputs("substituted-license"))
+        self.assertFalse(
+            (self.output_root / "wingie2-firmware-substituted-license").exists()
+        )
+
+    def test_standalone_rejects_vendor_without_required_module_exports(self):
+        self.esptool_bundle.write_text("export {Missing as SomethingElse};")
+        RELEASE.ESPTOOL_BUNDLE_SHA256 = self.sha256(self.esptool_bundle)
+        with self.assertRaisesRegex(RELEASE.ReleaseError, "缺少 Transport export"):
+            RELEASE.build_release(self.inputs("missing-export"))
+        self.assertFalse(
+            (self.output_root / "wingie2-firmware-missing-export").exists()
+        )
+
     def test_app_at_partition_boundary_is_allowed(self):
         (self.build_dir / "Wingie2.ino.bin").write_bytes(
             b"A" * RELEASE.APP_MAX_SIZE
@@ -259,6 +353,10 @@ class FirmwareReleaseTest(unittest.TestCase):
         self.assertNotIn("gh release edit", source)
         self.assertNotIn("gh release upload", source)
         self.assertNotIn("git push", source)
+        self.assertIn('standalone="Wingie2-$version.standalone.html"', source)
+        self.assertIn('"$release_dir/$standalone"', source)
+        self.assertIn("THIRD_PARTY_LICENSES.txt", source)
+        self.assertIn("cmp -s", source)
 
 
 if __name__ == "__main__":

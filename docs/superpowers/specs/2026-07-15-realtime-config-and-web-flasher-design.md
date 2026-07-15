@@ -65,6 +65,8 @@
 - app 大小必须 `<= 0x140000`；bootloader/app 必须通过 ESP32 `image_info`；partition 必须解析为
   NVS `0x9000/0x5000`、otadata `0xe000/0x2000`、app0 `0x10000/0x140000`。
 - 发布目录包含带版本文件、manifest、`SHA256SUMS.txt`、中英文说明和固定版本网页依赖。
+- 同时生成带版本的 standalone HTML，把 manifest、四段镜像和固定 vendor 全部内嵌；页面仍逐段
+  校验 SHA-256，且不请求相邻固件资源。Squarespace 只以按钮打开其顶层 HTTPS 地址。
 - `esptool-js 0.6.0` 与 `js-md5 0.8.0` 发布文件同时锁定 SHA-256，替换或版本漂移会 fail closed。
 - GitHub Release 只允许手工创建 Draft；本任务不 push、不发布、不连接或刷写硬件。
 

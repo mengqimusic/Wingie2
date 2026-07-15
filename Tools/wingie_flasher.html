@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <title>Wingie2 Firmware Installer</title>
   <style>
     #wingie-flasher {
@@ -515,6 +516,10 @@
             <summary>查看技术日志</summary>
             <pre id="wg-log" class="wg-log" aria-live="polite"></pre>
           </details>
+          <details>
+            <summary>Third-party licenses</summary>
+            <pre class="wg-log"><!-- WINGIE_STANDALONE_LICENSES -->完整许可证文本位于发布包的 licenses/ 目录。</pre>
+          </details>
         </section>
       </div>
 
@@ -522,6 +527,7 @@
     </div>
   </main>
 
+  <!-- WINGIE_STANDALONE_BUNDLE -->
   <script>
     (() => {
       "use strict";
@@ -536,6 +542,7 @@
       const NVS_SIZE = 0x5000;
       const MAX_APP_SIZE = 0x140000;
       const BAUDRATE = 460800;
+      const embeddedRelease = window.__WINGIE_EMBEDDED_RELEASE__ || null;
       const EXPECTED_PARTS = [
         {name: "bootloader", offset: 0x1000, label: "Bootloader"},
         {name: "partitions", offset: 0x8000, label: "Partition Table"},
@@ -612,6 +619,20 @@
 
       function hexadecimal(value) {
         return `0x${value.toString(16)}`;
+      }
+
+      async function withTimeout(promise, milliseconds, message) {
+        let timer = null;
+        try {
+          return await Promise.race([
+            promise,
+            new Promise((resolve, reject) => {
+              timer = window.setTimeout(() => reject(new Error(message)), milliseconds);
+            })
+          ]);
+        } finally {
+          if (timer) window.clearTimeout(timer);
+        }
       }
 
       function flashSpanSize(size) {
@@ -736,15 +757,51 @@
         return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, "0")).join("");
       }
 
+      async function verifyImage(part, data) {
+        if (!(data instanceof Uint8Array)) throw new Error(`${part.name} 不是有效的二进制镜像`);
+        if (data.length !== part.size) throw new Error(`${part.name} 大小不符：manifest ${part.size}，实际 ${data.length}`);
+        const actual = await sha256Hex(data);
+        if (actual !== part.sha256) throw new Error(`${part.name} 的 SHA-256 不匹配，发布包可能损坏`);
+        return {part, data};
+      }
+
+      function decodeBase64Image(part, encoded) {
+        if (typeof encoded !== "string" || !encoded) throw new Error(`内嵌固件缺少 ${part.name}`);
+        let binary;
+        try {
+          binary = window.atob(encoded);
+        } catch (error) {
+          throw new Error(`${part.name} 的内嵌 Base64 无效`);
+        }
+        const data = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) data[index] = binary.charCodeAt(index);
+        return data;
+      }
+
+      async function loadEmbeddedImages(manifest) {
+        const images = requireObject(embeddedRelease && embeddedRelease.images, "embedded images");
+        const expectedNames = manifest.parts.map(part => part.name).sort();
+        const actualNames = Object.keys(images).sort();
+        if (JSON.stringify(actualNames) !== JSON.stringify(expectedNames)) {
+          throw new Error("内嵌固件必须且只能包含四段 Wingie2 镜像");
+        }
+        const verified = [];
+        for (let index = 0; index < manifest.parts.length; index += 1) {
+          const part = manifest.parts[index];
+          setProgress((index / manifest.parts.length) * 100, `正在解码并校验 ${EXPECTED_PARTS[index].label}…`);
+          verified[index] = await verifyImage(part, decodeBase64Image(part, images[part.name]));
+          state.images[index] = verified[index];
+          renderParts();
+        }
+        return verified;
+      }
+
       async function downloadImage(part, manifestResponseUrl) {
         const imageUrl = new URL(part.path, manifestResponseUrl);
         const response = await fetch(imageUrl.href, {cache: "no-store"});
         if (!response.ok) throw new Error(`下载 ${part.path} 失败（HTTP ${response.status}）`);
         const data = new Uint8Array(await response.arrayBuffer());
-        if (data.length !== part.size) throw new Error(`${part.name} 大小不符：manifest ${part.size}，实际 ${data.length}`);
-        const actual = await sha256Hex(data);
-        if (actual !== part.sha256) throw new Error(`${part.name} 的 SHA-256 不匹配，发布包可能损坏`);
-        return {part, data};
+        return verifyImage(part, data);
       }
 
       async function prepareFirmware() {
@@ -757,21 +814,32 @@
         state.images = [];
         setProgress(0, "正在检查发布固件…");
         setStatus(elements.packageStatus, elements.packageStatusText, "working", "检查中");
-        elements.packageDetail.textContent = "正在读取 manifest.json…";
+        elements.packageDetail.textContent = embeddedRelease ? "正在读取内嵌固件…" : "正在读取 manifest.json…";
         renderParts();
         renderControls();
         try {
-          const response = await fetch(MANIFEST_URL, {cache: "no-store"});
-          if (!response.ok) throw new Error(`读取 manifest.json 失败（HTTP ${response.status}）`);
-          const manifest = validateManifest(await response.json());
+          let manifest;
+          let manifestResponseUrl = null;
+          if (embeddedRelease) {
+            manifest = validateManifest(embeddedRelease.manifest);
+          } else {
+            const response = await fetch(MANIFEST_URL, {cache: "no-store"});
+            if (!response.ok) throw new Error(`读取 manifest.json 失败（HTTP ${response.status}）`);
+            manifest = validateManifest(await response.json());
+            manifestResponseUrl = response.url || new URL(MANIFEST_URL, location.href).href;
+          }
           state.manifest = manifest;
-          elements.packageDetail.textContent = `${manifest.name} ${manifest.version} · ESP32 · DIO 80 MHz · 4 MB`;
+          elements.packageDetail.textContent = `${manifest.name} ${manifest.version} · ESP32 · DIO 80 MHz · 4 MB${embeddedRelease ? " · Standalone" : ""}`;
           renderParts();
-          for (let index = 0; index < manifest.parts.length; index += 1) {
-            const part = manifest.parts[index];
-            setProgress((index / manifest.parts.length) * 100, `正在下载并校验 ${EXPECTED_PARTS[index].label}…`);
-            state.images[index] = await downloadImage(part, response.url || new URL(MANIFEST_URL, location.href).href);
-            renderParts();
+          if (embeddedRelease) {
+            await loadEmbeddedImages(manifest);
+          } else {
+            for (let index = 0; index < manifest.parts.length; index += 1) {
+              const part = manifest.parts[index];
+              setProgress((index / manifest.parts.length) * 100, `正在下载并校验 ${EXPECTED_PARTS[index].label}…`);
+              state.images[index] = await downloadImage(part, manifestResponseUrl);
+              renderParts();
+            }
           }
           state.packageReady = true;
           setProgress(100, "四段镜像 SHA-256 校验全部通过");
@@ -781,7 +849,10 @@
         } catch (error) {
           setStatus(elements.packageStatus, elements.packageStatusText, "error", "检查失败");
           elements.packageDetail.textContent = "发布包不可用";
-          showAlert(`固件包检查失败：${error.message}\n请确认 manifest、四个 bin 文件与 SHA256SUMS 来自同一 GitHub Release，然后点“重新检查固件”。`, "error");
+          const recovery = embeddedRelease
+            ? "该 standalone HTML 的内嵌数据不完整或已损坏，请重新下载官方文件。"
+            : "此页面会自动读取同目录的 manifest 和 bin；如果只部署一个文件，请改用发布包中的 standalone HTML。";
+          showAlert(`固件包检查失败：${error.message}\n${recovery}`, "error");
           appendLog(`固件包检查失败：${error.message}`);
         } finally {
           renderControls();
@@ -805,6 +876,10 @@
         if (mock) {
           if (!window.md5 && typeof mock.md5 === "function") window.md5 = mock.md5;
           state.runtime = mock.esptool;
+        } else if (embeddedRelease) {
+          const runtimeReady = window.__WINGIE_ESPTOOL_READY__;
+          if (!runtimeReady || typeof runtimeReady.then !== "function") throw new Error("standalone esptool-js 尚未加载");
+          state.runtime = await withTimeout(runtimeReady, 5000, "standalone esptool-js module 加载超时");
         } else {
           await loadClassicScript(MD5_VENDOR_URL);
           state.runtime = await import(ESPTOOL_VENDOR_URL);
@@ -853,6 +928,9 @@
         }
         if (lower.includes("driver") || lower.includes("no device") || lower.includes("device unavailable")) {
           return "系统没有识别 USB 串口。请更换支持数据的 USB 线、换一个 USB 口，并安装设备对应的 USB 串口驱动。";
+        }
+        if (lower.includes("standalone esptool-js")) {
+          return "刷机运行组件没有加载。请确认使用官方 GitHub Pages HTTPS 地址；当前静态主机可能阻止了页面内嵌的 JavaScript module。";
         }
         if (lower.includes("wrong chip") || lower.includes("expected esp32")) return message;
         return `自动进入 ESP32 ROM bootloader 失败：${message}\n请关闭占用串口的软件并拔插 USB 后重试；仍失败时，可按住设备 BOOT 键再点击连接。`;
@@ -1007,7 +1085,8 @@
               connected: state.connected,
               busy: state.busy,
               resumeIndex: state.resumeIndex,
-              completed: state.completed
+              completed: state.completed,
+              embedded: Boolean(embeddedRelease)
             };
           }
         };
