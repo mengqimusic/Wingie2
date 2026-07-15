@@ -33,6 +33,55 @@ class DocumentParser(HTMLParser):
             self.external_assets.append(values["href"])
 
 
+class VisibleTextParser(HTMLParser):
+    VOID_ELEMENTS = {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.stack = []
+        self.suppressed = 0
+        self.text = []
+
+    def handle_starttag(self, tag, attributes):
+        values = dict(attributes)
+        suppress = (
+            tag in {"script", "style", "template"}
+            or "hidden" in values
+            or values.get("aria-hidden") == "true"
+        )
+        if tag not in self.VOID_ELEMENTS:
+            self.stack.append((tag, suppress))
+            if suppress:
+                self.suppressed += 1
+
+    def handle_endtag(self, tag):
+        while self.stack:
+            open_tag, suppress = self.stack.pop()
+            if suppress:
+                self.suppressed -= 1
+            if open_tag == tag:
+                break
+
+    def handle_data(self, data):
+        if self.suppressed == 0 and data.strip():
+            self.text.append(data)
+
+
 class WingieFlasherHtmlTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -48,6 +97,54 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertEqual(len(self.parser.ids), len(set(self.parser.ids)))
         self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_BUNDLE -->"), 1)
         self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_LICENSES -->"), 1)
+        self.assertEqual(self.source.count("<!-- WINGIE_TEST_MOCK -->"), 1)
+
+    def test_visible_copy_is_basic_bilingual_changelog_and_instructions(self):
+        parser = VisibleTextParser()
+        parser.feed(self.source)
+        visible_text = " ".join(" ".join(parser.text).split())
+        for fragment in (
+            "更新内容",
+            "操作说明",
+            "Changelog",
+            "Instructions",
+            "Firmware version",
+            "新的稳定滤波器内核",
+            "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
+            "啸叫抑制功能",
+            "以减少过载风险",
+            "stable resonator filter core",
+            "64 steps per side",
+            "feedback suppression",
+            "reducing overload risk",
+            "银色 Wingie2 需要使用 USB A–C 线",
+            "Silver Wingie2 units require a USB-A-to-USB-C cable",
+            "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
+            "点击“连接 Wingie2 / Connect”，在弹出的列表中选择 Wingie2 的 USB 串口",
+            "Connect Wingie2, and close serial monitors",
+            "choose the Wingie2 USB serial port from the list",
+            "连接 Wingie2 / Connect",
+            "安装固件 / Install",
+        ):
+            self.assertIn(fragment, visible_text)
+        for fragment in (
+            "安全边界",
+            "发布固件",
+            "0x1000",
+            "manifest.json",
+            "ROM bootloader",
+            "DTR/RTS",
+            "SHA-256",
+            "MD5",
+            "查看技术日志",
+            "Third-party licenses",
+            "Cave 切换到 Poly",
+            "13 秒",
+            "6d78147",
+            "过载与失真风险",
+            "overload and distortion",
+        ):
+            self.assertNotIn(fragment, visible_text)
 
     def test_uses_strict_wingie_manifest_and_fixed_offsets(self):
         for field in (
@@ -69,6 +166,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn("actual !== part.sha256", self.source)
         self.assertIn("state.images[index] = await downloadImage", self.source)
         self.assertIn("elements.connect.disabled = !state.packageReady", self.source)
+        self.assertIn("elements.version.textContent = `Firmware ${manifest.version}`", self.source)
 
     def test_generated_standalone_uses_embedded_images_and_runtime(self):
         for fragment in (
@@ -79,8 +177,8 @@ class WingieFlasherHtmlTest(unittest.TestCase):
             "state.runtime = await withTimeout(runtimeReady",
             "withTimeout(runtimeReady, 5000",
             'embeddedRelease ? "正在读取内嵌固件…"',
-            "如果只部署一个文件，请改用发布包中的 standalone HTML",
-            "当前静态主机可能阻止了页面内嵌的 JavaScript module",
+            "请改用发布包中的 standalone HTML",
+            "请从官方 GitHub Pages HTTPS 地址重新打开页面",
         ):
             self.assertIn(fragment, self.source)
 

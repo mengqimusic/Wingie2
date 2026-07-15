@@ -48,12 +48,12 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         cls.web_root = Path(cls.temporary.name)
         source = HTML_PATH.read_text(encoding="utf-8")
         mock_source = MOCK_PATH.read_text(encoding="utf-8")
-        marker = "  <script>\n    (() => {"
+        marker = "  <!-- WINGIE_TEST_MOCK -->"
         if marker not in source:
             raise AssertionError("Unable to inject the flasher mock before the page script")
         source = source.replace(
             marker,
-            "  <script>\n" + mock_source + "\n  </script>\n" + marker,
+            "  <script>\n" + mock_source + "\n  </script>",
             1,
         )
         (cls.web_root / "wingie_flasher.html").write_text(source, encoding="utf-8")
@@ -142,11 +142,122 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         self.browser(
             "wait",
             "--fn",
-            "window.__WINGIE_FLASH_PAGE__ && window.__WINGIE_FLASH_PAGE__.snapshot().packageReady",
+            "window.__WINGIE_FLASH_PAGE__ && window.__WINGIE_FLASH_PAGE__.snapshot().packageReady && !document.querySelector('#wg-connect').disabled",
         )
 
     def evaluate(self, javascript):
         return self.browser("eval", "--stdin", javascript=javascript)
+
+    def test_visible_page_is_basic_bilingual_and_hides_technical_details(self):
+        for width in (390, 1280):
+            with self.subTest(width=width):
+                self.browser("set", "viewport", str(width), "900")
+                self.open_scenario("current")
+                self.evaluate(
+                    """
+                    (() => {
+                      const visible = document.body.innerText;
+                      const required = [
+                        "更新内容",
+                        "操作说明",
+                        "Changelog",
+                        "Instructions",
+                        "Firmware v9.9.9-test",
+                        "新的稳定滤波器内核",
+                        "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
+                        "啸叫抑制功能",
+                        "以减少过载风险",
+                        "stable resonator filter core",
+                        "64 steps per side",
+                        "feedback suppression",
+                        "reducing overload risk",
+                        "银色 Wingie2 需要使用 USB A–C 线",
+                        "Silver Wingie2 units require a USB-A-to-USB-C cable",
+                        "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
+                        "点击“连接 Wingie2 / Connect”，在弹出的列表中选择 Wingie2 的 USB 串口",
+                        "Connect Wingie2, and close serial monitors",
+                        "choose the Wingie2 USB serial port from the list",
+                        "连接 Wingie2 / Connect",
+                        "安装固件 / Install"
+                      ];
+                      required.forEach(text => {
+                        if (!visible.includes(text)) throw new Error(`Missing visible copy: ${text}`);
+                      });
+                      const changelogOrders = Array.from(
+                        document.querySelectorAll("section[lang] > ul"),
+                        list => Array.from(list.children, item => item.dataset.change).join(",")
+                      );
+                      if (changelogOrders.length !== 2 || changelogOrders[0] !== "filter,sequencer,feedback" || changelogOrders[1] !== changelogOrders[0]) {
+                        throw new Error(`Changelog order differs by language: ${JSON.stringify(changelogOrders)}`);
+                      }
+                      const instructionOrders = Array.from(
+                        document.querySelectorAll("section[lang] > ol"),
+                        list => Array.from(list.children, item => item.dataset.step).join(",")
+                      );
+                      if (instructionOrders.length !== 2 || instructionOrders[0] !== "1,2,3,4,5" || instructionOrders[1] !== instructionOrders[0]) {
+                        throw new Error(`Instruction order differs by language: ${JSON.stringify(instructionOrders)}`);
+                      }
+                      const forbidden = [
+                        "安全边界",
+                        "发布固件",
+                        "0x1000",
+                        "manifest.json",
+                        "ROM bootloader",
+                        "DTR/RTS",
+                        "SHA-256",
+                        "MD5",
+                        "Third-party licenses",
+                        "Cave 切换到 Poly",
+                        "13 秒",
+                        "6d78147",
+                        "过载与失真风险",
+                        "overload and distortion"
+                      ];
+                      forbidden.forEach(text => {
+                        if (visible.includes(text)) throw new Error(`Technical detail is visible: ${text}`);
+                      });
+                      ["#wg-version", "#wg-connect", "#wg-flash", "#wg-install-detail", "[role='progressbar']"].forEach(selector => {
+                        const node = document.querySelector(selector);
+                        const rect = node && node.getBoundingClientRect();
+                        if (!rect || rect.width <= 0 || rect.height <= 0) throw new Error(`Hidden control: ${selector}`);
+                      });
+                      if (document.documentElement.scrollWidth > document.documentElement.clientWidth) {
+                        throw new Error("Page has horizontal overflow");
+                      }
+                      return "PASS";
+                    })()
+                    """
+                )
+
+    def test_visible_buttons_drive_the_complete_install_flow(self):
+        self.browser("set", "viewport", "1280", "900")
+        self.open_scenario("current")
+        self.evaluate("document.querySelector('#wg-connect').click(); 'CLICKED'")
+        self.browser(
+            "wait",
+            "--fn",
+            "window.__WINGIE_FLASH_PAGE__.snapshot().connected",
+        )
+        self.evaluate("document.querySelector('#wg-flash').click(); 'CLICKED'")
+        self.browser(
+            "wait",
+            "--fn",
+            "window.__WINGIE_FLASH_PAGE__.snapshot().completed",
+        )
+        self.evaluate(
+            """
+            (() => {
+              const log = window.__WINGIE_FLASH_MOCK__.snapshot().log;
+              if (log.filter(entry => entry.type === "write").length !== 4) {
+                throw new Error("Visible install button did not write all four images");
+              }
+              if (log.filter(entry => entry.type === "disconnect").length !== 1) {
+                throw new Error("Visible install flow did not release Web Serial");
+              }
+              return "PASS";
+            })()
+            """
+        )
 
     def test_supported_starting_states_use_the_same_safe_rom_flow(self):
         for scenario in ("blank", "v1", "v3", "current", "broken-app"):
@@ -191,7 +302,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         expectations = {
             "no-port": "没有选择串口",
             "port-busy": "串口可能被占用",
-            "boot-fail": "ROM bootloader 失败",
+            "boot-fail": "无法进入安装模式",
             "wrong-chip": "错误芯片",
         }
         for scenario, message in expectations.items():
@@ -258,12 +369,14 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                 throw new Error("Standalone runtime constructors were not initialized");
               }
               if (typeof window.md5 !== "function") throw new Error("Standalone MD5 was not initialized");
+              if (document.body.innerText.includes("Wingie2 web flasher third-party software notices")) {
+                throw new Error("Third-party license text became visible to ordinary users");
+              }
               const initialLog = window.__WINGIE_FLASH_MOCK__.snapshot().log;
               if (initialLog.some(entry => entry.type === "fetch-manifest" || entry.type === "fetch-image")) {
                 throw new Error("Standalone page fetched adjacent firmware assets");
               }
-              const partStates = Array.from(document.querySelectorAll(".wg-part-state"), node => node.textContent);
-              if (partStates.length !== 4 || partStates.some(value => !value.includes("SHA-256 通过"))) {
+              if (page.snapshot().verifiedImageCount !== 4) {
                 throw new Error("Standalone images did not pass SHA-256 verification");
               }
               await page.connect();
