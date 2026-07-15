@@ -1,14 +1,16 @@
 import math
 from pathlib import Path
-import re
 import unittest
 
 from ratio_mode_reference import (
+    BAR_FACTOR,
     FREQUENCY_MAX,
     FREQUENCY_MIN,
+    bar_mode_frequencies,
     mtof,
     note_frequency,
     ratio_mode_frequencies,
+    string_mode_frequencies,
 )
 
 
@@ -43,18 +45,34 @@ class RatioModeReferenceTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             ratio_mode_frequencies(440, [1, 2, 3, 4, math.nan, 6, 7, 8, 9])
 
-    def test_faust_and_generated_inventory_match_contract(self):
+    def test_string_and_bar_frequencies_are_preserved_control_side(self):
+        fundamental = note_frequency(57)
+        strings = string_mode_frequencies(fundamental)
+        bars = bar_mode_frequencies(fundamental)
+        self.assertAlmostEqual(strings[0], fundamental)
+        self.assertAlmostEqual(strings[8], fundamental * 9)
+        self.assertAlmostEqual(bars[0], fundamental * BAR_FACTOR * 1.5 ** 2)
+        self.assertAlmostEqual(bars[8], fundamental * BAR_FACTOR * 9.5 ** 2)
+
+    def test_faust_and_firmware_inventory_match_contract(self):
         source = (REPO_ROOT / "Wingie2.dsp").read_text(encoding="utf-8")
         generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
-        self.assertIn('hslider("../../ratio_mode_ratio_%i", ratio_req(i), 0.125, 32, 0.001)', source)
-        self.assertIn("ratio_mode(note, n) = note_freq(note)", source)
-        self.assertIn("ba.selectn(5, s)", source)
-        self.assertIn("a = max(16, min(f(note, index, source), 16000));", source)
-        matches = re.findall(
-            r'addHorizontalSlider\("ratio_mode_ratio_(\d)",[^\n]+FAUSTFLOAT\(0\.125f\), FAUSTFLOAT\(32\.0f\), FAUSTFLOAT\(0\.001f\)\)',
-            generated,
-        )
-        self.assertEqual(matches, [str(index) for index in range(9)])
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        midi = (REPO_ROOT / "Wingie2/MIDI.ino").read_text(encoding="utf-8")
+        self.assertNotIn("ratio_mode_ratio_", source)
+        self.assertNotIn("ratio_mode(note, n)", source)
+        self.assertIn("ba.selectn(2, s)", source)
+        self.assertIn("a = max(16, min(f(index, source), 16000));", source)
+        self.assertNotIn("ratio_mode_ratio_", generated)
+        self.assertNotIn('addHorizontalSlider("note0"', generated)
+        self.assertIn("Mode[ch] == POLY_MODE ? 0 : 1", firmware)
+        self.assertIn("const float fundamental = configured_note_frequency(midiNote);", firmware)
+        self.assertIn("return index + 1.0f;", firmware)
+        self.assertIn("return barFactor * barIndex * barIndex;", firmware)
+        self.assertIn("fundamental * pitched_mode_ratio(Mode[ch], index)", firmware)
+        self.assertIn("Mode[ch] == RATIO_MODE ? false : cm_ms", firmware)
+        self.assertIn("set_channel_note(ch, pitch);", midi)
+        self.assertIn("value == 127 ? RATIO_MODE : (value >> 5)", midi)
 
 
 if __name__ == "__main__":

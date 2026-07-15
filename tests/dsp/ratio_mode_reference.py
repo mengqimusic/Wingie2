@@ -4,6 +4,7 @@ import math
 RATIO_COUNT = 9
 FREQUENCY_MIN = 16.0
 FREQUENCY_MAX = 16000.0
+BAR_FACTOR = 0.44444
 
 
 def mtof(note, a3_frequency=440.0):
@@ -26,3 +27,12 @@ def ratio_mode_frequencies(fundamental, ratios):
     if len(ratios) != RATIO_COUNT or not all(math.isfinite(value) and value > 0 for value in ratios):
         raise ValueError("ratio profile must contain nine finite positive values")
     return [min(FREQUENCY_MAX, max(FREQUENCY_MIN, fundamental * ratio)) for ratio in ratios]
+
+
+def string_mode_frequencies(fundamental):
+    return ratio_mode_frequencies(fundamental, [index + 1 for index in range(RATIO_COUNT)])
+
+
+def bar_mode_frequencies(fundamental):
+    ratios = [BAR_FACTOR * (index + 1.5) ** 2 for index in range(RATIO_COUNT)]
+    return ratio_mode_frequencies(fundamental, ratios)

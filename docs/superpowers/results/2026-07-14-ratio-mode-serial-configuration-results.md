@@ -1,5 +1,9 @@
 # Ratio Mode、Cave 与纯 HTML 串口配置结果
 
+> 2026-07-15 更新：本页记录的原生第五 Faust source 在完整产品中会触发 WDT，已由
+> [Ratio Mode WDT 根因、最终实现与串口保留结果](2026-07-15-ratio-mode-wdt-results.md)
+> 替代为两-source 实现。本页以下内容保留为原候选的配置与串口验证记录。
+
 ## 交付内容
 
 - Ratio Mode 为第五模式，左右共用 9-value profile，范围 `0.125–32`、精度 `0.001`，

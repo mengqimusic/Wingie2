@@ -68,12 +68,12 @@ void printMidiDiagnostics() {
                   Mode[ch], currentPoly[ch]);
   }
   Serial.printf("MIDI_DIAG left_note=%.1f left_poly=%.1f,%.1f,%.1f\n",
-                dsp.getParamValue("note0"),
+                static_cast<float>(currentNote[0]),
                 dsp.getParamValue("/Wingie/left/poly_note_0"),
                 dsp.getParamValue("/Wingie/left/poly_note_1"),
                 dsp.getParamValue("/Wingie/left/poly_note_2"));
   Serial.printf("MIDI_DIAG right_note=%.1f right_poly=%.1f,%.1f,%.1f\n",
-                dsp.getParamValue("note1"),
+                static_cast<float>(currentNote[1]),
                 dsp.getParamValue("/Wingie/right/poly_note_0"),
                 dsp.getParamValue("/Wingie/right/poly_note_1"),
                 dsp.getParamValue("/Wingie/right/poly_note_2"));

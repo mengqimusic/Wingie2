@@ -30,8 +30,6 @@ pre_clip_gain = hslider("pre_clip_gain", 0.5, 0, 1, 0.01) : ba.lin2LogGain;
 post_clip_gain = hslider("post_clip_gain", 0.5, 0, 1, 0.01) : ba.lin2LogGain;
 env_mode_change_decay = hslider("env_mode_change_decay", 0.05, 0, 1, 0.01);
 //hp_cutoff = hslider("hp_cutoff", 85, 35, 500, 0.1);
-bar_factor = 0.44444;
-
 //---- alternate tuning support -----
 use_alt_tuning = button("../../use_alt_tuning");
 
@@ -110,23 +108,14 @@ vol_dry0 = (1 - mix0);
 vol_wet1 = mix1;
 vol_dry1 = (1 - mix1);
 
-note0 = hslider("note0", 36, 12, 127, 1);
-note1 = hslider("note1", 36, 12, 96, 1);
-mode0 = hslider("mode0", 0, 0, 4, 1);
-mode1 = hslider("mode1", 0, 0, 4, 1);
+mode0 = hslider("mode0", 0, 0, 1, 1);
+mode1 = hslider("mode1", 0, 0, 1, 1);
 
 env_mode_change(t) = 1 - en.ar(0.002, env_mode_change_decay, t);
 env_mute(t) = 1 - en.asr(0.25, 1., 0.25, t);
 
-bar_ratios(freq, n) = freq * bar_factor * pow((n + 1) + 0.5, 2);
-int_ratios(freq, n) = freq * (n + 1);
-//odd_ratios(freq, n) = freq * (2 * n + 1);
-//cymbal_808(n) = 130.812792, 193.957204, 235.501256, 333.053319, 344.076511, 392.438376, 509.742979, 581.871611, 706.503769, 999.16, 1032.222378, 1529.218338: ba.selectn(12, n); // chromatic
-
 req(n) = 62, 115, 218, 411, 777, 1500, 2800, 5200, 11000 : ba.selectn(nHarmonics, n);
 cave(n) = par(i, nHarmonics, vslider("cave_freq_%i", req(i), 50, 16000, 1)) : ba.selectn(nHarmonics, n);
-ratio_req(n) = 1, 2, 3, 4, 5, 6, 7, 8, 9 : ba.selectn(nHarmonics, n);
-ratio_mode(note, n) = note_freq(note) * (par(i, nHarmonics, hslider("../../ratio_mode_ratio_%i", ratio_req(i), 0.125, 32, 0.001)) : ba.selectn(nHarmonics, n));
 
 pn0 = vslider("poly_note_0", 36, 24, 96, 1);
 pn1 = vslider("poly_note_1", 36, 24, 96, 1);
@@ -158,26 +147,12 @@ with
     c3 = pn2 : mtoq3;
 };
 
-//bianzhong(n) = 212.3, 424.6, 530.8, 636.9, 1061.6, 1167.7, 2017.0, 2335.5, 2653.9, 3693 : ba.selectn(10, n);
-//cymbal_808(n) = 205.3, 304.4, 369.6, 522.7, 540, 615.9, 800, 913.2, 1108.8, 1568.1 : ba.selectn(10, n); // original
-//circular_membrane_ratios(n) = 1, 1.59, 2.14, 2.30, 2.65, 2.92, 3.16, 3.50, 3.60, 3.65 : ba.selectn(10, n);
-
-// note_ratio(note) = pow(2., note / 12);
-
 poly(n) = poly_norm(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
 
-note_freq(note) = mtof(note), mtoq(note) : ba.selectn(2, use_alt_tuning);
-
-strings(note, n) = int_ratios(note_freq(note), n);
-bars(note, n) = bar_ratios(note_freq(note), n);
-
-f(note, n, s) = 
+f(n, s) =
     poly(n),
-    strings(note, n),
-    bars(note, n),
-    cave(n),
-    ratio_mode(note, n)
-  : ba.selectn(5, s);
+    cave(n)
+  : ba.selectn(2, s);
 
 controlledModalStep(sine, cosine, rhoUser, rhoGuard, energyLimit, enabled, x,
                     qPrevious, pPrevious, peakPrevious,
@@ -220,10 +195,10 @@ with {
   scale = (2.0 / rhoUser) : modalBlockHold;
 };
 
-r(note, index, source) = blockRateMode(a, b, ba.lin2LogGain(c))
+r(index, source) = blockRateMode(a, b, ba.lin2LogGain(c))
 with
 {
-  a = max(16, min(f(note, index, source), 16000));
+  a = max(16, min(f(index, source), 16000));
   b = decay;
   c = env_mute(button("mute_%index"));
 };
@@ -234,8 +209,8 @@ process = _,_
       (_ <: attach(_, _ : an.amp_follower(amp_follower_decay) : _ > right_thresh : hbargraph("right_trig", 0, 1)))
         : hgroup("left", _ * env_mode_change(button("mode_changed")) * volume0),
           hgroup("right", _ * env_mode_change(button("mode_changed")) * volume1)
-            <: (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("left", sum(i, nHarmonics, r(note0, i, mode0))) * pre_clip_gain),
-               (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("right", sum(i, nHarmonics, r(note1, i, mode1))) * pre_clip_gain),
+            <: (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("left", sum(i, nHarmonics, r(i, mode0))) * pre_clip_gain),
+               (_ * resonator_input_gain : fi.lowpass(1, 4000) <: hgroup("right", sum(i, nHarmonics, r(i, mode1))) * pre_clip_gain),
                _,
                _
                 : ef.cubicnl(0.01, 0), ef.cubicnl(0.01, 0), _, _

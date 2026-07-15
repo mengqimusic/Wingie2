@@ -203,11 +203,11 @@ void control(void *pvParameters) {
   }
 
   Mode[0] = prefs.getUChar("left_mode");
-  dsp.setParamValue("mode0", Mode[0]);
+  set_channel_dsp_mode(0);
   Serial.printf("left_mode = %d\n", Mode[0]);
 
   Mode[1] = prefs.getUChar("right_mode");
-  dsp.setParamValue("mode1", Mode[1]);
+  set_channel_dsp_mode(1);
   Serial.printf("right_mode = %d\n", Mode[1]);
 
   use_alt_tuning = prefs.getUChar("use_alt_tuning", 0);
@@ -233,15 +233,6 @@ void control(void *pvParameters) {
 
   oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
   oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
-
-  for (int ch = 0; ch < 2; ch++) {
-    if (Mode[ch] == CAVE_MODE) {
-      int cave = oct[ch] + 1;
-      for (int v = 0; v < 9; v++) {
-        cm_freq_set(ch, v, cm_freq[ch][cave][v]);
-      }
-    }
-  }
 
   //
   // Key Init State Read 用来面对，开机时有些键是被按着的情况
@@ -309,8 +300,10 @@ void control(void *pvParameters) {
 
   Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");
 
-  dsp.setParamValue("note0", BASE_NOTE + oct[0] * 12);
-  dsp.setParamValue("note1", BASE_NOTE + oct[1] * 12 + 12);
+  set_channel_note(0, BASE_NOTE + oct[0] * 12);
+  set_channel_note(1, BASE_NOTE + oct[1] * 12 + 12);
+  if (Mode[0] == CAVE_MODE || Mode[0] == RATIO_MODE) apply_current_mode_parameters(0);
+  if (Mode[1] == CAVE_MODE || Mode[1] == RATIO_MODE) apply_current_mode_parameters(1);
 
   dsp.setParamValue("/Wingie/left/poly_note_0", 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
   dsp.setParamValue("/Wingie/left/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
@@ -432,8 +425,7 @@ void control(void *pvParameters) {
     for (int ch = 0; ch < 2; ch++) {
       if (octPrev[ch] != oct[ch]) {
         octPrev[ch] = oct[ch];
-        if (!ch) dsp.setParamValue("note0", note[0] + BASE_NOTE + oct[0] * 12);
-        if (ch) dsp.setParamValue("note1", note[1] + BASE_NOTE + oct[1] * 12 + 12);
+        set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
       }
 
       if (Mode[ch] == CAVE_MODE) {
@@ -442,10 +434,7 @@ void control(void *pvParameters) {
         if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
         duck_env_triggered[ch] = true;
         duck_env_init_timer[ch] = currentMillis;
-        for (int v = 0; v < 9; v++) {
-          cm_freq_set(ch, v, cm_freq[ch][cave][v]);
-          cm_mute_set(ch, v, cm_ms[ch][cave][v]);
-        }
+        apply_cave_bank_to_dsp(ch, cave);
       }
     }
 
@@ -466,13 +455,12 @@ void control(void *pvParameters) {
           modeChangingFromMIDI[ch] = false;
         }
 
+        set_channel_dsp_mode(ch);
         if (!ch) {
-          dsp.setParamValue("mode0", Mode[ch]);
           dsp.setParamValue("/Wingie/left/mode_changed", 1);
           dirty[8] = true;
         }
         if (ch) {
-          dsp.setParamValue("mode1", Mode[ch]);
           dsp.setParamValue("/Wingie/right/mode_changed", 1);
           dirty[9] = true;
         }
@@ -484,13 +472,7 @@ void control(void *pvParameters) {
         ratio_led_timer[ch] = currentMillis;
         set_mode_led(ch);
 
-        if (Mode[ch] != CAVE_MODE) {
-          for (int v = 0; v < 9; v++) {
-            int cave = oct[ch] + 1;
-            cm_mute_set(ch, v, cm_ms[ch][cave][v]);
-            cm_freq_set(ch, v, cm_freq[ch][cave][v]);
-          }
-        }
+        apply_current_mode_parameters(ch);
       }
 
       if (duck_env_triggered[ch] && currentMillis - duck_env_init_timer[ch] > 20) {
@@ -611,15 +593,13 @@ void control(void *pvParameters) {
                   if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
                     note[ch] = i;
                     tapSequence[ch].reset(uint8_t(i));
-                    if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
-                    if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
+                    set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
                   }
                 } else {  // Not First Press
                   if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
                     note[ch] = i;
                     tapSequence[ch].append(uint8_t(i));
-                    if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
-                    if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
+                    set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
                   }
                 }
 
@@ -734,8 +714,7 @@ void control(void *pvParameters) {
           uint8_t nextNote;
           if (tapSequence[ch].advance(nextNote)) {
             note[ch] = nextNote;
-            if (!ch) dsp.setParamValue("note0", note[ch] + BASE_NOTE + oct[ch] * 12);
-            if (ch) dsp.setParamValue("note1", note[ch] + BASE_NOTE + oct[ch] * 12 + 12);
+            set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
             if (!ch) dsp.setParamValue("/Wingie/left/mode_changed", 1);
             if (ch) dsp.setParamValue("/Wingie/right/mode_changed", 1);
           }
@@ -796,7 +775,7 @@ void control(void *pvParameters) {
       }
     }
 
-    if (!save_routine_flag) {
+    if (!save_routine_flag && !led_blink) {
       for (int ch = 0; ch < 2; ch++) {
         if (Mode[ch] == RATIO_MODE && currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL) {
           ratio_led_timer[ch] = currentMillis;

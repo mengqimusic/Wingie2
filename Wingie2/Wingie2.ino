@@ -76,6 +76,8 @@
 #define MAX_NOTE 96
 #define NUM_NOTES 60
 
+const float barFactor = 0.44444f;
+
 struct MySettings : public midi::DefaultSettings
 {
   static const unsigned SysExMaxSize = 16;
@@ -124,7 +126,7 @@ volatile bool an[2] = {0, 0};
 bool keyChanged = false;
 bool source, key[2][12], keyPrev[2][12], firstPress[2] = {true, true};
 bool sourceChanged = false, sourceChanged2 = false;
-int note[2], octPrev[2], oct[2], Mode[2] = {POLY_MODE, POLY_MODE}, allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
+int note[2], currentNote[2] = {36, 36}, octPrev[2], oct[2], Mode[2] = {POLY_MODE, POLY_MODE}, allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
 bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false, false}, modeChangingFromMIDI[2] = {false, false}, duck_env_triggered[2] = {false, false};
 
 //
@@ -296,12 +298,24 @@ void cm_mute_set(byte kb, byte voice, bool state) {
   dsp.setParamValue(str, state);
 }
 
-void cm_freq_set(byte kb, byte voice, int freq) {
+void cm_freq_set(byte kb, byte voice, float freq) {
   char buff[100];
   if (!kb) snprintf(buff, sizeof(buff), "/Wingie/left/cave_freq_%d", voice);
   else snprintf(buff, sizeof(buff), "/Wingie/right/cave_freq_%d", voice);
   const std::string str = buff;
   dsp.setParamValue(str, freq);
+}
+
+void set_channel_dsp_mode(byte ch) {
+  const int dspMode = Mode[ch] == POLY_MODE ? 0 : 1;
+  dsp.setParamValue(ch ? "mode1" : "mode0", dspMode);
+}
+
+void apply_cave_bank_to_dsp(byte ch, byte bank) {
+  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
+    cm_freq_set(ch, index, cm_freq[ch][bank][index]);
+    cm_mute_set(ch, index, cm_ms[ch][bank][index]);
+  }
 }
 
 void set_mode_led(byte ch) {
@@ -359,6 +373,56 @@ int get_int_from_sliders() {
 // standard conversion, MIDI note to frequency (equal temperament)
 float mtof(int note) {
   return a3_freq * pow(2., (note - 69.) / 12.);
+}
+
+float configured_note_frequency(int midiNote) {
+  if (!use_alt_tuning || alt_tuning_index < 0) return mtof(midiNote);
+  int degree = midiNote % 12;
+  if (degree < 0) degree += 12;
+  return mtof(midiNote - degree) * alt_tunings[alt_tuning_index][degree];
+}
+
+float pitched_mode_ratio(byte mode, uint8_t index) {
+  if (mode == STRING_MODE) return index + 1.0f;
+  if (mode == BAR_MODE) {
+    const float barIndex = index + 1.5f;
+    return barFactor * barIndex * barIndex;
+  }
+  return ratio_profile.ratios[index];
+}
+
+void apply_pitched_mode_channel(byte ch, int midiNote) {
+  const float fundamental = configured_note_frequency(midiNote);
+  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
+    const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
+                                min(static_cast<float>(wingie_config::kRatioFrequencyMax),
+                                    fundamental * pitched_mode_ratio(Mode[ch], index)));
+    cm_freq_set(ch, index, frequency);
+    cm_mute_set(ch, index, Mode[ch] == RATIO_MODE ? false : cm_ms[ch][oct[ch] + 1][index]);
+  }
+}
+
+void set_channel_note(byte ch, int midiNote) {
+  currentNote[ch] = midiNote;
+  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+    apply_pitched_mode_channel(ch, midiNote);
+  }
+}
+
+void apply_current_mode_parameters(byte ch) {
+  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+    apply_pitched_mode_channel(ch, currentNote[ch]);
+  } else {
+    apply_cave_bank_to_dsp(ch, oct[ch] + 1);
+  }
+}
+
+void apply_note_profiles_to_dsp() {
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+      apply_pitched_mode_channel(ch, currentNote[ch]);
+    }
+  }
 }
 
 // MIDI note to frequency in the current alternate tuning 

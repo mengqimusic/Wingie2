@@ -109,13 +109,6 @@ byte activeCaveBank(byte ch) {
   return static_cast<byte>(max(0, min(2, oct[ch] + 1)));
 }
 
-float configuredNoteFrequency(int midiNote) {
-  if (!use_alt_tuning || alt_tuning_index < 0) return mtof(midiNote);
-  int degree = midiNote % 12;
-  if (degree < 0) degree += 12;
-  return mtof(midiNote - degree) * alt_tunings[alt_tuning_index][degree];
-}
-
 void sendHello(uint32_t id) {
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"hello\","
@@ -157,8 +150,8 @@ void sendCaveBank(uint32_t id, byte ch, byte bank) {
 }
 
 void sendStatus(uint32_t id) {
-  const int leftNote = lroundf(dsp.getParamValue("note0"));
-  const int rightNote = lroundf(dsp.getParamValue("note1"));
+  const int leftNote = currentNote[0];
+  const int rightNote = currentNote[1];
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"status\","
                   "\"mode\":{\"left\":%d,\"right\":%d},"
@@ -166,7 +159,7 @@ void sendStatus(uint32_t id) {
                   "\"fundamental_hz\":{\"left\":%.3f,\"right\":%.3f},"
                   "\"profile_revision\":%lu,\"cave_active_bank\":{\"left\":%u,\"right\":%u}}",
                   static_cast<unsigned long>(id), Mode[0], Mode[1], leftNote, rightNote,
-                  configuredNoteFrequency(leftNote), configuredNoteFrequency(rightNote),
+                  configured_note_frequency(leftNote), configured_note_frequency(rightNote),
                   static_cast<unsigned long>(ratio_profile.revision), activeCaveBank(0), activeCaveBank(1));
   sendJson(response);
 }
@@ -179,11 +172,8 @@ void sendQueued(uint32_t id, const char *operation, uint32_t revision) {
 }
 
 void applyCaveBank(byte ch, byte bank) {
-  if (activeCaveBank(ch) != bank) return;
-  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    cm_freq_set(ch, index, cm_freq[ch][bank][index]);
-    cm_mute_set(ch, index, cm_ms[ch][bank][index]);
-  }
+  if (Mode[ch] != CAVE_MODE || activeCaveBank(ch) != bank) return;
+  apply_cave_bank_to_dsp(ch, bank);
 }
 
 void processSerialConfigFrame() {
@@ -282,10 +272,10 @@ void processSerialConfigFrame() {
 }  // namespace
 
 void apply_ratio_profile_to_dsp() {
-  char path[32];
-  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    snprintf(path, sizeof(path), "ratio_mode_ratio_%u", index);
-    dsp.setParamValue(path, ratio_profile.ratios[index]);
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == RATIO_MODE) {
+      apply_pitched_mode_channel(ch, currentNote[ch]);
+    }
   }
 }
 
