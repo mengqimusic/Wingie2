@@ -133,9 +133,9 @@ Bitwig 后，debug serial 只读观察 35 秒无 WDT；随后发送 35 个 `hell
 ### 协议与产品行为
 
 最终 schema 3 只增加 `get_settings` 与 `set_param` 两条协议路径。它没有恢复 schema 2 的
-`config_runtime.*`、事件队列、heartbeat、自动 polling 或 mutex，也没有设备到网页的实时同步
-刷新。网页连接时读取一次完整设备快照，手动 Refresh 可重新读取；每项编辑直接、单向写入设备，
-无需 Apply，只有 Save 需要按键确认并写入 Preferences。
+`config_runtime.*`、事件队列、heartbeat 或 mutex，也没有设备主动推送。后续网页更新使用现有
+读取命令每秒请求一次完整快照，编辑、实时写入、Save 或手动 Refresh 期间跳过；每项编辑仍直接、
+单向写入设备，无需 Apply，只有 Save 需要按键确认并写入 Preferences。
 
 当前设置页支持左右独立的 Mode、Threshold，以及 A3、Tuning、Gain、MIDI、Ratio、Cave 等其他
 设置项目。网页不显示或编辑仅运行态的 Mix、Decay、Volume，也不请求可能很快过期的 Source、Note、

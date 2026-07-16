@@ -404,7 +404,7 @@
       <header class="wg-header">
         <div>
           <h1>Wingie2 Configuration</h1>
-          <p class="wg-subtitle">编辑立即进入运行状态；只有 Save 写入 flash。页面不会自动轮询设备。</p>
+          <p class="wg-subtitle">编辑立即进入运行状态；只有 Save 写入 flash。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。</p>
         </div>
         <div class="wg-connect">
           <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接</span>
@@ -520,7 +520,7 @@
         </div>
       </section>
 
-      <footer class="wg-footer">桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 无自动轮询</footer>
+      <footer class="wg-footer">桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步</footer>
     </div>
   </main>
 
@@ -591,7 +591,12 @@
         writeChain: Promise.resolve(),
         pendingWrites: 0,
         refreshing: false,
-        saving: false
+        saving: false,
+        pollTimer: null,
+        polling: false,
+        pollPromise: null,
+        pollError: null,
+        connectionEpoch: 0
       };
 
       function setAlert(message, kind = "info") {
@@ -750,8 +755,9 @@
           if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 3) throw new Error("需要 Wingie2 config schema 3 固件。");
           state.connected = true;
           await refreshAll(false);
+          startPolling();
           setConnection("connected", "Wingie2 已连接");
-          setAlert("已读取设备快照；后续只在手动 Refresh 时重读。", "success");
+          setAlert("已读取设备快照；页面每秒后台同步，编辑或写入期间自动跳过。", "success");
         } catch (error) {
           await disconnect(false);
           elements.connect.disabled = false;
@@ -776,7 +782,10 @@
       }
 
       async function disconnect(announce = true) {
+        stopPolling();
+        state.connectionEpoch += 1;
         state.connected = false;
+        state.pollError = null;
         clearEditTimers();
         rejectPendingRequests(new Error("设备已断开。"));
         try {
@@ -802,6 +811,18 @@
 
       function transportLost(error) {
         disconnect(false).finally(() => setAlert(`连接已断开：${formatError(error)}`, "error"));
+      }
+
+      function stopPolling() {
+        if (state.pollTimer !== null) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+      }
+
+      function startPolling() {
+        stopPolling();
+        state.pollTimer = window.setInterval(() => {
+          pollFullSnapshot().catch(() => undefined);
+        }, 1000);
       }
 
       function normalizeSettings(response) {
@@ -866,7 +887,7 @@
           for (let bank = 0; bank < bankCount; bank += 1) {
             const normalized = normalizeCave(responses[side][bank]);
             const current = state.cave[side][bank];
-            if (preservePending && current && state.pendingResourceKeys.has(caveKey(side, bank))) {
+            if (preservePending && current && (state.pendingResourceKeys.has(caveKey(side, bank)) || current.focused.some(Boolean))) {
               normalized.draftFrequencies = current.draftFrequencies.slice();
               normalized.raw = current.raw.slice();
               normalized.focused = current.focused.slice();
@@ -882,7 +903,45 @@
         applyCaveResponses(await readCaveResponses(), true);
       }
 
+      async function readFullSnapshot() {
+        const settingsResponse = await request("get_settings");
+        const ratioResponse = await request("get");
+        const caveResponses = await readCaveResponses();
+        return {
+          settings: normalizeSettings(settingsResponse),
+          ratio: normalizeRatio(ratioResponse),
+          caves: caveResponses
+        };
+      }
+
+      function parameterEditIsPending(edit) {
+        return edit.timer || edit.version !== edit.sentVersion || edit.focused;
+      }
+
+      function applyRatioSnapshot(ratio, preservePending) {
+        const previous = state.ratio;
+        if (preservePending && previous && (state.pendingResourceKeys.has("ratio") || previous.focused.some(Boolean))) {
+          ratio.draft = previous.draft.slice();
+          ratio.raw = previous.raw.slice();
+          ratio.focused = previous.focused.slice();
+        }
+        state.ratio = ratio;
+      }
+
+      function applyFullSnapshot(snapshot, preservePending) {
+        state.settings = snapshot.settings;
+        applyRatioSnapshot(snapshot.ratio, preservePending);
+        applyCaveResponses(snapshot.caves, preservePending);
+        if (preservePending) {
+          for (const [key, edit] of state.edits) {
+            if (!parameterEditIsPending(edit)) state.edits.delete(key);
+          }
+        }
+      }
+
       async function refreshAll(announce = true) {
+        if (!state.connected || state.refreshing) return;
+        if (state.pollPromise) await state.pollPromise;
         if (!state.connected || state.refreshing) return;
         state.refreshing = true;
         updateControls();
@@ -890,21 +949,42 @@
           flushScheduledWrites();
           await state.writeChain;
           state.writeErrors.clear();
-          const settingsResponse = await request("get_settings");
-          const ratioResponse = await request("get");
-          const caveResponses = await readCaveResponses();
-          state.settings = normalizeSettings(settingsResponse);
-          state.ratio = normalizeRatio(ratioResponse);
-          applyCaveResponses(caveResponses, false);
+          applyFullSnapshot(await readFullSnapshot(), false);
           clearEditTimers();
           state.edits.clear();
           state.resourceVersions.clear();
           state.writeErrors.clear();
+          state.pollError = null;
           renderAll();
           if (announce) setAlert("已重新读取完整设备快照。", "success");
         } finally {
           state.refreshing = false;
           renderAll();
+        }
+      }
+
+      async function pollFullSnapshot() {
+        if (!state.connected || state.polling || state.refreshing || state.saving || pendingUiWriteCount()) return;
+        state.polling = true;
+        const epoch = state.connectionEpoch;
+        let finishPoll;
+        state.pollPromise = new Promise((resolve) => { finishPoll = resolve; });
+        try {
+          const snapshot = await readFullSnapshot();
+          if (!state.connected || epoch !== state.connectionEpoch) return;
+          applyFullSnapshot(snapshot, true);
+          state.pollError = null;
+          renderAll();
+        } catch (error) {
+          if (state.connected && epoch === state.connectionEpoch) {
+            state.pollError = formatError(error);
+            updateControls();
+          }
+        } finally {
+          state.polling = false;
+          state.pollPromise = null;
+          finishPoll();
+          updateControls();
         }
       }
 
@@ -1119,6 +1199,7 @@
       }
 
       async function waitForWrites() {
+        if (state.pollPromise) await state.pollPromise;
         flushScheduledWrites();
         await state.writeChain;
         if (state.writeErrors.size) throw new Error(Array.from(state.writeErrors.values()).map(formatError).join("; "));
@@ -1236,6 +1317,7 @@
         else if (!ready) elements.stateSummary.textContent = "连接后读取设备配置。";
         else if (pendingUiWriteCount()) elements.stateSummary.textContent = `${pendingUiWriteCount()} 项实时写入处理中；Save、Refresh 与 Export 会等待完成。`;
         else if (state.writeErrors.size) elements.stateSummary.textContent = "有实时写入失败；修正后再 Save。";
+        else if (state.pollError) elements.stateSummary.textContent = `后台同步失败：${state.pollError}；请点 Refresh。`;
         else if (dirtyCount()) elements.stateSummary.textContent = `${dirtyCount()} 组运行配置尚未写入 flash。`;
         else elements.stateSummary.textContent = "配置与 flash 已同步。";
       }
@@ -1455,6 +1537,9 @@
       window.__wingieConfigTest = {
         state: () => state,
         refresh: () => refreshAll(false),
+        poll: pollFullSnapshot,
+        startPolling,
+        stopPolling,
         exportObject,
         importObject,
         idle: waitForWrites

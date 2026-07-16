@@ -43,11 +43,39 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   ]), "connection did not retry startup busy before one fixed snapshot");
   const initialCount = mock.writes.length;
   await sleep(350);
-  assert(mock.writes.length === initialCount, "page polled after connection");
+  assert(mock.writes.length === initialCount, "page polled before the one-second interval");
   assert(element('[data-cave-input="left:0"]').value === "62.00", "Cave values do not show 0.01 Hz precision");
+  assert(window.__wingieConfigTest.state().pollTimer !== null, "one-second polling did not start after connection");
   for (const selector of ["#wg-left-mode", "#wg-left-threshold", '[data-cave-input="left:0"]', '[data-value-key="ratio:0"]', "#wg-a3"]) {
     assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
   }
+
+  window.__wingieConfigTest.stopPolling();
+  mock.setSettings({left: {mode: 3}});
+  mock.setRatios([0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  mock.setCave("left", 0, {
+    frequencies: [63.25, 115, 218, 411, 777, 1500, 2800, 5200, 11000],
+    mute: [true, false, false, false, false, false, false, false, false]
+  });
+  mock.clearWrites();
+  await window.__wingieConfigTest.poll();
+  assert(JSON.stringify(mock.writes.map((request) => request.op)) === JSON.stringify([
+    "get_settings", "get",
+    "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"
+  ]), "background poll did not read one complete snapshot");
+  assert(element("#wg-left-mode").value === "3", "background poll did not update external settings");
+  assert(element('[data-value-key="ratio:0"]').value === "0.750", "background poll did not update Ratio");
+  assert(element('[data-cave-input="left:0"]').value === "63.25", "background poll did not update Cave frequency");
+  assert(element('[data-cave-mute="left:0"]').checked, "background poll did not update Cave mute");
+  assert(!element('[data-cave-input="left:0"]').disabled && !element('[data-value-key="ratio:0"]').disabled, "background poll locked editable fields");
+
+  mock.clearWrites();
+  const pendingThreshold = element("#wg-left-threshold");
+  edit(pendingThreshold, "0.33");
+  await window.__wingieConfigTest.poll();
+  assert(mock.writes.length === 0 && pendingThreshold.value === "0.33", "background poll did not skip a pending edit");
+  await window.__wingieConfigTest.idle();
+  mock.clearWrites();
 
   const mode = element("#wg-left-mode");
   mode.value = "2";
@@ -164,6 +192,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   mute.checked = true;
   mute.dispatchEvent(new Event("change", {bubbles: true}));
   await waitFor(() => mock.snapshot().cave.left[0].mute[0], "immediate Cave mute");
+  await waitFor(() => window.__wingieConfigTest.state().pendingWrites === 0, "Cave mute acknowledgement");
   assert(mock.writes.filter((request) => request.op === "set_cave").length === 2, "mute was not sent immediately as a full bank");
 
   mock.clearWrites();

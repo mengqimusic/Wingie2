@@ -72,7 +72,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
             self.assertRegex(self.source, rf'"{operation}"')
         self.assertIn("navigator.serial.requestPort()", self.source)
         self.assertIn("expected_revision", self.source)
-        self.assertNotIn("setInterval", self.source)
+        self.assertIn("setInterval", self.source)
         self.assertNotIn("heartbeat", self.source.lower())
         self.assertNotIn('"changed"', self.source)
         self.assertNotIn("set_ratio_value", self.source)
@@ -81,7 +81,18 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn('code !== "busy"', self.source)
         self.assertIn("await helloWhenReady();", self.source)
 
-    def test_connect_and_refresh_are_explicit_full_snapshots(self):
+    def test_connect_refresh_and_poll_use_complete_snapshots(self):
+        snapshot_reader = re.search(
+            r"async function readFullSnapshot\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(snapshot_reader)
+        snapshot_block = snapshot_reader.group(1)
+        self.assertEqual(snapshot_block.count('request("get_settings")'), 1)
+        self.assertEqual(snapshot_block.count('request("get")'), 1)
+        self.assertEqual(snapshot_block.count("await readCaveResponses()"), 1)
+
         refresh = re.search(
             r"async function refreshAll\(announce = true\) \{(.*?)\n      \}",
             self.source,
@@ -89,10 +100,18 @@ class WingieConfigHtmlTest(unittest.TestCase):
         )
         self.assertIsNotNone(refresh)
         block = refresh.group(1)
-        self.assertEqual(block.count('request("get_settings")'), 1)
-        self.assertEqual(block.count('request("get")'), 1)
-        self.assertNotIn('request("status")', block)
-        self.assertEqual(block.count("await readCaveResponses()"), 1)
+        self.assertIn("applyFullSnapshot(await readFullSnapshot(), false)", block)
+
+        poll = re.search(
+            r"async function pollFullSnapshot\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(poll)
+        self.assertIn("const snapshot = await readFullSnapshot()", poll.group(1))
+        self.assertIn("applyFullSnapshot(snapshot, true)", poll.group(1))
+        self.assertIn("window.setInterval", self.source)
+        self.assertIn("}, 1000);", self.source)
         cave_reader = re.search(
             r"async function readCaveResponses\(\) \{(.*?)\n      \}",
             self.source,

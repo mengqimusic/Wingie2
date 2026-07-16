@@ -16,9 +16,9 @@
 1. 使用桌面版 Chrome、Edge 或其他支持 Web Serial 的 Chromium 浏览器，通过 HTTPS 打开页面；
 2. 关闭 Arduino Serial Monitor 等占用 Wingie2 串口的软件；
 3. 点击“连接 Wingie2”，选择对应的 USB 串口；
-4. 连接成功后，页面会读取一次完整设备快照；有效编辑会立即写入设备并作用于当前运行状态，
-   不需要 Apply；
-5. 页面不会自动轮询设备。若实体控件、MIDI 或其他软件改变了设备，请点击 Refresh 重新读取完整快照；
+4. 连接成功后，页面会读取完整设备快照，并每秒在后台重读一次；有效编辑会立即写入设备并作用于
+   当前运行状态，不需要 Apply。编辑、实时写入和 Save 期间自动跳过后台读取；
+5. 若实体控件、MIDI 或其他软件改变了设备，后台快照会在空闲时更新页面；也可以点击 Refresh 立即重读；
 6. 确认声音后点击“Save to Flash”并确认，才会写入 flash 并在重启后保留。
 
 左右声道分别设置 Mode 与 Input Threshold。网页不显示或编辑 Mix、Decay、Volume；它们是仅当前

@@ -235,6 +235,18 @@
       }
       if (values.dirty !== undefined) settingsDirty = Boolean(values.dirty);
     },
+    setRatios(values, dirty = true) {
+      ratios = values.map(Number);
+      ratioRevision += 1;
+      ratioDirty = Boolean(dirty);
+    },
+    setCave(side, bank, values) {
+      const target = cave[side][bank];
+      if (values.frequencies) target.frequencies = values.frequencies.map(Number);
+      if (values.mute) target.mute = values.mute.map(Boolean);
+      if (values.dirty !== undefined) target.dirty = Boolean(values.dirty);
+      target.revision += 1;
+    },
     setStatus(values) {
       if (values.mode) Object.assign(status.mode, values.mode);
       if (values.note) Object.assign(status.note, values.note);
