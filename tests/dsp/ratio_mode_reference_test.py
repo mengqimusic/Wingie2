@@ -88,6 +88,14 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("set_channel_note(ch, pitch);", midi)
         self.assertIn("value == 127 ? RATIO_MODE : (value >> 5)", midi)
 
+    def test_faust_compute_uses_iram_with_local_literals(self):
+        build_options = (REPO_ROOT / "Wingie2/build_opt.h").read_text(encoding="utf-8")
+        generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
+
+        self.assertEqual(build_options.strip(), "-mtext-section-literals")
+        self.assertIn('#include "esp_attr.h"', generated)
+        self.assertIn("virtual void IRAM_ATTR compute", generated)
+
     def test_only_cave_mode_applies_cave_mutes(self):
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
         cave_block = extract_braced_block(firmware, "void apply_cave_bank_to_dsp")
@@ -112,7 +120,7 @@ class RatioModeReferenceTest(unittest.TestCase):
 
     def test_active_cave_bank_refreshes_after_tuning_changes(self):
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
-        tune_block = extract_braced_block(firmware, "void tune_caves()")
+        tune_block = extract_braced_block(firmware, "bool tune_caves()")
         restore_block = extract_braced_block(firmware, "void restore_caves_to_unq()")
 
         active_apply = "if (Mode[ch] == CAVE_MODE) apply_cave_bank_to_dsp(ch, oct[ch] + 1);"
@@ -138,6 +146,10 @@ class RatioModeReferenceTest(unittest.TestCase):
             control,
             "if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch])",
         )
+        channel_mode_block = extract_braced_block(
+            firmware,
+            "void apply_channel_mode_change",
+        )
         save_blink_end_block = extract_braced_block(control, "if (!led_blink)")
         ratio_cycle_block = extract_braced_block(
             control,
@@ -148,12 +160,15 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("ledColor[4]", firmware)
         self.assertIn("uint8_t ratio_led_phase[2] = {0, 0};", firmware)
         self.assertIn("ledColor[ratio_led_phase[ch]]", led_block)
-        for reset_block in (mode_change_block, save_blink_end_block):
+        self.assertIn("apply_channel_mode_change(ch);", mode_change_block)
+        for reset_block in (channel_mode_block, save_blink_end_block):
             phase_reset = reset_block.index("ratio_led_phase[ch] = 0;")
-            timer_reset = reset_block.index("ratio_led_timer[ch] = currentMillis;")
+            timer_reset = reset_block.index("ratio_led_timer[ch] = ")
             render = reset_block.index("set_mode_led(ch);")
             self.assertLess(phase_reset, render)
             self.assertLess(timer_reset, render)
+        self.assertIn("ratio_led_timer[ch] = changedAt;", channel_mode_block)
+        self.assertIn("ratio_led_timer[ch] = currentMillis;", save_blink_end_block)
         self.assertIn(
             "currentMillis - ratio_led_timer[ch] >= RATIO_LED_INTERVAL",
             ratio_cycle_block,

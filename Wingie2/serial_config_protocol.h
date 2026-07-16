@@ -24,7 +24,9 @@ enum Operation {
   kOperationReset,
   kOperationStatus,
   kOperationGetCave,
-  kOperationSetCave
+  kOperationSetCave,
+  kOperationGetSettings,
+  kOperationSetParam
 };
 
 enum ParseErrorCode {
@@ -53,6 +55,9 @@ struct Request {
   float ratios[wingie_config::kRatioCount];
   float frequencies[wingie_config::kRatioCount];
   bool mute[wingie_config::kRatioCount];
+  char target[8];
+  char name[20];
+  float value;
 };
 
 inline void setError(ParseError &error, ParseErrorCode code, int index = -1) {
@@ -84,7 +89,8 @@ inline bool parseUnsigned(const char *cursor, uint32_t &value, const char *end =
   const unsigned long parsed = strtoul(cursor, &parsedEnd, 10);
   if (parsedEnd == cursor || parsed > UINT32_MAX) return false;
   if (end && parsedEnd > end) return false;
-  if (*skipWhitespace(parsedEnd) == '.' || *skipWhitespace(parsedEnd) == 'e' || *skipWhitespace(parsedEnd) == 'E') return false;
+  const char terminator = *skipWhitespace(parsedEnd);
+  if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
   value = static_cast<uint32_t>(parsed);
   return true;
 }
@@ -94,6 +100,8 @@ inline bool parseNumber(const char *cursor, float &value, const char **end = nul
   char *parsedEnd = nullptr;
   value = strtof(cursor, &parsedEnd);
   if (parsedEnd == cursor || !isfinite(value)) return false;
+  const char terminator = *skipWhitespace(parsedEnd);
+  if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
   if (end) *end = parsedEnd;
   return true;
 }
@@ -115,12 +123,18 @@ inline bool parseBoolean(const char *cursor, bool &value, const char **end = nul
   if (!cursor) return false;
   if (strncmp(cursor, "true", 4) == 0) {
     value = true;
-    if (end) *end = cursor + 4;
+    const char *parsedEnd = cursor + 4;
+    const char terminator = *skipWhitespace(parsedEnd);
+    if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
+    if (end) *end = parsedEnd;
     return true;
   }
   if (strncmp(cursor, "false", 5) == 0) {
     value = false;
-    if (end) *end = cursor + 5;
+    const char *parsedEnd = cursor + 5;
+    const char terminator = *skipWhitespace(parsedEnd);
+    if (terminator != '\0' && terminator != ',' && terminator != '}' && terminator != ']') return false;
+    if (end) *end = parsedEnd;
     return true;
   }
   return false;
@@ -171,6 +185,8 @@ inline Operation operationFromString(const char *value) {
   if (strcmp(value, "status") == 0) return kOperationStatus;
   if (strcmp(value, "get_cave") == 0) return kOperationGetCave;
   if (strcmp(value, "set_cave") == 0) return kOperationSetCave;
+  if (strcmp(value, "get_settings") == 0) return kOperationGetSettings;
+  if (strcmp(value, "set_param") == 0) return kOperationSetParam;
   return kOperationInvalid;
 }
 
@@ -257,6 +273,20 @@ inline bool parseRequestLine(const char *line, size_t length, Request &request, 
         !parseFrequencyArray(frequencies, request.frequencies, wingie_config::kRatioCount, frequencyCount) ||
         !parseBooleanArray(mute, request.mute, wingie_config::kRatioCount, muteCount) ||
         frequencyCount != wingie_config::kRatioCount || muteCount != wingie_config::kRatioCount) {
+      setError(error, kParseInvalidField);
+      return false;
+    }
+  }
+
+  if (request.operation == kOperationSetParam) {
+    const char *target = findField(object, "target");
+    const char *name = findField(object, "name");
+    const char *value = findField(object, "value");
+    if (!target || !parseString(target, request.target, sizeof(request.target)) ||
+        (strcmp(request.target, "left") != 0 && strcmp(request.target, "right") != 0 &&
+         strcmp(request.target, "shared") != 0) ||
+        !name || !parseString(name, request.name, sizeof(request.name)) || request.name[0] == '\0' ||
+        !value || !parseNumber(value, request.value)) {
       setError(error, kParseInvalidField);
       return false;
     }

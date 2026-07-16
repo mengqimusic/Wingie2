@@ -6,32 +6,56 @@
 
 [**How to build programming environment**](https://github.com/mengqimusic/Wingie2#english) (For those who want to modify or write their own firmware, if you just want to flash original firmware, see Releases on the right side)
 
-## Ratio / Cave USB 配置
+## Wingie2 USB 配置
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) 是可直接部署或植入现有网站的单文件
 配置页。CSS 与 JavaScript 全部内联，不需要 SoftAP、Wi‑Fi、CDN、Node 或 Python；浏览器
-通过 USB Web Serial 与 Wingie2 通信。
+通过 USB Web Serial 与 Wingie2 通信。当前页面要求设备运行 `config schema 3` 固件，不兼容
+旧的 schema 1 或 schema 2 配置固件。
 
 1. 使用桌面版 Chrome、Edge 或其他支持 Web Serial 的 Chromium 浏览器，通过 HTTPS 打开页面；
 2. 关闭 Arduino Serial Monitor 等占用 Wingie2 串口的软件；
 3. 点击“连接 Wingie2”，选择对应的 USB 串口；
-4. Ratio 或 Cave 编辑完成后先点击 Apply，使它进入当前运行状态；
-5. 确认声音后点击“Save to Wingie2”，才会写入 flash 并在重启后保留。
+4. 连接成功后，页面会读取一次完整设备快照；有效编辑会立即写入设备并作用于当前运行状态，
+   不需要 Apply；
+5. 页面不会自动轮询设备。若实体控件、MIDI 或其他软件改变了设备，请点击 Refresh 重新读取完整快照；
+6. 确认声音后点击“Save to Flash”并确认，才会写入 flash 并在重启后保留。
 
-Ratio profile 由左右声道共用，Factory Ratio Reset 只改变运行状态，仍需另行 Save。
-Cave 保留左右各 3 个 bank、逐共鸣器 mute 与整数 Hz 频率；页面不提供 Cave factory reset。
+左右声道分别设置 Mode、Input Threshold、Mix、Decay 与 Volume。Mode 和 Input Threshold 可以
+保存；Mix、Decay、Volume 只影响当前运行状态，不会写入 flash。Wingie2 上的 Mix、Decay、
+Volume 是左右声道共用的实体旋钮，移动任一实体旋钮后，该旋钮会重新接管左右两侧的对应参数。
+
+Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、左右 Mode 与 Input
+Threshold、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
+左右声道共用；Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频率范围为
+`16.00–16000.00 Hz`，以 `0.01 Hz` 为步进；页面不提供 Cave factory reset。
 
 若页面放在 iframe 中，iframe 需要 `allow="serial"`，服务器也必须允许相应的
 `Permissions-Policy: serial=(self)`。Safari、Firefox、移动浏览器和非安全 HTTP 页面不在
 当前支持范围内。
 
-## Ratio / Cave USB Configuration
+## Wingie2 USB Configuration
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) is a self-contained page that can be deployed
 or embedded directly. It uses USB Web Serial and has no SoftAP, Wi-Fi, CDN, Node, or Python
-dependency. Open it from an HTTPS origin in a desktop Chromium browser, connect the Wingie2 port,
-Apply edits to the running configuration, then use Save to write Ratio and Cave settings to flash.
-Cave frequencies use integer Hz values.
+dependency. The current page requires firmware that reports `config schema 3`; older schema 1 and
+schema 2 configuration firmware is not compatible.
+
+Open it from an HTTPS origin in a desktop Chromium browser, close any other software using the serial
+port, and connect the Wingie2 port. The page reads one complete device snapshot when it connects.
+Every valid edit is written to the running instrument immediately, with no Apply step. The page does
+not poll the device: if hardware controls, MIDI, or other software changes the instrument, use Refresh
+to read a new complete snapshot. Use the confirmed “Save to Flash” action only when the current
+persistent settings should be written to flash.
+
+Mode, Input Threshold, Mix, Decay, and Volume are independent for the left and right channels. Mode
+and Input Threshold can be saved; Mix, Decay, and Volume are runtime-only. Moving one of Wingie2's
+shared physical Mix, Decay, or Volume knobs takes over that parameter on both channels again.
+
+Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, left/right Mode and Input
+Threshold, the shared Ratio profile, and all three Cave banks for each channel, including frequency
+and mute. Factory Ratio and imported settings first change the running state and still require Save.
+Cave frequencies cover `16.00–16000.00 Hz` in `0.01 Hz` steps. The page has no Cave factory reset.
 
 For an iframe, add `allow="serial"` and serve a compatible
 `Permissions-Policy: serial=(self)` header. Safari, Firefox, mobile browsers, and insecure HTTP

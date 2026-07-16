@@ -223,7 +223,8 @@ float frequencies[NUM_NOTES+6];
 // global settings
 //
 float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
-bool save_routine_flag = false, stuff_saved = false, dirty[10];
+bool save_routine_flag = false, stuff_saved = false, dirty[10], tuning_preferences_dirty = false;
+volatile bool preferences_save_requested = false;
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
 #define RATIO_LED_INTERVAL 20
@@ -280,7 +281,9 @@ void loop() {
     Serial.println(xPortGetCoreID());
   }
 
+  service_preferences_save();
   service_serial_configuration();
+  if (!serial_config_ready) return;
 #if MIDI_DIAGNOSTICS
   serviceMidiDiagnostics();
 #else
@@ -433,6 +436,19 @@ void apply_current_mode_parameters(byte ch) {
   }
 }
 
+void apply_channel_mode_change(byte ch) {
+  const unsigned long changedAt = millis();
+  set_channel_dsp_mode(ch);
+  dsp.setParamValue(ch ? "/Wingie/right/mode_changed" : "/Wingie/left/mode_changed", 1);
+  dirty[8 + ch] = true;
+  duck_env_triggered[ch] = true;
+  duck_env_init_timer[ch] = changedAt;
+  ratio_led_phase[ch] = 0;
+  ratio_led_timer[ch] = changedAt;
+  set_mode_led(ch);
+  apply_current_mode_parameters(ch);
+}
+
 void apply_note_profiles_to_dsp() {
   for (byte ch = 0; ch < 2; ch++) {
     if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
@@ -502,22 +518,30 @@ void build_freq_table() {
 //    C, D, E, F#, G#, A#, C, D, E
 // left channel caves gets odd-numbered scale tones:
 //    C#, D#, F, G, A, B, A#, C#, D#, F
-void tune_caves() {
+bool tune_caves() {
   if (!use_alt_tuning || alt_tuning_index < 0) {
-    return;
+    return false;
   }
 
   build_freq_table();
+  bool anyChanged = false;
 
   for (int bank = 0; bank < 3; bank++) {
     int bank_ofs = (bank + 2) * 12;
+    bool changed[2] = {false, false};
     for (int v = 0; v < 9; v++) {
       const int i = bank_ofs + (v * 2);
+      if (fabsf(cm_freq[0][bank][v] - frequencies[i]) > 0.0051f) changed[0] = true;
+      if (fabsf(cm_freq[1][bank][v] - frequencies[i + 1]) > 0.0051f) changed[1] = true;
       cm_freq[0][bank][v] = frequencies[i];
       cm_freq[1][bank][v] = frequencies[i+1];
     }
-    mark_cave_changed(0, bank);
-    mark_cave_changed(1, bank);
+    for (byte ch = 0; ch < 2; ch++) {
+      if (changed[ch]) {
+        mark_cave_changed(ch, bank);
+        anyChanged = true;
+      }
+    }
   }
 
   for (byte ch = 0; ch < 2; ch++) {
@@ -533,6 +557,7 @@ void tune_caves() {
   // }
 
   Serial.println("Finished tuning caves");
+  return anyChanged;
 }
 
 void restore_caves_to_unq() {

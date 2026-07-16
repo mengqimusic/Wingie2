@@ -1,0 +1,1 @@
+-mtext-section-literals

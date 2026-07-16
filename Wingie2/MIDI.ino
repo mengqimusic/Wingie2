@@ -55,6 +55,7 @@ void MIDISetPitch(int ch, int mode, int pitch) {
 
 void MIDISetTuning(byte cc, byte value) {
   if (cc == CC_TUNING) {
+    const int previousTuning = use_alt_tuning ? alt_tuning_index : -1;
     if (value == 0) {
       use_alt_tuning = 0;
       alt_tuning_index = -1;
@@ -79,6 +80,7 @@ void MIDISetTuning(byte cc, byte value) {
       tune_caves();
       Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
     }
+    if ((use_alt_tuning ? alt_tuning_index : -1) != previousTuning) tuning_preferences_dirty = true;
     apply_note_profiles_to_dsp();
   }
 }
@@ -142,6 +144,7 @@ void handleControlChange (byte channel, byte number, byte value) {
 
         a3_freq = 440. + freq_offset;
         dsp.setParamValue("a3_freq", a3_freq);
+        if (use_alt_tuning && alt_tuning_index >= 0) tune_caves();
         apply_note_profiles_to_dsp();
         dirty[3] = true;
       }
@@ -161,8 +164,8 @@ void MIDISetParam(int ch, byte number, byte value) {
   }
 
   if (number == CC_MIX or number == CC_MIX + 32) {
-    realtime_value_valid[MIX] = false;
     potValSampled[MIX] = potValRealtime[MIX];
+    realtime_value_valid[MIX] = false;
 
     if (number == CC_MIX) midiVal[ch][MIX][MSB] = value;
     else midiVal[ch][MIX][LSB] = value;
@@ -176,8 +179,8 @@ void MIDISetParam(int ch, byte number, byte value) {
   }
 
   if (number == CC_DECAY or number == CC_DECAY + 32) {
-    realtime_value_valid[DECAY] = false;
     potValSampled[DECAY] = potValRealtime[DECAY];
+    realtime_value_valid[DECAY] = false;
 
     if (number == CC_DECAY) midiVal[ch][DECAY][MSB] = value;
     else midiVal[ch][DECAY][LSB] = value;
@@ -192,8 +195,8 @@ void MIDISetParam(int ch, byte number, byte value) {
   }
 
   if (number == CC_VOL or number == CC_VOL + 32) {
-    realtime_value_valid[VOL] = false;
     potValSampled[VOL] = potValRealtime[VOL];
+    realtime_value_valid[VOL] = false;
 
     if (number == CC_VOL) midiVal[ch][VOL][MSB] = value;
     else midiVal[ch][VOL][LSB] = value;

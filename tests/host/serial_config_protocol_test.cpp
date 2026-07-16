@@ -24,6 +24,9 @@ static void testSimpleCommands() {
 
   Request status = parse("@{ \"v\": 1, \"id\": 3, \"op\": \"status\" }");
   assert(status.operation == kOperationStatus);
+
+  Request settings = parse("@{\"v\":1,\"id\":4,\"op\":\"get_settings\"}");
+  assert(settings.operation == kOperationGetSettings);
 }
 
 static void testRatioSet() {
@@ -54,6 +57,19 @@ static void testCaveCommands() {
   assert(wingie_config::validateCaveBank(set.frequencies, set.mute, wingie_config::kRatioCount));
 }
 
+static void testSettingsCommands() {
+  Request channel = parse("@{\"v\":1,\"id\":7,\"op\":\"set_param\",\"target\":\"left\",\"name\":\"mix\",\"value\":0.625}");
+  assert(channel.operation == kOperationSetParam);
+  assert(strcmp(channel.target, "left") == 0);
+  assert(strcmp(channel.name, "mix") == 0);
+  assert(fabsf(channel.value - 0.625f) < 1e-6f);
+
+  Request shared = parse("@{\"v\":1,\"id\":8,\"op\":\"set_param\",\"target\":\"shared\",\"name\":\"post_clip_gain\",\"value\":0.825}");
+  assert(strcmp(shared.target, "shared") == 0);
+  assert(strcmp(shared.name, "post_clip_gain") == 0);
+  assert(fabsf(shared.value - 0.825f) < 1e-6f);
+}
+
 static void testInvalidRequests() {
   Request request;
   ParseError error;
@@ -77,6 +93,18 @@ static void testInvalidRequests() {
   assert(!parseRequestLine(badFrequency, strlen(badFrequency), request, error));
   assert(error.code == kParseInvalidField);
 
+  const char *missingParameter = "@{\"v\":1,\"id\":1,\"op\":\"set_param\",\"target\":\"left\",\"value\":1}";
+  assert(!parseRequestLine(missingParameter, strlen(missingParameter), request, error));
+  assert(error.code == kParseInvalidField);
+
+  const char *badTarget = "@{\"v\":1,\"id\":1,\"op\":\"set_param\",\"target\":\"both\",\"name\":\"mix\",\"value\":1}";
+  assert(!parseRequestLine(badTarget, strlen(badTarget), request, error));
+  assert(error.code == kParseInvalidField);
+
+  const char *badNumber = "@{\"v\":1,\"id\":1,\"op\":\"set_param\",\"target\":\"left\",\"name\":\"mix\",\"value\":1oops}";
+  assert(!parseRequestLine(badNumber, strlen(badNumber), request, error));
+  assert(error.code == kParseInvalidField);
+
   char oversized[kMaxFrameBytes + 2];
   memset(oversized, 'x', sizeof(oversized));
   oversized[0] = '@';
@@ -88,6 +116,7 @@ int main() {
   testSimpleCommands();
   testRatioSet();
   testCaveCommands();
+  testSettingsCommands();
   testInvalidRequests();
   return 0;
 }

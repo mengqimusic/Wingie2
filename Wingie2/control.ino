@@ -289,6 +289,7 @@ void control(void *pvParameters) {
 
   modeButtonState[0] = aw1.digitalRead(4);
   modeButtonState[1] = aw1.digitalRead(7);
+  const int loadedTuning = use_alt_tuning ? alt_tuning_index : -1;
 
   if (!modeButtonState[0] && !modeButtonState[1]) {
     // both buttons -- CLEAR ALL PREFS AND REBOOT
@@ -316,6 +317,8 @@ void control(void *pvParameters) {
       alt_tuning_set(-1);
     }
   }
+
+  if ((use_alt_tuning ? alt_tuning_index : -1) != loadedTuning) tuning_preferences_dirty = true;
 
   if (use_alt_tuning != 0 && alt_tuning_index != -1) {
     alt_tuning_set(alt_tuning_index);
@@ -478,24 +481,7 @@ void control(void *pvParameters) {
           modeChangingFromMIDI[ch] = false;
         }
 
-        set_channel_dsp_mode(ch);
-        if (!ch) {
-          dsp.setParamValue("/Wingie/left/mode_changed", 1);
-          dirty[8] = true;
-        }
-        if (ch) {
-          dsp.setParamValue("/Wingie/right/mode_changed", 1);
-          dirty[9] = true;
-        }
-
-        duck_env_triggered[ch] = true;
-        duck_env_init_timer[ch] = currentMillis;
-
-        ratio_led_phase[ch] = 0;
-        ratio_led_timer[ch] = currentMillis;
-        set_mode_led(ch);
-
-        apply_current_mode_parameters(ch);
+        apply_channel_mode_change(ch);
       }
 
       if (duck_env_triggered[ch] && currentMillis - duck_env_init_timer[ch] > 20) {
@@ -779,7 +765,7 @@ void control(void *pvParameters) {
         led_flash_timer = currentMillis;
         save_routine_flag = false;
         stuff_saved = true;
-        save_stuff();
+        request_preferences_save();
       }
     }
 

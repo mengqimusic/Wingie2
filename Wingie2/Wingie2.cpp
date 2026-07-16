@@ -11994,6 +11994,7 @@ struct dsp_poly_factory : public dsp_factory {
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include "esp_attr.h"
 #include <math.h>
 
 #ifndef FAUSTCLASS 
@@ -13335,7 +13336,7 @@ class mydsp : public dsp {
 		ui_interface->closeBox();
 	}
 	
-	virtual void compute(int count, FAUSTFLOAT** RESTRICT inputs, FAUSTFLOAT** RESTRICT outputs) {
+	virtual void IRAM_ATTR compute(int count, FAUSTFLOAT** RESTRICT inputs, FAUSTFLOAT** RESTRICT outputs) {
 		FAUSTFLOAT* input0 = inputs[0];
 		FAUSTFLOAT* input1 = inputs[1];
 		FAUSTFLOAT* output0 = outputs[0];

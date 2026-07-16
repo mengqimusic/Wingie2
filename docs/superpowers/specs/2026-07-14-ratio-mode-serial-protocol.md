@@ -1,5 +1,9 @@
 # Ratio Mode 与 Cave Web Serial 协议
 
+> **已被取代（2026-07-16）：** 本文是 schema 1 历史草案。当前已实现协议见
+> [Wingie2 Schema 3 配置协议](./2026-07-16-schema3-configuration-protocol.md)。以下内容仅保留设计历史，
+> 不再作为固件或网页行为依据。
+
 ## 状态
 
 这是 Ratio Mode 与现有 Cave 配置共用的第一版串口协议草案，供固件和单文件 HTML 共用。
