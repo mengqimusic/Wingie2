@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wingie2 配置 / Wingie2 Configuration</title>
+  <title>Wingie2 配置</title>
   <style>
     :root {
       color-scheme: light;
@@ -403,120 +403,118 @@
     <div class="wg-shell">
       <header class="wg-header">
         <div>
-          <h1>Wingie2 配置 / Wingie2 Configuration</h1>
-          <p class="wg-subtitle" data-i18n-zh="编辑立即进入运行状态；只有 Save 写入 flash。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。" data-i18n-en="Edit changes the running state immediately; only Save writes flash. The page reads a full snapshot every second and pauses while editing or writing."></p>
+          <h1 data-i18n-zh="Wingie2 配置" data-i18n-en="Wingie2 Configuration"></h1>
+          <p class="wg-subtitle" data-i18n-zh="编辑立即进入运行状态；只有保存写入闪存。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。" data-i18n-en="Edit changes the running state immediately; only Save writes flash. The page reads a full snapshot every second and pauses while editing or writing."></p>
         </div>
         <div class="wg-connect">
-          <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接 / Disconnected</span>
-          <button id="wg-language" class="wg-button" type="button" data-no-localize="true" aria-label="切换语言 / Switch language">中文 / EN</button>
-          <button id="wg-connect" class="wg-button wg-button-primary" type="button">连接 Wingie2 / Connect</button>
-          <button id="wg-disconnect" class="wg-button" type="button" hidden>断开 / Disconnect</button>
+          <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接</span>
+          <button id="wg-language" class="wg-button" type="button" data-no-localize="true" data-i18n-aria-zh="切换语言" data-i18n-aria-en="Switch language">中文 / EN</button>
+          <button id="wg-connect" class="wg-button wg-button-primary" type="button" data-i18n-zh="连接 Wingie2" data-i18n-en="Connect Wingie2"></button>
+          <button id="wg-disconnect" class="wg-button" type="button" hidden data-i18n-zh="断开" data-i18n-en="Disconnect"></button>
         </div>
       </header>
 
       <div id="wg-alert" class="wg-alert" data-visible="false" data-kind="info" role="status" aria-live="polite"></div>
 
-      <nav id="wg-mobile-sides" class="wg-mobile-sides" aria-label="移动端通道选择 / Mobile channel selection">
-        <button class="wg-side-button" type="button" data-mobile-side="left" aria-pressed="true">Left</button>
-        <button class="wg-side-button" type="button" data-mobile-side="right" aria-pressed="false">Right</button>
+      <nav id="wg-mobile-sides" class="wg-mobile-sides" data-i18n-aria-zh="移动端通道选择" data-i18n-aria-en="Mobile channel selection">
+        <button class="wg-side-button" type="button" data-mobile-side="left" aria-pressed="true" data-i18n-zh="左" data-i18n-en="Left"></button>
+        <button class="wg-side-button" type="button" data-mobile-side="right" aria-pressed="false" data-i18n-zh="右" data-i18n-en="Right"></button>
       </nav>
 
       <div id="wg-channel-grid" class="wg-channel-grid" data-mobile-side="left">
         <section class="wg-section" data-side-panel="left" aria-labelledby="wg-left-title">
           <div class="wg-section-head">
             <div>
-              <h2 id="wg-left-title">左通道 / Left Channel</h2>
-              <p class="wg-help">硬件左侧 / Hardware left</p>
+              <h2 id="wg-left-title" data-i18n-zh="左通道" data-i18n-en="Left Channel"></h2>
             </div>
           </div>
           <div class="wg-fields">
             <div class="wg-field">
-              <label for="wg-left-mode">模式 / Mode</label>
+              <label for="wg-left-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
               <select id="wg-left-mode" class="wg-select" data-value-key="param:left:mode" disabled>
-                <option value="0">复音 / Poly</option><option value="1">弦 / String</option><option value="2">梁 / Bar</option><option value="3">Cave / Cave</option><option value="4">比率 / Ratio</option>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
               </select>
             </div>
             <div class="wg-field">
-              <label for="wg-left-threshold">输入阈值 / Input Threshold</label>
+              <label for="wg-left-threshold" data-i18n-zh="输入阈值" data-i18n-en="Input Threshold"></label>
               <input id="wg-left-threshold" class="wg-number" data-value-key="param:left:threshold" type="text" inputmode="decimal" disabled>
             </div>
           </div>
           <div class="wg-divider"></div>
           <div class="wg-bank-head">
-            <h3>Cave 音库 / Cave Banks</h3>
-            <div class="wg-bank-tabs" data-bank-tabs="left" aria-label="左 Cave 音库 / Left Cave banks">
-              <button class="wg-bank-button" type="button" data-side="left" data-bank="0" aria-pressed="true">第 1 组 / Bank 1</button>
-              <button class="wg-bank-button" type="button" data-side="left" data-bank="1" aria-pressed="false">第 2 组 / Bank 2</button>
-              <button class="wg-bank-button" type="button" data-side="left" data-bank="2" aria-pressed="false">第 3 组 / Bank 3</button>
+            <h3 data-i18n-zh="Cave 音库" data-i18n-en="Cave Banks"></h3>
+            <div class="wg-bank-tabs" data-bank-tabs="left" data-i18n-aria-zh="左 Cave 音库" data-i18n-aria-en="Left Cave banks">
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="0" aria-pressed="true" data-i18n-zh="第 1 组" data-i18n-en="Bank 1"></button>
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="1" aria-pressed="false" data-i18n-zh="第 2 组" data-i18n-en="Bank 2"></button>
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="2" aria-pressed="false" data-i18n-zh="第 3 组" data-i18n-en="Bank 3"></button>
             </div>
           </div>
-          <div class="wg-table-wrap"><table aria-label="左 Cave 音库 / Left Cave bank"><thead><tr><th>共鸣器 / Resonator</th><th>频率 Hz / Frequency Hz</th><th class="wg-mute-cell">静音 / Mute</th></tr></thead><tbody id="wg-left-cave-rows"></tbody></table></div>
-          <p id="wg-left-cave-meta" class="wg-meta">范围由设备提供 / Range provided by device</p>
+          <div class="wg-table-wrap"><table data-i18n-aria-zh="左 Cave 音库" data-i18n-aria-en="Left Cave bank"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="频率 Hz" data-i18n-en="Frequency Hz"></th><th class="wg-mute-cell" data-i18n-zh="静音" data-i18n-en="Mute"></th></tr></thead><tbody id="wg-left-cave-rows"></tbody></table></div>
+          <p id="wg-left-cave-meta" class="wg-meta"></p>
         </section>
 
         <section class="wg-section" data-side-panel="right" aria-labelledby="wg-right-title">
           <div class="wg-section-head">
             <div>
-              <h2 id="wg-right-title">右通道 / Right Channel</h2>
-              <p class="wg-help">硬件右侧 / Hardware right</p>
+              <h2 id="wg-right-title" data-i18n-zh="右通道" data-i18n-en="Right Channel"></h2>
             </div>
           </div>
           <div class="wg-fields">
             <div class="wg-field">
-              <label for="wg-right-mode">模式 / Mode</label>
+              <label for="wg-right-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
               <select id="wg-right-mode" class="wg-select" data-value-key="param:right:mode" disabled>
-                <option value="0">复音 / Poly</option><option value="1">弦 / String</option><option value="2">梁 / Bar</option><option value="3">Cave / Cave</option><option value="4">比率 / Ratio</option>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
               </select>
             </div>
             <div class="wg-field">
-              <label for="wg-right-threshold">输入阈值 / Input Threshold</label>
+              <label for="wg-right-threshold" data-i18n-zh="输入阈值" data-i18n-en="Input Threshold"></label>
               <input id="wg-right-threshold" class="wg-number" data-value-key="param:right:threshold" type="text" inputmode="decimal" disabled>
             </div>
           </div>
           <div class="wg-divider"></div>
           <div class="wg-bank-head">
-            <h3>Cave 音库 / Cave Banks</h3>
-            <div class="wg-bank-tabs" data-bank-tabs="right" aria-label="右 Cave 音库 / Right Cave banks">
-              <button class="wg-bank-button" type="button" data-side="right" data-bank="0" aria-pressed="true">第 1 组 / Bank 1</button>
-              <button class="wg-bank-button" type="button" data-side="right" data-bank="1" aria-pressed="false">第 2 组 / Bank 2</button>
-              <button class="wg-bank-button" type="button" data-side="right" data-bank="2" aria-pressed="false">第 3 组 / Bank 3</button>
+            <h3 data-i18n-zh="Cave 音库" data-i18n-en="Cave Banks"></h3>
+            <div class="wg-bank-tabs" data-bank-tabs="right" data-i18n-aria-zh="右 Cave 音库" data-i18n-aria-en="Right Cave banks">
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="0" aria-pressed="true" data-i18n-zh="第 1 组" data-i18n-en="Bank 1"></button>
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="1" aria-pressed="false" data-i18n-zh="第 2 组" data-i18n-en="Bank 2"></button>
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="2" aria-pressed="false" data-i18n-zh="第 3 组" data-i18n-en="Bank 3"></button>
             </div>
           </div>
-          <div class="wg-table-wrap"><table aria-label="右 Cave 音库 / Right Cave bank"><thead><tr><th>共鸣器 / Resonator</th><th>频率 Hz / Frequency Hz</th><th class="wg-mute-cell">静音 / Mute</th></tr></thead><tbody id="wg-right-cave-rows"></tbody></table></div>
-          <p id="wg-right-cave-meta" class="wg-meta">范围由设备提供 / Range provided by device</p>
+          <div class="wg-table-wrap"><table data-i18n-aria-zh="右 Cave 音库" data-i18n-aria-en="Right Cave bank"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="频率 Hz" data-i18n-en="Frequency Hz"></th><th class="wg-mute-cell" data-i18n-zh="静音" data-i18n-en="Mute"></th></tr></thead><tbody id="wg-right-cave-rows"></tbody></table></div>
+          <p id="wg-right-cave-meta" class="wg-meta"></p>
         </section>
       </div>
 
       <section class="wg-section" aria-labelledby="wg-ratio-title">
         <div class="wg-section-head">
-          <div><h2 id="wg-ratio-title">共享 Ratio 配置 / Shared Ratio Profile</h2><p class="wg-help">左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。<br>Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms.</p></div>
-          <button id="wg-factory" class="wg-button" type="button" disabled>恢复出厂 Ratio / Factory Ratio</button>
+          <div><h2 id="wg-ratio-title" data-i18n-zh="共享比例配置" data-i18n-en="Shared Ratio Profile"></h2><p class="wg-help" data-i18n-zh="左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。" data-i18n-en="Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms."></p></div>
+          <button id="wg-factory" class="wg-button" type="button" disabled data-i18n-zh="恢复出厂比例" data-i18n-en="Factory Ratio"></button>
         </div>
-        <p class="wg-help wg-mobile-scroll-note">表格可横向滑动查看左右频率。<br>Swipe horizontally to view both frequencies.</p>
-        <div class="wg-table-wrap"><table class="wg-ratio-table" aria-label="Ratio 配置 / Ratio profile"><thead><tr><th>共鸣器 / Resonator</th><th>比例 / Ratio</th><th>音程 / Interval</th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
-        <p id="wg-ratio-meta" class="wg-meta">范围由设备提供 / Range provided by device</p>
+        <p class="wg-help wg-mobile-scroll-note" data-i18n-zh="表格可横向滑动查看左右频率。" data-i18n-en="Swipe horizontally to view both frequencies."></p>
+        <div class="wg-table-wrap"><table class="wg-ratio-table" data-i18n-aria-zh="比例配置" data-i18n-aria-en="Ratio profile"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="比例" data-i18n-en="Ratio"></th><th data-i18n-zh="音程" data-i18n-en="Interval"></th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
+        <p id="wg-ratio-meta" class="wg-meta"></p>
       </section>
 
       <section class="wg-section" aria-labelledby="wg-shared-title">
-        <div class="wg-section-head"><div><h2 id="wg-shared-title">共享设置 / Shared Settings</h2><p class="wg-help">全局调律、增益与 MIDI 路由。<br>Global tuning, gain and MIDI routing.</p></div></div>
+        <div class="wg-section-head"><div><h2 id="wg-shared-title" data-i18n-zh="共享设置" data-i18n-en="Shared Settings"></h2><p class="wg-help" data-i18n-zh="全局调律、增益与 MIDI 路由。" data-i18n-en="Global tuning, gain and MIDI routing."></p></div></div>
         <div class="wg-shared-grid">
-          <div class="wg-field"><label for="wg-a3">A3 频率 Hz / A3 Frequency Hz</label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-tuning">调律 / Tuning</label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1">标准 / Standard</option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
-          <div class="wg-field"><label for="wg-pre-clip">前级削波增益 / Pre Clip Gain</label><input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-post-clip">后级削波增益 / Post Clip Gain</label><input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-midi-left">MIDI 左通道 / MIDI Left Channel</label><input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled></div>
-          <div class="wg-field"><label for="wg-midi-right">MIDI 右通道 / MIDI Right Channel</label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
-          <div class="wg-field"><label for="wg-midi-both">MIDI 双通道 / MIDI Both Channel</label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field"><label for="wg-a3" data-i18n-zh="A3 频率 Hz" data-i18n-en="A3 Frequency Hz"></label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field"><label for="wg-tuning" data-i18n-zh="调律" data-i18n-en="Tuning"></label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1" data-i18n-zh="标准" data-i18n-en="Standard"></option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
+          <div class="wg-field"><label for="wg-pre-clip" data-i18n-zh="前级削波增益" data-i18n-en="Pre Clip Gain"></label><input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field"><label for="wg-post-clip" data-i18n-zh="后级削波增益" data-i18n-en="Post Clip Gain"></label><input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field"><label for="wg-midi-left" data-i18n-zh="MIDI 左通道" data-i18n-en="MIDI Left Channel"></label><input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field"><label for="wg-midi-right" data-i18n-zh="MIDI 右通道" data-i18n-en="MIDI Right Channel"></label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field"><label for="wg-midi-both" data-i18n-zh="MIDI 双通道" data-i18n-en="MIDI Both Channel"></label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
         </div>
       </section>
 
       <section class="wg-section wg-state" aria-labelledby="wg-state-title">
-        <div><h2 id="wg-state-title">配置 / Configuration</h2><p id="wg-state-summary" class="wg-help">连接后读取设备配置。<br>Connect to read device configuration.</p></div>
+        <div><h2 id="wg-state-title" data-i18n-zh="配置" data-i18n-en="Configuration"></h2><p id="wg-state-summary" class="wg-help"></p></div>
         <div class="wg-actions">
-          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled>保存到 Flash / Save to Flash</button>
-          <button id="wg-refresh" class="wg-button" type="button" disabled>刷新 / Refresh</button>
-          <button id="wg-export" class="wg-button" type="button" disabled>导出 JSON / Export JSON</button>
-          <button id="wg-import" class="wg-button" type="button" disabled>导入 JSON / Import JSON</button>
+          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled data-i18n-zh="保存到闪存" data-i18n-en="Save to Flash"></button>
+          <button id="wg-refresh" class="wg-button" type="button" disabled data-i18n-zh="刷新" data-i18n-en="Refresh"></button>
+          <button id="wg-export" class="wg-button" type="button" disabled data-i18n-zh="导出 JSON" data-i18n-en="Export JSON"></button>
+          <button id="wg-import" class="wg-button" type="button" disabled data-i18n-zh="导入 JSON" data-i18n-en="Import JSON"></button>
           <input id="wg-import-file" type="file" accept="application/json,.json" hidden>
         </div>
       </section>
@@ -600,46 +598,40 @@
         pollError: null,
         connectionEpoch: 0,
         language: "zh",
-        alertMessage: "",
-        connectionLabel: "未连接 / Disconnected"
+        alertMessage: null,
+        connectionLabel: {zh: "未连接", en: "Disconnected"}
       };
+
+      function copy(chinese, english) {
+        return {zh: chinese, en: english};
+      }
 
       function languageText(chinese, english) {
         return state.language === "zh" ? chinese : english;
       }
 
-      function chooseLanguage(value) {
-        const divider = String(value).indexOf(" / ");
-        if (divider < 0) return String(value);
-        return state.language === "zh" ? String(value).slice(0, divider) : String(value).slice(divider + 3);
+      function localized(message) {
+        if (!message) return "";
+        return typeof message === "string" ? message : message[state.language];
       }
 
       function applyLanguage() {
         root.querySelectorAll("[data-i18n-zh]").forEach((element) => {
           element.textContent = state.language === "zh" ? element.dataset.i18nZh : element.dataset.i18nEn;
         });
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        while (walker.nextNode()) {
-          const node = walker.currentNode;
-          if (node.parentElement && node.parentElement.closest("script,style,[data-no-localize='true']")) continue;
-          if (!node.__bilingualOriginal && node.nodeValue.includes(" / ")) node.__bilingualOriginal = node.nodeValue;
-          if (node.__bilingualOriginal) node.nodeValue = chooseLanguage(node.__bilingualOriginal);
-        }
-        root.querySelectorAll("[aria-label]").forEach((element) => {
-          const original = element.dataset.bilingualAriaLabel || element.getAttribute("aria-label");
-          if (!original || !original.includes(" / ")) return;
-          element.dataset.bilingualAriaLabel = original;
-          element.setAttribute("aria-label", chooseLanguage(original));
+        root.querySelectorAll("[data-i18n-aria-zh]").forEach((element) => {
+          element.setAttribute("aria-label", state.language === "zh" ? element.dataset.i18nAriaZh : element.dataset.i18nAriaEn);
         });
+        document.title = languageText("Wingie2 配置", "Wingie2 Configuration");
         elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
-        elements.connection.textContent = chooseLanguage(state.connectionLabel);
-        elements.alert.textContent = chooseLanguage(state.alertMessage);
+        elements.connection.textContent = localized(state.connectionLabel);
+        elements.alert.textContent = localized(state.alertMessage);
         renderAll();
       }
 
       function setAlert(message, kind = "info") {
-        state.alertMessage = message || "";
-        elements.alert.textContent = chooseLanguage(state.alertMessage);
+        state.alertMessage = message || null;
+        elements.alert.textContent = localized(state.alertMessage);
         elements.alert.dataset.kind = kind;
         elements.alert.dataset.visible = state.alertMessage ? "true" : "false";
       }
@@ -647,13 +639,13 @@
       function setConnection(stage, label) {
         elements.connection.dataset.state = stage;
         state.connectionLabel = label;
-        elements.connection.textContent = chooseLanguage(label);
+        elements.connection.textContent = localized(label);
         elements.connect.hidden = stage === "connected" || stage === "connecting";
         elements.disconnect.hidden = stage !== "connected";
       }
 
       function formatError(error) {
-        if (!error) return "未知错误 / Unknown error";
+        if (!error) return languageText("未知错误", "Unknown error");
         if (error.payload && error.payload.error) {
           const detail = error.payload.error;
           return [detail.code, detail.field, detail.detail].filter(Boolean).join(" · ");
@@ -662,7 +654,7 @@
       }
 
       function assertArray(value, length, label) {
-        if (!Array.isArray(value) || value.length !== length) throw new Error(`${label} 数量错误 / count mismatch.`);
+        if (!Array.isArray(value) || value.length !== length) throw new Error(languageText(`${label} 数量错误。`, `${label} count mismatch.`));
       }
 
       function clone(value) {
@@ -747,7 +739,7 @@
       }
 
       async function sendLine(text) {
-        if (!state.writer) throw new Error("设备未连接。 / Device is not connected.");
+        if (!state.writer) throw new Error(languageText("设备未连接。", "Device is not connected."));
         await state.writer.write(encoder.encode(text));
       }
 
@@ -776,7 +768,7 @@
           } catch (error) {
             const code = error.payload && error.payload.error && error.payload.error.code;
             if (code !== "busy" || Date.now() >= deadline) throw error;
-            setConnection("connecting", "Wingie2 正在启动… / Wingie2 is starting…");
+            setConnection("connecting", copy("Wingie2 正在启动…", "Wingie2 is starting…"));
             await new Promise((resolve) => window.setTimeout(resolve, 100));
           }
         }
@@ -785,24 +777,24 @@
       async function connect() {
         setAlert("");
         elements.connect.disabled = true;
-        setConnection("connecting", "正在连接… / Connecting…");
+        setConnection("connecting", copy("正在连接…", "Connecting…"));
         try {
           state.port = await navigator.serial.requestPort();
           await state.port.open({baudRate: 115200});
           state.writer = state.port.writable.getWriter();
           state.readLoop = readSerialLoop();
           const hello = await helloWhenReady();
-          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 3) throw new Error("需要 Wingie2 config schema 3 固件。 / Wingie2 config schema 3 firmware is required.");
+          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 3) throw new Error(languageText("需要 Wingie2 配置 schema 3 固件。", "Wingie2 config schema 3 firmware is required."));
           state.connected = true;
           await refreshAll(false);
           startPolling();
-          setConnection("connected", "Wingie2 已连接 / Connected");
-          setAlert("已读取设备快照；页面每秒后台同步，编辑或写入期间自动跳过。 / Device snapshot loaded; the page syncs every second and pauses while editing or writing.", "success");
+          setConnection("connected", copy("Wingie2 已连接", "Connected"));
+          setAlert(copy("已读取设备快照；页面每秒后台同步，编辑或写入期间自动跳过。", "Device snapshot loaded; the page syncs every second and pauses while editing or writing."), "success");
         } catch (error) {
           await disconnect(false);
           elements.connect.disabled = false;
-          setConnection("disconnected", "未连接 / Disconnected");
-          setAlert(`连接失败 / Connection failed: ${formatError(error)}`, "error");
+          setConnection("disconnected", copy("未连接", "Disconnected"));
+          setAlert(copy(`连接失败：${formatError(error)}`, `Connection failed: ${formatError(error)}`), "error");
         }
       }
 
@@ -844,13 +836,13 @@
         state.inputBuffer = "";
         state.caveCacheValid = false;
         elements.connect.disabled = false;
-        setConnection("disconnected", "未连接 / Disconnected");
+        setConnection("disconnected", copy("未连接", "Disconnected"));
         renderAll();
-        if (announce) setAlert("已断开。 / Disconnected.", "info");
+        if (announce) setAlert(copy("已断开。", "Disconnected."), "info");
       }
 
       function transportLost(error) {
-        disconnect(false).finally(() => setAlert(`连接已断开 / Connection lost: ${formatError(error)}`, "error"));
+        disconnect(false).finally(() => setAlert(copy(`连接已断开：${formatError(error)}`, `Connection lost: ${formatError(error)}`), "error"));
       }
 
       function stopPolling() {
@@ -996,7 +988,7 @@
           state.writeErrors.clear();
           state.pollError = null;
           renderAll();
-          if (announce) setAlert("已重新读取完整设备快照。 / Full device snapshot refreshed.", "success");
+          if (announce) setAlert(copy("已重新读取完整设备快照。", "Full device snapshot refreshed."), "success");
         } finally {
           state.refreshing = false;
           renderAll();
@@ -1067,7 +1059,7 @@
             if (state.resourceVersions.get(key) === version) {
               state.writeErrors.set(key, error);
               rollback();
-              setAlert(`实时写入失败 / Live write failed: ${formatError(error)}`, "error");
+              setAlert(copy(`实时写入失败：${formatError(error)}`, `Live write failed: ${formatError(error)}`), "error");
             }
           }
         }).finally(() => {
@@ -1188,7 +1180,7 @@
         const mute = bank.draftMute.slice();
         enqueueWrite(key, version,
           () => {
-            if (!state.caveCacheValid) throw new Error("Cave 状态已失效，请先刷新。 / Cave state is invalid; click Refresh first.");
+            if (!state.caveCacheValid) throw new Error(languageText("Cave 状态已失效，请先刷新。", "Cave state is invalid; click Refresh first."));
             return request("set_cave", {
               side,
               bank: bankIndex,
@@ -1249,17 +1241,17 @@
         if (!state.connected || state.saving) return;
         state.saving = true;
         updateControls();
-        setAlert("正在等待实时写入… / Waiting for live writes…", "info");
+        setAlert(copy("正在等待实时写入…", "Waiting for live writes…"), "info");
         try {
           await waitForWrites();
-          setAlert("正在写入 flash… / Writing to flash…", "info");
+          setAlert(copy("正在写入闪存…", "Writing to flash…"), "info");
           await request("save", {}, 6000);
           if (state.settings) state.settings.dirty = false;
           if (state.ratio) state.ratio.dirty = false;
           for (const side of sides) for (const bank of state.cave[side]) if (bank) bank.dirty = false;
-          setAlert("配置已保存到 Wingie2 flash。 / Configuration saved to Wingie2 flash.", "success");
+          setAlert(copy("配置已保存到 Wingie2 闪存。", "Configuration saved to Wingie2 flash."), "success");
         } catch (error) {
-          setAlert(`保存失败 / Save failed: ${formatError(error)}`, "error");
+          setAlert(copy(`保存失败：${formatError(error)}`, `Save failed: ${formatError(error)}`), "error");
         } finally {
           state.saving = false;
           renderAll();
@@ -1267,7 +1259,7 @@
       }
 
       async function resetFactoryRatio() {
-        if (!state.ratio || !window.confirm(`${languageText("恢复 Factory Ratio？", "Restore Factory Ratio?")}\n\n${languageText("此操作会立即改变运行状态；点击 Save 后才写入 flash。", "This changes the running state; Save is required to write flash.")}`)) return;
+        if (!state.ratio || !window.confirm(`${languageText("恢复出厂比例？", "Restore Factory Ratio?")}\n\n${languageText("此操作会立即改变运行状态；点击保存后才写入闪存。", "This changes the running state; Save is required to write flash.")}`)) return;
         await waitForWrites();
         const response = await request("reset", {expected_revision: state.ratio.revision});
         state.ratio.revision = Number(response.revision);
@@ -1277,17 +1269,17 @@
         state.ratio.dirty = true;
         bumpResource("ratio");
         renderAll();
-        setAlert("已恢复 Factory Ratio；尚未写入 flash。 / Factory Ratio restored; not saved to flash yet.", "success");
+        setAlert(copy("已恢复出厂比例；尚未写入闪存。", "Factory Ratio restored; not saved to flash yet."), "success");
       }
 
       function createRows() {
         for (let index = 0; index < resonatorCount; index += 1) {
           const ratioRow = document.createElement("tr");
-          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="共鸣器 ${index + 1} 比例 / Resonator ${index + 1} ratio" disabled></td><td data-cents="${index}">—</td>`;
+          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`)}" disabled></td><td data-cents="${index}">—</td>`;
           elements.ratioRows.appendChild(ratioRow);
           for (const side of sides) {
             const row = document.createElement("tr");
-            row.innerHTML = `<td>${index + 1}</td><td><input class="wg-frequency-input" data-cave-input="${side}:${index}" data-index="${index}" type="text" inputmode="decimal" aria-label="${side} 共鸣器 ${index + 1} 频率 / ${side} resonator ${index + 1} frequency" disabled></td><td class="wg-mute-cell"><input class="wg-mute-input" data-cave-mute="${side}:${index}" data-index="${index}" type="checkbox" aria-label="${side} 共鸣器 ${index + 1} 静音 / ${side} resonator ${index + 1} mute" disabled></td>`;
+            row.innerHTML = `<td>${index + 1}</td><td><input class="wg-frequency-input" data-cave-input="${side}:${index}" data-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`${side} 共鸣器 ${index + 1} 频率`, `${side} resonator ${index + 1} frequency`)}" disabled></td><td class="wg-mute-cell"><input class="wg-mute-input" data-cave-mute="${side}:${index}" data-index="${index}" type="checkbox" aria-label="${languageText(`${side} 共鸣器 ${index + 1} 静音`, `${side} resonator ${index + 1} mute`)}" disabled></td>`;
             elements.caveRows[side].appendChild(row);
           }
         }
@@ -1300,6 +1292,7 @@
       function renderRatio() {
         const ratio = state.ratio;
         elements.ratioRows.querySelectorAll(".wg-ratio-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`));
           input.disabled = !state.connected || !ratio || state.saving || state.refreshing;
           if (!ratio) input.value = "";
           else if (document.activeElement !== input) input.value = ratio.raw[index];
@@ -1309,7 +1302,7 @@
           const cents = root.querySelector(`[data-cents="${index}"]`);
           cents.textContent = Number.isFinite(value) && value > 0 ? `${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
         }
-        elements.ratioMeta.textContent = ratio ? `Ratio ${ratio.limits.min}–${ratio.limits.max} · ${languageText(`修订 ${ratio.revision}`, `revision ${ratio.revision}`)}${ratio.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
+        elements.ratioMeta.textContent = ratio ? `${languageText("比例", "Ratio")} ${ratio.limits.min}–${ratio.limits.max} · ${languageText(`修订 ${ratio.revision}`, `revision ${ratio.revision}`)}${ratio.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
       }
 
       function renderCave(side) {
@@ -1317,11 +1310,13 @@
         const bank = state.cave[side][bankIndex];
         root.querySelectorAll(`[data-bank-tabs="${side}"] [data-bank]`).forEach((button) => button.setAttribute("aria-pressed", Number(button.dataset.bank) === bankIndex ? "true" : "false"));
         elements.caveRows[side].querySelectorAll(".wg-frequency-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`${side} 共鸣器 ${index + 1} 频率`, `${side} resonator ${index + 1} frequency`));
           input.disabled = !state.connected || !state.caveCacheValid || !bank || state.saving || state.refreshing;
           if (!bank) input.value = "";
           else if (document.activeElement !== input) input.value = bank.raw[index];
         });
         elements.caveRows[side].querySelectorAll(".wg-mute-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`${side} 共鸣器 ${index + 1} 静音`, `${side} resonator ${index + 1} mute`));
           input.disabled = !state.connected || !state.caveCacheValid || !bank || state.saving || state.refreshing;
           if (bank) input.checked = bank.draftMute[index];
         });
@@ -1356,10 +1351,10 @@
         if (state.connected && !state.caveCacheValid) elements.stateSummary.textContent = languageText("Cave 状态需要重新读取；请点刷新。", "Cave state needs rereading; click Refresh.");
         else if (!ready) elements.stateSummary.textContent = languageText("连接后读取设备配置。", "Connect to read device configuration.");
         else if (pendingUiWriteCount()) elements.stateSummary.textContent = languageText(`${pendingUiWriteCount()} 项实时写入处理中；保存、刷新与导出会等待完成。`, `${pendingUiWriteCount()} live write(s) pending; Save, Refresh and Export will wait.`);
-        else if (state.writeErrors.size) elements.stateSummary.textContent = languageText("有实时写入失败；修正后再 Save。", "A live write failed; correct it before Save.");
+        else if (state.writeErrors.size) elements.stateSummary.textContent = languageText("有实时写入失败；修正后再保存。", "A live write failed; correct it before Save.");
         else if (state.pollError) elements.stateSummary.textContent = languageText(`后台同步失败：${state.pollError}；请点刷新。`, `Background sync failed: ${state.pollError}; click Refresh.`);
-        else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入 flash。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
-        else elements.stateSummary.textContent = languageText("配置与 flash 已同步。", "Configuration matches flash.");
+        else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入闪存。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
+        else elements.stateSummary.textContent = languageText("配置与闪存已同步。", "Configuration matches flash.");
       }
 
       function renderAll() {
@@ -1403,7 +1398,7 @@
       }
 
       function exportObject() {
-        if (!state.settings || !state.ratio || !state.caveCacheValid) throw new Error("设备配置尚未完整读取；请先刷新。 / Device configuration is incomplete; click Refresh first.");
+        if (!state.settings || !state.ratio || !state.caveCacheValid) throw new Error(languageText("设备配置尚未完整读取；请先刷新。", "Device configuration is incomplete; click Refresh first."));
         return {
           format: "wingie2-config",
           version: 3,
@@ -1417,9 +1412,9 @@
       }
 
       function validateImport(value) {
-        if (!value || value.format !== "wingie2-config" || Number(value.version) !== 3) throw new Error("不是 Wingie2 schema 3 配置文件。 / This is not a Wingie2 schema 3 configuration file.");
+        if (!value || value.format !== "wingie2-config" || Number(value.version) !== 3) throw new Error(languageText("不是 Wingie2 schema 3 配置文件。", "This is not a Wingie2 schema 3 configuration file."));
         for (const side of sides) {
-          if (!value.settings || !value.settings[side]) throw new Error(`缺少 ${side} settings。 / Missing ${side} settings.`);
+          if (!value.settings || !value.settings[side]) throw new Error(languageText(`缺少 ${side} 设置。`, `Missing ${side} settings.`));
           assertArray(value.cave && value.cave[side], bankCount, `${side} Cave`);
           for (const bank of value.cave[side]) {
             assertArray(bank.frequencies, resonatorCount, "Imported Cave frequency");
@@ -1432,7 +1427,7 @@
 
       async function importObject(value) {
         const imported = validateImport(clone(value));
-        if (!state.caveCacheValid) throw new Error("Cave 状态已失效；请先刷新。 / Cave state is invalid; click Refresh first.");
+        if (!state.caveCacheValid) throw new Error(languageText("Cave 状态已失效；请先刷新。", "Cave state is invalid; click Refresh first."));
         await waitForWrites();
         for (const [key, spec] of Object.entries(parameterSpecs)) {
           const source = valueAtPath(imported.settings, spec.path);
@@ -1453,7 +1448,7 @@
         }
         renderAll();
         await waitForWrites();
-        setAlert("配置已导入运行状态；Save 后才写入 flash。 / Configuration imported into the running state; Save to write flash.", "success");
+        setAlert(copy("配置已导入运行状态；保存后才写入闪存。", "Configuration imported into the running state; Save to write flash."), "success");
       }
 
       async function downloadExport() {
@@ -1469,7 +1464,7 @@
           link.remove();
           URL.revokeObjectURL(url);
         } catch (error) {
-          setAlert(`${formatError(error)} / Export failed`, "error");
+          setAlert(copy(`导出失败：${formatError(error)}`, `Export failed: ${formatError(error)}`), "error");
         }
       }
 
@@ -1477,7 +1472,7 @@
         try {
           await importObject(JSON.parse(await file.text()));
         } catch (error) {
-          setAlert(`导入失败 / Import failed: ${formatError(error)}`, "error");
+          setAlert(copy(`导入失败：${formatError(error)}`, `Import failed: ${formatError(error)}`), "error");
         } finally {
           elements.importFile.value = "";
         }
@@ -1490,8 +1485,8 @@
         applyLanguage();
       });
       elements.save.addEventListener("click", saveConfiguration);
-      elements.refresh.addEventListener("click", () => refreshAll(true).catch((error) => setAlert(`刷新失败 / Refresh failed: ${formatError(error)}`, "error")));
-      elements.factory.addEventListener("click", () => resetFactoryRatio().catch((error) => setAlert(`${formatError(error)} / Factory Ratio failed`, "error")));
+      elements.refresh.addEventListener("click", () => refreshAll(true).catch((error) => setAlert(copy(`刷新失败：${formatError(error)}`, `Refresh failed: ${formatError(error)}`), "error")));
+      elements.factory.addEventListener("click", () => resetFactoryRatio().catch((error) => setAlert(copy(`出厂比例失败：${formatError(error)}`, `Factory Ratio failed: ${formatError(error)}`), "error")));
       elements.export.addEventListener("click", downloadExport);
       elements.import.addEventListener("click", () => elements.importFile.click());
       elements.importFile.addEventListener("change", () => {
@@ -1572,7 +1567,7 @@
 
       if (!("serial" in navigator)) {
         elements.connect.disabled = true;
-        setAlert("当前浏览器不支持 Web Serial。请使用桌面版 Chrome 或 Edge。 / This browser does not support Web Serial. Use desktop Chrome or Edge.", "warning");
+        setAlert(copy("当前浏览器不支持 Web Serial。请使用桌面版 Chrome 或 Edge。", "This browser does not support Web Serial. Use desktop Chrome or Edge."), "warning");
       }
 
       createRows();

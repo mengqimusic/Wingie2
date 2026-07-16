@@ -46,12 +46,17 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   assert(mock.writes.length === initialCount, "page polled before the one-second interval");
   assert(element('[data-cave-input="left:0"]').value === "62.00", "Cave values do not show 0.01 Hz precision");
   assert(window.__wingieConfigTest.state().pollTimer !== null, "one-second polling did not start after connection");
+  assert(!document.querySelector('[data-side-panel="left"] .wg-help') && !document.querySelector('[data-side-panel="right"] .wg-help'), "channel helper text duplicated the channel title");
+  assert(document.querySelector(".wg-footer").textContent === "桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步", "Chinese footer was mixed or truncated");
   for (const selector of ["#wg-left-mode", "#wg-left-threshold", '[data-cave-input="left:0"]', '[data-value-key="ratio:0"]', "#wg-a3"]) {
     assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
   }
   assert(element("#wg-language").textContent === "中文 / EN" && element("#wg-left-title").textContent === "左通道 / Left Channel".split(" / ")[0], "Chinese language did not initialize");
   element("#wg-language").click();
   assert(element("#wg-language").textContent === "EN / 中文" && element("#wg-left-title").textContent === "Left Channel", "English language toggle failed");
+  assert(document.querySelector("#wg-ratio-title").parentElement.querySelector(".wg-help").textContent === "Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms.", "English Ratio help remained mixed");
+  assert(document.querySelector("#wg-shared-title").parentElement.querySelector(".wg-help").textContent === "Global tuning, gain and MIDI routing.", "English Shared Settings help remained mixed");
+  assert(document.querySelector(".wg-footer").textContent === "Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync", "English footer was mixed or truncated");
   element("#wg-language").click();
 
   window.__wingieConfigTest.stopPolling();
@@ -250,8 +255,8 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   mock.clearWrites();
   element("#wg-factory").click();
   await waitFor(() => mock.snapshot().ratios[0] === 1, "Factory Ratio");
-  assert(factoryPrompt.includes("恢复 Factory Ratio？") && !factoryPrompt.includes("Restore Factory Ratio?"), "Chinese Factory confirmation is wrong");
-  assert(document.querySelector("#wg-alert").textContent.includes("已恢复 Factory Ratio") && !document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored"), "Chinese Factory success alert is wrong");
+  assert(factoryPrompt.includes("恢复出厂比例？") && !factoryPrompt.includes("Restore Factory Ratio?"), "Chinese Factory confirmation is wrong");
+  assert(document.querySelector("#wg-alert").textContent.includes("已恢复出厂比例") && !document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored"), "Chinese Factory success alert is wrong");
   element("#wg-language").click();
   assert(document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored"), "English Factory success alert is wrong");
   element("#wg-language").click();

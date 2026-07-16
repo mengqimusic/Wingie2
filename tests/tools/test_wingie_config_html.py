@@ -149,27 +149,23 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("Import JSON", self.source)
         self.assertNotIn(">Apply", self.source)
 
-    def test_user_facing_copy_is_bilingual(self):
+    def test_user_facing_copy_uses_explicit_language_fields(self):
         for phrase in (
-            "连接 Wingie2 / Connect",
-            "断开 / Disconnect",
-            "模式 / Mode",
-            "输入阈值 / Input Threshold",
-            "Cave 音库 / Cave Banks",
-            "共享 Ratio 配置 / Shared Ratio Profile",
-            "共享设置 / Shared Settings",
-            "保存到 Flash / Save to Flash",
-            "刷新 / Refresh",
-            "导出 JSON / Export JSON",
-            "导入 JSON / Import JSON",
             "id=\"wg-language\"",
             "state.language === \"zh\" ? \"en\" : \"zh\"",
             "applyLanguage()",
-            "Device snapshot loaded;",
-            "Full device snapshot refreshed.",
-            "Configuration saved to Wingie2 flash.",
+            "data-i18n-zh=\"连接 Wingie2\"",
+            "data-i18n-en=\"Connect Wingie2\"",
+            "data-i18n-zh=\"共享比例配置\"",
+            "data-i18n-en=\"Shared Ratio Profile\"",
+            "data-i18n-zh=\"保存到闪存\"",
+            "data-i18n-en=\"Save to Flash\"",
         ):
             self.assertIn(phrase, self.source)
+        self.assertNotIn("chooseLanguage", self.source)
+        self.assertNotIn("bilingualOriginal", self.source)
+        self.assertNotIn("硬件左侧", self.source)
+        self.assertNotIn("Hardware left", self.source)
 
     def test_minimal_responsive_visual_contract(self):
         self.assertIn("background: #fff", self.source)
