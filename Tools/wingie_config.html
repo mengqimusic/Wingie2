@@ -78,7 +78,7 @@
       margin-bottom: 24px;
     }
 
-    #wingie-config .wg-connect,
+    #wingie-config .wg-connect-controls,
     #wingie-config .wg-actions,
     #wingie-config .wg-section-head,
     #wingie-config .wg-bank-head {
@@ -86,6 +86,16 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    #wingie-config .wg-connect {
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+    }
+
+    #wingie-config .wg-connect-controls {
+      justify-content: flex-end;
     }
 
     #wingie-config .wg-section-head,
@@ -108,6 +118,13 @@
       color: #111;
       border-color: #267326;
       background: #f2fff2;
+    }
+
+    #wingie-config .wg-poll-status {
+      min-height: 1.45em;
+      color: #555;
+      font-size: 13px;
+      text-align: right;
     }
 
     #wingie-config .wg-button,
@@ -365,7 +382,6 @@
         align-items: start;
       }
 
-      #wingie-config .wg-connect,
       #wingie-config .wg-state .wg-actions {
         justify-content: flex-start;
       }
@@ -407,10 +423,13 @@
           <p class="wg-subtitle" data-i18n-zh="编辑立即进入运行状态；只有保存写入闪存。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。" data-i18n-en="Edit changes the running state immediately; only Save writes flash. The page reads a full snapshot every second and pauses while editing or writing."></p>
         </div>
         <div class="wg-connect">
-          <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接</span>
-          <button id="wg-language" class="wg-button" type="button" data-no-localize="true" data-i18n-aria-zh="切换语言" data-i18n-aria-en="Switch language">中文 / EN</button>
-          <button id="wg-connect" class="wg-button wg-button-primary" type="button" data-i18n-zh="连接 Wingie2" data-i18n-en="Connect Wingie2"></button>
-          <button id="wg-disconnect" class="wg-button" type="button" hidden data-i18n-zh="断开" data-i18n-en="Disconnect"></button>
+          <div class="wg-connect-controls">
+            <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接</span>
+            <button id="wg-language" class="wg-button" type="button" data-no-localize="true" data-i18n-aria-zh="切换语言" data-i18n-aria-en="Switch language">中文 / EN</button>
+            <button id="wg-connect" class="wg-button wg-button-primary" type="button" data-i18n-zh="连接 Wingie2" data-i18n-en="Connect Wingie2"></button>
+            <button id="wg-disconnect" class="wg-button" type="button" hidden data-i18n-zh="断开" data-i18n-en="Disconnect"></button>
+          </div>
+          <span id="wg-poll-status" class="wg-poll-status">连接后每秒读取一次完整配置</span>
         </div>
       </header>
 
@@ -536,6 +555,7 @@
 
       const elements = {
         connection: root.querySelector("#wg-connection"),
+        pollStatus: root.querySelector("#wg-poll-status"),
         language: root.querySelector("#wg-language"),
         connect: root.querySelector("#wg-connect"),
         disconnect: root.querySelector("#wg-disconnect"),
@@ -599,7 +619,8 @@
         connectionEpoch: 0,
         language: "zh",
         alertMessage: null,
-        connectionLabel: {zh: "未连接", en: "Disconnected"}
+        connectionLabel: {zh: "未连接", en: "Disconnected"},
+        pollStatusLabel: {zh: "连接后每秒读取一次完整配置", en: "Connect to read the full configuration every second"}
       };
 
       function copy(chinese, english) {
@@ -625,6 +646,7 @@
         document.title = languageText("Wingie2 配置", "Wingie2 Configuration");
         elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
         elements.connection.textContent = localized(state.connectionLabel);
+        elements.pollStatus.textContent = localized(state.pollStatusLabel);
         elements.alert.textContent = localized(state.alertMessage);
         renderAll();
       }
@@ -642,6 +664,20 @@
         elements.connection.textContent = localized(label);
         elements.connect.hidden = stage === "connected" || stage === "connecting";
         elements.disconnect.hidden = stage !== "connected";
+        updatePollingStatus();
+      }
+
+      function updatePollingStatus() {
+        let label;
+        const stage = elements.connection.dataset.state;
+        if (stage === "connecting") label = copy("正在连接设备…", "Connecting to device…");
+        else if (!state.connected || stage !== "connected") label = copy("连接后每秒读取一次完整配置", "Connect to read the full configuration every second");
+        else if (state.refreshing || state.polling) label = copy("正在读取完整设备配置…", "Reading the full device configuration…");
+        else if (state.saving || pendingUiWriteCount()) label = copy("实时写入期间暂停轮询", "Polling pauses during live writes");
+        else if (state.pollError) label = copy(`轮询失败：${state.pollError}`, `Polling failed: ${state.pollError}`);
+        else label = copy("每秒从设备读取一次完整配置", "Reading the full device configuration every second");
+        state.pollStatusLabel = label;
+        elements.pollStatus.textContent = localized(label);
       }
 
       function formatError(error) {
@@ -855,6 +891,7 @@
         state.pollTimer = window.setInterval(() => {
           pollFullSnapshot().catch(() => undefined);
         }, 1000);
+        updatePollingStatus();
       }
 
       function normalizeSettings(response) {
@@ -998,6 +1035,7 @@
       async function pollFullSnapshot() {
         if (!state.connected || state.polling || state.refreshing || state.saving || pendingUiWriteCount()) return;
         state.polling = true;
+        updatePollingStatus();
         const epoch = state.connectionEpoch;
         let finishPoll;
         state.pollPromise = new Promise((resolve) => { finishPoll = resolve; });
@@ -1082,6 +1120,7 @@
         if (canonical === null) {
           edit.timer = null;
           syncParameterControls(key);
+          updateControls();
           return;
         }
         const commit = () => {
@@ -1121,6 +1160,7 @@
         if (immediate || spec.immediate) commit();
         else edit.timer = window.setTimeout(commit, 150);
         syncParameterControls(key);
+        updateControls();
       }
 
       function resourceVersion(key) {
@@ -1144,6 +1184,7 @@
         };
         if (immediate) run();
         else state.resourceTimers.set(key, window.setTimeout(run, 150));
+        updateControls();
       }
 
       function commitRatio(version) {
@@ -1341,6 +1382,7 @@
       }
 
       function updateControls() {
+        updatePollingStatus();
         const ready = state.connected && state.settings && state.ratio && state.caveCacheValid && sides.every((side) => state.cave[side].every(Boolean));
         const busy = state.saving || state.refreshing;
         elements.factory.disabled = !ready || busy || state.pendingWrites > 0;

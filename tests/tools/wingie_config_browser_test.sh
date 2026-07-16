@@ -52,8 +52,12 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
     assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
   }
   assert(element("#wg-language").textContent === "中文 / EN" && element("#wg-left-title").textContent === "左通道 / Left Channel".split(" / ")[0], "Chinese language did not initialize");
+  assert(element("#wg-poll-status").textContent === "每秒从设备读取一次完整配置", "Chinese polling status did not show the one-second device read");
+  assert(getComputedStyle(element(".wg-connect")).justifyItems === "end", "header controls are not right aligned");
+  assert(getComputedStyle(element("#wg-poll-status")).textAlign === "right", "polling status is not right aligned");
   element("#wg-language").click();
   assert(element("#wg-language").textContent === "EN / 中文" && element("#wg-left-title").textContent === "Left Channel", "English language toggle failed");
+  assert(element("#wg-poll-status").textContent === "Reading the full device configuration every second", "English polling status did not show the one-second device read");
   assert(document.querySelector("#wg-ratio-title").parentElement.querySelector(".wg-help").textContent === "Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms.", "English Ratio help remained mixed");
   assert(document.querySelector("#wg-shared-title").parentElement.querySelector(".wg-help").textContent === "Global tuning, gain and MIDI routing.", "English Shared Settings help remained mixed");
   assert(document.querySelector(".wg-footer").textContent === "Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync", "English footer was mixed or truncated");
@@ -81,6 +85,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   mock.clearWrites();
   const pendingThreshold = element("#wg-left-threshold");
   edit(pendingThreshold, "0.33");
+  assert(element("#wg-poll-status").textContent === "实时写入期间暂停轮询", "polling status did not show the live-write pause");
   await window.__wingieConfigTest.poll();
   assert(mock.writes.length === 0 && pendingThreshold.value === "0.33", "background poll did not skip a pending edit");
   await window.__wingieConfigTest.idle();

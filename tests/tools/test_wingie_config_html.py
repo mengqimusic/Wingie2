@@ -123,6 +123,19 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("for (let bank = 0; bank < bankCount; bank += 1)", cave_reader.group(1))
         self.assertIn("#wg-refresh", self.source)
 
+    def test_poll_status_and_header_controls_are_bilingual(self):
+        self.assertIn('id="wg-poll-status"', self.source)
+        self.assertIn('class="wg-connect-controls"', self.source)
+        self.assertIn("连接后每秒读取一次完整配置", self.source)
+        self.assertIn("Connect to read the full configuration every second", self.source)
+        self.assertIn("每秒从设备读取一次完整配置", self.source)
+        self.assertIn("Reading the full device configuration every second", self.source)
+        self.assertIn("实时写入期间暂停轮询", self.source)
+        self.assertIn("Polling pauses during live writes", self.source)
+        self.assertIn("justify-items: end", self.source)
+        self.assertIn("text-align: right", self.source)
+        self.assertIn("updatePollingStatus()", self.source)
+
     def test_has_complete_controls_and_omits_runtime_status(self):
         for target in ("left", "right"):
             for name in ("mode", "threshold"):
