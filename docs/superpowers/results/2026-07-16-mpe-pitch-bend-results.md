@@ -39,7 +39,9 @@
 8. 测试发现普通 Ch 5 PB 曾错误叠加到 MPE voice；隔离 ownership 后复测为 `+6.001`，不再包含
    普通 PB；
 9. USB `mpe_enabled=1/0` 即时得到 claimed mask `0xf00f/0x0000`；未 Save，重启后仍为 false；
-10. 最终已刷回普通构建，`get_settings` 确认 MPE false、MIDI 1/2/3、Tuning Standard。
+10. 隔离修复后的普通构建曾刷回并由 `get_settings` 确认 MPE false、MIDI 1/2/3、Tuning Standard；
+    最后一处 MCM 重配收窄随后完成编译、上传和 flash hash 校验，但设备在上传后同时退出 USB Serial
+    与 CoreMIDI 枚举，因此无法补做这一最终二进制的重启后在线确认。
 
 ## 剩余边界
 
