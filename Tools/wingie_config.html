@@ -904,7 +904,7 @@
           if (announce) setAlert("已重新读取完整设备快照。", "success");
         } finally {
           state.refreshing = false;
-          updateControls();
+          renderAll();
         }
       }
 

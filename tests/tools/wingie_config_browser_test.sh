@@ -45,6 +45,9 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   await sleep(350);
   assert(mock.writes.length === initialCount, "page polled after connection");
   assert(element('[data-cave-input="left:0"]').value === "62.00", "Cave values do not show 0.01 Hz precision");
+  for (const selector of ["#wg-left-mode", "#wg-left-threshold", '[data-cave-input="left:0"]', '[data-value-key="ratio:0"]', "#wg-a3"]) {
+    assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
+  }
 
   const mode = element("#wg-left-mode");
   mode.value = "2";
