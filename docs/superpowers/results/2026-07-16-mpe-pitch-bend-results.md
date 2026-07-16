@@ -2,7 +2,7 @@
 
 ## 实现边界
 
-- MPE 1.1 Lower Zone 映射左侧，Upper Zone 映射右侧；开机双 Zone 默认关闭，可由 USB 配置保存；
+- MPE 1.1 Lower Zone 映射左侧，Upper Zone 映射右侧；开机双 Zone 默认关闭，可由 USB Serial 配置页保存；
 - RPN 6 在运行时建立、调整或撤销 Zone，最近的重叠配置优先；
 - Poly 每侧 3 voice 维护 `Member Channel + note -> voice` ownership，满载时替换最旧 voice；
 - Member Pitch Bend 只作用于所属 voice，Manager Pitch Bend 作用于整侧；
@@ -22,9 +22,9 @@
 
 ## 真机验证
 
-设备：ESP32-D0WDQ6 rev 1，USB Serial `/dev/cu.usbserial-11310`，CoreMIDI destination
-`USB MIDI DevicePort 1`。未读取或备份 app0；上传只写标准 bootloader、partition、boot_app0 与 app
-区域，NVS `0x9000` 未写入。
+Wingie2 设备为 ESP32-D0WDQ6 rev 1，本机 USB 只提供串口 `/dev/cu.usbserial-11310`。MIDI 测试使用
+独立的 USB→DIN MIDI 接口：CoreMIDI destination `USB MIDI DevicePort 1` → Wingie2 DIN MIDI In。
+未读取或备份 app0；上传只写标准 bootloader、partition、boot_app0 与 app 区域，NVS `0x9000` 未写入。
 
 1. MCM `lower=3, upper=3` 后诊断 claimed mask 为 `0xf00f`；
 2. 左 Poly：Ch 2 / 3 / 4 分别绑定 voice 0 / 1 / 2，PB 得到 `+24.003 / -12.000 / 0.000`
@@ -38,10 +38,11 @@
 7. RPN 0 将 Member range 改为 ±12 后，半量 PB 得到 `+6.001` semitone；
 8. 测试发现普通 Ch 5 PB 曾错误叠加到 MPE voice；隔离 ownership 后复测为 `+6.001`，不再包含
    普通 PB；
-9. USB `mpe_enabled=1/0` 即时得到 claimed mask `0xf00f/0x0000`；未 Save，重启后仍为 false；
+9. USB Serial 配置 `mpe_enabled=1/0` 即时得到 claimed mask `0xf00f/0x0000`；未 Save，重启后仍为 false；
 10. 隔离修复后的普通构建曾刷回并由 `get_settings` 确认 MPE false、MIDI 1/2/3、Tuning Standard；
-    最后一处 MCM 重配收窄随后完成编译、上传和 flash hash 校验，但设备在上传后同时退出 USB Serial
-    与 CoreMIDI 枚举，因此无法补做这一最终二进制的重启后在线确认。
+    最后一处 MCM 重配收窄随后完成编译、上传和 flash hash 校验，但 Wingie2 的 USB Serial 在上传后
+    未重新枚举，因此无法补做这一最终二进制的重启后在线确认。`USB MIDI DevicePort 1` 属于独立接口，
+    其枚举状态不能作为 Wingie2 在线状态的证据。
 
 ## 剩余边界
 
