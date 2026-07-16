@@ -226,7 +226,15 @@
     }
 
     #wingie-config .wg-shared-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    #wingie-config .wg-shared-grid .wg-field-half {
+      grid-column: span 3;
+    }
+
+    #wingie-config .wg-shared-grid .wg-field-third {
+      grid-column: span 2;
     }
 
     #wingie-config .wg-field label {
@@ -404,6 +412,11 @@
         grid-template-columns: 1fr;
       }
 
+      #wingie-config .wg-shared-grid .wg-field-half,
+      #wingie-config .wg-shared-grid .wg-field-third {
+        grid-column: 1;
+      }
+
       #wingie-config .wg-mobile-scroll-note {
         display: block;
       }
@@ -517,13 +530,13 @@
       <section class="wg-section" aria-labelledby="wg-shared-title">
         <div class="wg-section-head"><div><h2 id="wg-shared-title" data-i18n-zh="共享设置" data-i18n-en="Shared Settings"></h2><p class="wg-help" data-i18n-zh="全局调律、增益与 MIDI 路由。" data-i18n-en="Global tuning, gain and MIDI routing."></p></div></div>
         <div class="wg-shared-grid">
-          <div class="wg-field"><label for="wg-a3" data-i18n-zh="A3 频率 Hz" data-i18n-en="A3 Frequency Hz"></label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-tuning" data-i18n-zh="调律" data-i18n-en="Tuning"></label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1" data-i18n-zh="标准" data-i18n-en="Standard"></option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
-          <div class="wg-field"><label for="wg-pre-clip" data-i18n-zh="前级削波增益" data-i18n-en="Pre Clip Gain"></label><input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-post-clip" data-i18n-zh="后级削波增益" data-i18n-en="Post Clip Gain"></label><input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled></div>
-          <div class="wg-field"><label for="wg-midi-left" data-i18n-zh="MIDI 左通道" data-i18n-en="MIDI Left Channel"></label><input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled></div>
-          <div class="wg-field"><label for="wg-midi-right" data-i18n-zh="MIDI 右通道" data-i18n-en="MIDI Right Channel"></label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
-          <div class="wg-field"><label for="wg-midi-both" data-i18n-zh="MIDI 双通道" data-i18n-en="MIDI Both Channel"></label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-half"><label for="wg-a3" data-i18n-zh="A3 频率 Hz" data-i18n-en="A3 Frequency Hz"></label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-half"><label for="wg-tuning" data-i18n-zh="调律" data-i18n-en="Tuning"></label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1" data-i18n-zh="标准" data-i18n-en="Standard"></option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
+          <div class="wg-field wg-field-half"><label for="wg-pre-clip" data-i18n-zh="前级削波增益" data-i18n-en="Pre Clip Gain"></label><input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-half"><label for="wg-post-clip" data-i18n-zh="后级削波增益" data-i18n-en="Post Clip Gain"></label><input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-left" data-i18n-zh="MIDI 左通道" data-i18n-en="MIDI Left Channel"></label><input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-right" data-i18n-zh="MIDI 右通道" data-i18n-en="MIDI Right Channel"></label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-both" data-i18n-zh="MIDI 双通道" data-i18n-en="MIDI Both Channel"></label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
         </div>
       </section>
 

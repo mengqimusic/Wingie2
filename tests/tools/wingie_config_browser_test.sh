@@ -301,6 +301,8 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   document.querySelector('[data-mobile-side="right"]').click();
   assert(getComputedStyle(left).display === "none" && getComputedStyle(right).display !== "none", "mobile Right switch failed");
   assert(document.querySelector(".wg-ratio-table").scrollWidth > document.querySelector(".wg-table-wrap").clientWidth, "mobile Ratio table is not horizontally scrollable");
+  const sharedRows = ["#wg-a3", "#wg-tuning", "#wg-pre-clip", "#wg-post-clip", "#wg-midi-left", "#wg-midi-right", "#wg-midi-both"].map((selector) => document.querySelector(selector).closest(".wg-field").offsetTop);
+  assert(new Set(sharedRows).size === sharedRows.length, "mobile shared settings are not single-column");
 })()
 JS
 
@@ -309,6 +311,10 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 (() => {
   const columns = getComputedStyle(document.querySelector(".wg-channel-grid")).gridTemplateColumns.split(" ");
   if (columns.length !== 2) throw new Error("desktop layout is not two columns");
+  const top = (selector) => document.querySelector(selector).closest(".wg-field").offsetTop;
+  if (top("#wg-pre-clip") !== top("#wg-post-clip")) throw new Error("clip gains are not on one row");
+  if (new Set([top("#wg-midi-left"), top("#wg-midi-right"), top("#wg-midi-both")]).size !== 1) throw new Error("MIDI channels are not on one row");
+  if (top("#wg-pre-clip") === top("#wg-midi-left")) throw new Error("clip and MIDI fields share the same row");
 })()
 JS
 
