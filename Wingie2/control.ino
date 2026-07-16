@@ -101,6 +101,7 @@ void control(void *pvParameters) {
     prefs.putUChar("right_mode", 0);
     prefs.putUChar("use_alt_tuning", 0);
     prefs.putChar("alt_tuning_idx", -1);
+    prefs.putBool("mpe_enabled", false);
     prefs.putBool("unq_caves_store", false);
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
@@ -129,6 +130,9 @@ void control(void *pvParameters) {
   midi_ch_r = prefs.getUChar("midi_ch_r");
   midi_ch_both = prefs.getUChar("midi_ch_both");
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
+  mpe_enabled = prefs.getBool("mpe_enabled", false);
+  configure_mpe_power_on(mpe_enabled);
+  Serial.printf("mpe_enabled = %d\n", mpe_enabled);
   float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
   a3_freq = 440. + a3_freq_offset;
   dsp.setParamValue("a3_freq", a3_freq);
@@ -332,12 +336,12 @@ void control(void *pvParameters) {
   apply_current_mode_parameters(0);
   apply_current_mode_parameters(1);
 
-  dsp.setParamValue("/Wingie/left/poly_note_0", 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
-  dsp.setParamValue("/Wingie/left/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
-  dsp.setParamValue("/Wingie/left/poly_note_2", 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
-  dsp.setParamValue("/Wingie/right/poly_note_0", 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
-  dsp.setParamValue("/Wingie/right/poly_note_1", 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
-  dsp.setParamValue("/Wingie/right/poly_note_2", 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
+  set_poly_voice_note(0, 0, 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
+  set_poly_voice_note(0, 1, 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
+  set_poly_voice_note(0, 2, 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_L);
+  set_poly_voice_note(1, 0, 0 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
+  set_poly_voice_note(1, 1, 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
+  set_poly_voice_note(1, 2, 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
 
   dsp.setParamValue("/Wingie/left/decay", 0.1);  // 最小 Startup Decay 避免开机声音过大
   dsp.setParamValue("/Wingie/right/decay", 0.1);
@@ -646,19 +650,7 @@ void control(void *pvParameters) {
                 }
 
                 if (Mode[ch] == POLY_MODE) {
-                  if (currentPoly[ch] == 0) {
-                    currentPoly[ch] = 1;
-                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_0", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
-                  } else if (currentPoly[ch] == 1) {
-                    currentPoly[ch] = 2;
-                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_1", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
-                  } else if (currentPoly[ch] == 2) {
-                    currentPoly[ch] = 0;
-                    if (!ch) dsp.setParamValue("/Wingie/left/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_L);
-                    if (ch) dsp.setParamValue("/Wingie/right/poly_note_2", i + BASE_NOTE + oct[ch] * 12 + POLY_MODE_NOTE_ADD_R);
-                  }
+                  cycle_poly_voice_note(ch, i + BASE_NOTE + oct[ch] * 12 + (ch ? POLY_MODE_NOTE_ADD_R : POLY_MODE_NOTE_ADD_L));
                 }
 
               }  // !modeButtonPressed[ch]

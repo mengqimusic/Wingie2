@@ -24,7 +24,7 @@
 左右声道分别设置 Mode 与 Input Threshold。网页不显示或编辑 Mix、Decay、Volume；它们是仅当前
 运行的共享实体旋钮参数，直接由 Wingie2 面板控制，不写入 flash。
 
-Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、左右 Mode 与 Input
+Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、开机 MPE 双 Zone、左右 Mode 与 Input
 Threshold、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
 左右声道共用；Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频率范围为
 `16.00–16000.00 Hz`，以 `0.01 Hz` 为步进；页面不提供 Cave factory reset。
@@ -51,7 +51,7 @@ The page exposes independent Mode and Input Threshold controls for the left and 
 not display or edit Mix, Decay, or Volume: those are runtime-only shared physical controls on Wingie2
 and are not written to flash.
 
-Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, left/right Mode and Input
+Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, the MPE dual-zone startup setting, left/right Mode and Input
 Threshold, the shared Ratio profile, and all three Cave banks for each channel, including frequency
 and mute. Factory Ratio and imported settings first change the running state and still require Save.
 Cave frequencies cover `16.00–16000.00 Hz` in `0.01 Hz` steps. The page has no Cave factory reset.
@@ -59,6 +59,34 @@ Cave frequencies cover `16.00–16000.00 Hz` in `0.01 Hz` steps. The page has no
 For an iframe, add `allow="serial"` and serve a compatible
 `Permissions-Policy: serial=(self)` header. Safari, Firefox, mobile browsers, and insecure HTTP
 origins are not supported.
+
+## MPE
+
+网页中的“开机 MPE 双 Zone”默认关闭。开启并保存后，Lower Zone 使用 Channel 1 作为 Manager、
+Channel 2–4 作为 Member 并控制左侧；Upper Zone 使用 Channel 16 作为 Manager、Channel 15–13
+作为 Member 并控制右侧。标准 MPE Configuration Message（RPN 6）可在运行时重新分配 Zone；
+MPE 占用的通道优先于普通 MIDI，未占用通道继续使用现有 Left/Right/Both 路由。
+
+Poly Mode 将每个 MPE Note On 绑定到该侧 3 个 voice 之一；Member Pitch Bend 只改变绑定 voice，
+Manager Pitch Bend 改变整侧。String、Bar、Ratio 使用最新 Note On 的单音 Member Pitch Bend；Cave
+不响应 Pitch Bend。Member 默认范围为 ±48 semitones，Manager 默认 ±2 semitones，并响应 RPN 0。
+
+MPE 来源可以在 Note On 前发送逐音 Pitch Bend 来实现外部 alternate tuning。此时建议把 Wingie2
+内部 Tuning 设为 Standard；若内部 alternate tuning 仍开启，两者会透明叠加。详见
+[`MPE.md`](MPE.md)。当前实现范围是 Zone、Note ownership 与 Pitch Bend，不映射 Channel
+Pressure 或 CC 74。
+
+“MPE Dual Zones at Startup” is off by default. When enabled and saved, the Lower Zone maps Manager
+Channel 1 plus Member Channels 2–4 to the left side; the Upper Zone maps Manager Channel 16 plus
+Member Channels 15–13 to the right side. RPN 6 may reconfigure either Zone at runtime. Claimed MPE
+channels take precedence, while unclaimed channels retain the conventional Left/Right/Both routing.
+
+Member Pitch Bend addresses one allocated Poly voice, while Manager Pitch Bend addresses the whole
+side. String, Bar, and Ratio use monophonic per-note bend; Cave ignores Pitch Bend. The default ranges
+are ±48 semitones for Members and ±2 semitones for Managers, with RPN 0 support. A MIDI source may
+perform alternate tuning by sending per-note bend before Note On; select Standard internal tuning to
+avoid adding the two tuning offsets. The current scope covers Zones, note ownership, and Pitch Bend;
+Channel Pressure and CC 74 are not mapped. See [`MPE.md`](MPE.md).
 
 ## 网页刷机 / Web Flasher
 

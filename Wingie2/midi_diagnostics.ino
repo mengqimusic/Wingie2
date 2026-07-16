@@ -11,7 +11,10 @@ struct MidiDiagnosticState {
   uint32_t readCalls;
   uint32_t parsedMessages;
   uint32_t parseErrors;
+  uint32_t pitchBendCount;
   byte lastError;
+  byte lastPitchBendChannel;
+  int lastPitchBend;
   int maxRxAvailable;
   unsigned long startedAt;
 };
@@ -43,6 +46,12 @@ void recordMidiNoteOff(byte channel, byte pitch, byte velocity) {
   midiDiagnostic.channel[index].noteOffCount++;
   midiDiagnostic.channel[index].lastPitch = pitch;
   midiDiagnostic.channel[index].lastVelocity = velocity;
+}
+
+void recordMidiPitchBend(byte channel, int bend) {
+  midiDiagnostic.pitchBendCount++;
+  midiDiagnostic.lastPitchBendChannel = channel;
+  midiDiagnostic.lastPitchBend = bend;
 }
 
 void handleMidiError(int8_t errorCode) {
@@ -77,6 +86,21 @@ void printMidiDiagnostics() {
                 dsp.getParamValue("/Wingie/right/poly_note_0"),
                 dsp.getParamValue("/Wingie/right/poly_note_1"),
                 dsp.getParamValue("/Wingie/right/poly_note_2"));
+  Serial.printf("MPE startup_enabled=%d claimed=0x%04x pb_count=%lu last_pb_ch=%u last_pb=%d\n",
+                mpe_enabled, mpe_state.claimedChannels(),
+                (unsigned long)midiDiagnostic.pitchBendCount,
+                midiDiagnostic.lastPitchBendChannel, midiDiagnostic.lastPitchBend);
+  for (byte ch = 0; ch < 2; ch++) {
+    Serial.printf("MPE side=%u manager_pb=%.3f mono_ch=%u mono_active=%d mono_member_pb=%.3f\n",
+                  ch, mpe_manager_bend(ch), mpeMonoState[ch].channel,
+                  mpeMonoState[ch].active, mpeMonoState[ch].memberBendSemitones);
+    for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
+      const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+      Serial.printf("MPE side=%u voice=%u note=%u ch=%u active=%d member_pb=%.3f total_pb=%.3f\n",
+                    ch, voice, state.note, state.channel, state.active,
+                    state.memberBendSemitones, poly_total_bend(ch, voice));
+    }
+  }
   Serial.printf("ANTI_FEEDBACK enabled=%.0f energy_limit=%.6f rho_guard=%.6f\n",
                 dsp.getParamValue("anti_feedback_enabled"),
                 dsp.getParamValue("anti_feedback_energy_limit"),

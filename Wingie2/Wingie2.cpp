@@ -12360,6 +12360,12 @@ class mydsp : public dsp {
 	float fVec23[2];
 	float fRec199[2];
 	int iRec200[2];
+	FAUSTFLOAT fVslider24;
+	FAUSTFLOAT fVslider25;
+	FAUSTFLOAT fVslider26;
+	FAUSTFLOAT fVslider27;
+	FAUSTFLOAT fVslider28;
+	FAUSTFLOAT fVslider29;
 	
  public:
 	mydsp() {}
@@ -12527,6 +12533,12 @@ class mydsp : public dsp {
 		fButton19 = FAUSTFLOAT(0.0f);
 		fVslider23 = FAUSTFLOAT(1.1e+04f);
 		fButton20 = FAUSTFLOAT(0.0f);
+		fVslider24 = FAUSTFLOAT(1.0f);
+		fVslider25 = FAUSTFLOAT(1.0f);
+		fVslider26 = FAUSTFLOAT(1.0f);
+		fVslider27 = FAUSTFLOAT(1.0f);
+		fVslider28 = FAUSTFLOAT(1.0f);
+		fVslider29 = FAUSTFLOAT(1.0f);
 	}
 	
 	virtual void instanceClear() {
@@ -13293,6 +13305,9 @@ class mydsp : public dsp {
 		ui_interface->addVerticalSlider("poly_note_0", &fVslider2, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("poly_note_1", &fVslider0, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("poly_note_2", &fVslider6, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_0", &fVslider24, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_1", &fVslider25, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_2", &fVslider26, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
 		ui_interface->addHorizontalSlider("volume0", &fHslider22, FAUSTFLOAT(0.25f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->closeBox();
 		ui_interface->addHorizontalSlider("left_thresh", &fHslider23, FAUSTFLOAT(0.1f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
@@ -13328,6 +13343,9 @@ class mydsp : public dsp {
 		ui_interface->addVerticalSlider("poly_note_0", &fVslider19, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("poly_note_1", &fVslider15, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("poly_note_2", &fVslider12, FAUSTFLOAT(36.0f), FAUSTFLOAT(24.0f), FAUSTFLOAT(96.0f), FAUSTFLOAT(1.0f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_0", &fVslider27, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_1", &fVslider28, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
+		ui_interface->addVerticalSlider("poly_pitch_ratio_2", &fVslider29, FAUSTFLOAT(1.0f), FAUSTFLOAT(7.6293945e-06f), FAUSTFLOAT(131072.0f), FAUSTFLOAT(1e-06f));
 		ui_interface->addHorizontalSlider("volume1", &fHslider28, FAUSTFLOAT(0.25f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->closeBox();
 		ui_interface->addHorizontalSlider("right_thresh", &fHslider29, FAUSTFLOAT(0.1f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
@@ -13356,9 +13374,9 @@ class mydsp : public dsp {
 		int iSlow8 = float(fButton0) >= 1.0f;
 		float fSlow9 = float(fHslider8);
 		float fSlow10 = float(fVslider0);
-		float fSlow11 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow10 + -69.0f));
+		float fSlow11 = float(fVslider25) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow10 + -69.0f));
 		float fSlow12 = std::fmod(fSlow10, 12.0f);
-		float fSlow13 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow10 + (-69.0f - fSlow12)));
+		float fSlow13 = float(fVslider25) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow10 + (-69.0f - fSlow12)));
 		float fSlow14 = float(fHslider9);
 		float fSlow15 = float(fHslider10);
 		float fSlow16 = float(fHslider11);
@@ -13384,9 +13402,9 @@ class mydsp : public dsp {
 		int iSlow36 = fSlow35 == 0.0f;
 		float fTemp17 = fTempPerm4;
 		float fSlow37 = float(fVslider2);
-		float fSlow38 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow37 + -69.0f));
+		float fSlow38 = float(fVslider24) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow37 + -69.0f));
 		float fSlow39 = std::fmod(fSlow37, 12.0f);
-		float fSlow40 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow37 + (-69.0f - fSlow39)));
+		float fSlow40 = float(fVslider24) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow37 + (-69.0f - fSlow39)));
 		float fSlow41 = ((fSlow39 >= 6.0f) ? ((fSlow39 >= 9.0f) ? ((fSlow39 >= 11.0f) ? fSlow25 : ((fSlow39 >= 1e+01f) ? fSlow24 : fSlow23)) : ((fSlow39 >= 8.0f) ? fSlow22 : ((fSlow39 >= 7.0f) ? fSlow21 : fSlow20))) : ((fSlow39 >= 3.0f) ? ((fSlow39 >= 5.0f) ? fSlow19 : ((fSlow39 >= 4.0f) ? fSlow18 : fSlow17)) : ((fSlow39 >= 2.0f) ? fSlow16 : ((fSlow39 >= 1.0f) ? fSlow15 : fSlow14))));
 		float fSlow42 = fConst4 * std::max<float>(16.0f, std::min<float>(((iSlow7) ? float(fVslider3) : ((iSlow8) ? 3.0f * fSlow40 * fSlow41 : 3.0f * fSlow38)), 1.6e+04f));
 		float fSlow43 = std::sin(fSlow42);
@@ -13407,9 +13425,9 @@ class mydsp : public dsp {
 		int iSlow56 = fSlow55 == 0.0f;
 		float fTemp35 = fTempPerm7;
 		float fSlow57 = float(fVslider6);
-		float fSlow58 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow57 + -69.0f));
+		float fSlow58 = float(fVslider26) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow57 + -69.0f));
 		float fSlow59 = std::fmod(fSlow57, 12.0f);
-		float fSlow60 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow57 + (-69.0f - fSlow59)));
+		float fSlow60 = float(fVslider26) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow57 + (-69.0f - fSlow59)));
 		float fSlow61 = ((fSlow59 >= 6.0f) ? ((fSlow59 >= 9.0f) ? ((fSlow59 >= 11.0f) ? fSlow25 : ((fSlow59 >= 1e+01f) ? fSlow24 : fSlow23)) : ((fSlow59 >= 8.0f) ? fSlow22 : ((fSlow59 >= 7.0f) ? fSlow21 : fSlow20))) : ((fSlow59 >= 3.0f) ? ((fSlow59 >= 5.0f) ? fSlow19 : ((fSlow59 >= 4.0f) ? fSlow18 : fSlow17)) : ((fSlow59 >= 2.0f) ? fSlow16 : ((fSlow59 >= 1.0f) ? fSlow15 : fSlow14))));
 		float fSlow62 = fConst4 * std::max<float>(16.0f, std::min<float>(((iSlow7) ? float(fVslider7) : ((iSlow8) ? 2.0f * fSlow60 * fSlow61 : 2.0f * fSlow58)), 1.6e+04f));
 		float fSlow63 = std::sin(fSlow62);
@@ -13448,9 +13466,9 @@ class mydsp : public dsp {
 		float fTemp69 = fTempPerm15;
 		int iSlow89 = float(fHslider27) >= 1.0f;
 		float fSlow90 = float(fVslider12);
-		float fSlow91 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow90 + -69.0f));
+		float fSlow91 = float(fVslider29) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow90 + -69.0f));
 		float fSlow92 = std::fmod(fSlow90, 12.0f);
-		float fSlow93 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow90 + (-69.0f - fSlow92)));
+		float fSlow93 = float(fVslider29) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow90 + (-69.0f - fSlow92)));
 		float fSlow94 = ((fSlow92 >= 6.0f) ? ((fSlow92 >= 9.0f) ? ((fSlow92 >= 11.0f) ? fSlow25 : ((fSlow92 >= 1e+01f) ? fSlow24 : fSlow23)) : ((fSlow92 >= 8.0f) ? fSlow22 : ((fSlow92 >= 7.0f) ? fSlow21 : fSlow20))) : ((fSlow92 >= 3.0f) ? ((fSlow92 >= 5.0f) ? fSlow19 : ((fSlow92 >= 4.0f) ? fSlow18 : fSlow17)) : ((fSlow92 >= 2.0f) ? fSlow16 : ((fSlow92 >= 1.0f) ? fSlow15 : fSlow14))));
 		float fSlow95 = fConst4 * std::max<float>(16.0f, std::min<float>(((iSlow89) ? float(fVslider13) : ((iSlow8) ? 2.0f * fSlow93 * fSlow94 : 2.0f * fSlow91)), 1.6e+04f));
 		float fSlow96 = std::sin(fSlow95);
@@ -13469,9 +13487,9 @@ class mydsp : public dsp {
 		int iSlow108 = fSlow107 == 0.0f;
 		float fTemp87 = fTempPerm17;
 		float fSlow109 = float(fVslider15);
-		float fSlow110 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow109 + -69.0f));
+		float fSlow110 = float(fVslider28) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow109 + -69.0f));
 		float fSlow111 = std::fmod(fSlow109, 12.0f);
-		float fSlow112 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow109 + (-69.0f - fSlow111)));
+		float fSlow112 = float(fVslider28) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow109 + (-69.0f - fSlow111)));
 		float fSlow113 = ((fSlow111 >= 6.0f) ? ((fSlow111 >= 9.0f) ? ((fSlow111 >= 11.0f) ? fSlow25 : ((fSlow111 >= 1e+01f) ? fSlow24 : fSlow23)) : ((fSlow111 >= 8.0f) ? fSlow22 : ((fSlow111 >= 7.0f) ? fSlow21 : fSlow20))) : ((fSlow111 >= 3.0f) ? ((fSlow111 >= 5.0f) ? fSlow19 : ((fSlow111 >= 4.0f) ? fSlow18 : fSlow17)) : ((fSlow111 >= 2.0f) ? fSlow16 : ((fSlow111 >= 1.0f) ? fSlow15 : fSlow14))));
 		float fSlow114 = fConst4 * std::max<float>(16.0f, std::min<float>(((iSlow89) ? float(fVslider16) : ((iSlow8) ? 3.0f * fSlow112 * fSlow113 : 3.0f * fSlow110)), 1.6e+04f));
 		float fSlow115 = std::sin(fSlow114);
@@ -13492,9 +13510,9 @@ class mydsp : public dsp {
 		int iSlow128 = fSlow127 == 0.0f;
 		float fTemp105 = fTempPerm20;
 		float fSlow129 = float(fVslider19);
-		float fSlow130 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow129 + -69.0f));
+		float fSlow130 = float(fVslider27) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow129 + -69.0f));
 		float fSlow131 = std::fmod(fSlow129, 12.0f);
-		float fSlow132 = fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow129 + (-69.0f - fSlow131)));
+		float fSlow132 = float(fVslider27) * fSlow9 * std::pow(2.0f, 0.083333336f * (fSlow129 + (-69.0f - fSlow131)));
 		float fSlow133 = ((fSlow131 >= 6.0f) ? ((fSlow131 >= 9.0f) ? ((fSlow131 >= 11.0f) ? fSlow25 : ((fSlow131 >= 1e+01f) ? fSlow24 : fSlow23)) : ((fSlow131 >= 8.0f) ? fSlow22 : ((fSlow131 >= 7.0f) ? fSlow21 : fSlow20))) : ((fSlow131 >= 3.0f) ? ((fSlow131 >= 5.0f) ? fSlow19 : ((fSlow131 >= 4.0f) ? fSlow18 : fSlow17)) : ((fSlow131 >= 2.0f) ? fSlow16 : ((fSlow131 >= 1.0f) ? fSlow15 : fSlow14))));
 		float fSlow134 = fConst4 * std::max<float>(16.0f, std::min<float>(((iSlow89) ? float(fVslider20) : ((iSlow8) ? fSlow132 * fSlow133 : fSlow130)), 1.6e+04f));
 		float fSlow135 = std::sin(fSlow134);

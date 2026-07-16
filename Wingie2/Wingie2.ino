@@ -28,6 +28,7 @@
 #include <Wire.h>
 #include "Wingie2.h"
 #include "config_profiles.h"
+#include "mpe_state.h"
 #include "serial_config_protocol.h"
 #include "tap_sequence.h"
 #include "WiFi.h"
@@ -90,6 +91,13 @@ struct MySettings : public midi::DefaultSettings
 #define MIDI_DIAGNOSTICS 0
 #endif
 
+struct MpeMonoState {
+  bool active;
+  byte channel;
+  byte note;
+  float memberBendSemitones;
+};
+
 
 Wingie2 dsp(44100, 32);
 AC101 ac;
@@ -134,9 +142,13 @@ bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false,
 //
 bool realtime_value_valid[3] = {true, true, true}, polyFlip = false;
 int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use_alt_tuning, alt_tuning_index;
-float a3_freq;
+float a3_freq, currentPitchBend[2] = {0.0f, 0.0f};
 int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // Channel, Type, (MSB, LSB)
-bool unq_caves_store = false;
+bool unq_caves_store = false, mpe_enabled = false;
+wingie_mpe::State mpe_state;
+MpeMonoState mpeMonoState[2];
+float conventionalPitchBend[2] = {0.0f, 0.0f};
+byte conventionalPitchChannel[2] = {0, 0};
 
 //
 // cave mode
@@ -223,7 +235,7 @@ float frequencies[NUM_NOTES+6];
 // global settings
 //
 float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
-bool save_routine_flag = false, stuff_saved = false, dirty[10], tuning_preferences_dirty = false;
+bool save_routine_flag = false, stuff_saved = false, dirty[11], tuning_preferences_dirty = false;
 volatile bool preferences_save_requested = false;
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
@@ -245,15 +257,17 @@ bool startup = true, core_print = true; // 启动淡入所用
 void setup() {
   Serial.begin(115200);
   wingie_config::setFactoryRatios(ratio_profile);
+  initialize_mpe_state();
 
   WiFi.mode(WIFI_MODE_NULL);
   btStop();
 
   MIDI.begin(MIDI_CHANNEL_OMNI);
   MIDI.setHandleNoteOn(handleNoteOn);
-  MIDI.setHandleControlChange(handleControlChange);
-#if MIDI_DIAGNOSTICS
   MIDI.setHandleNoteOff(handleNoteOff);
+  MIDI.setHandleControlChange(handleControlChange);
+  MIDI.setHandlePitchBend(handlePitchBend);
+#if MIDI_DIAGNOSTICS
   MIDI.setHandleError(handleMidiError);
   resetMidiDiagnostics();
 #endif
@@ -409,7 +423,7 @@ float pitched_mode_ratio(byte mode, uint8_t index) {
 }
 
 void apply_pitched_mode_channel(byte ch, int midiNote) {
-  const float fundamental = configured_note_frequency(midiNote);
+  const float fundamental = configured_note_frequency(midiNote) * wingie_mpe::pitchRatio(currentPitchBend[ch]);
   for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
     const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
@@ -419,16 +433,23 @@ void apply_pitched_mode_channel(byte ch, int midiNote) {
   unmute_channel_resonators(ch);
 }
 
-void set_channel_note(byte ch, int midiNote) {
+void set_channel_pitch(byte ch, int midiNote, float bendSemitones) {
   currentNote[ch] = midiNote;
+  currentPitchBend[ch] = bendSemitones;
   if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
     apply_pitched_mode_channel(ch, midiNote);
   }
 }
 
+void set_channel_note(byte ch, int midiNote) {
+  clear_mpe_mono_assignment(ch);
+  set_channel_pitch(ch, midiNote, currentPitchBend[ch]);
+}
+
 void apply_current_mode_parameters(byte ch) {
   if (Mode[ch] == POLY_MODE) {
     unmute_channel_resonators(ch);
+    apply_all_poly_voice_pitch(ch);
   } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
     apply_pitched_mode_channel(ch, currentNote[ch]);
   } else if (Mode[ch] == CAVE_MODE) {
@@ -438,6 +459,7 @@ void apply_current_mode_parameters(byte ch) {
 
 void apply_channel_mode_change(byte ch) {
   const unsigned long changedAt = millis();
+  reset_mpe_assignments(ch);
   set_channel_dsp_mode(ch);
   dsp.setParamValue(ch ? "/Wingie/right/mode_changed" : "/Wingie/left/mode_changed", 1);
   dirty[8 + ch] = true;

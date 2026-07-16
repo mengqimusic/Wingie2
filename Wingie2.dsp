@@ -120,31 +120,34 @@ cave(n) = par(i, nHarmonics, vslider("cave_freq_%i", req(i), 50, 16000, 1)) : ba
 pn0 = vslider("poly_note_0", 36, 24, 96, 1);
 pn1 = vslider("poly_note_1", 36, 24, 96, 1);
 pn2 = vslider("poly_note_2", 36, 24, 96, 1);
+pr0 = vslider("poly_pitch_ratio_0", 1, 0.00000762939453125, 131072, 0.000001);
+pr1 = vslider("poly_pitch_ratio_1", 1, 0.00000762939453125, 131072, 0.000001);
+pr2 = vslider("poly_pitch_ratio_2", 1, 0.00000762939453125, 131072, 0.000001);
 
 // standard tuning poly mode
 poly_norm(n) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
 with
 {
-    a = pn0 : mtof;
-    b = pn1 : mtof;
-    c = pn2 : mtof;
+    a = (pn0 : mtof) * pr0;
+    b = (pn1 : mtof) * pr1;
+    c = (pn2 : mtof) * pr2;
 };
 
 // alt tuning poly mode
 poly_quantized(n, tuning) = a1, a2, a3, b1, b2, b3, c1, c2, c3 : ba.selectn(nHarmonics, n)
 with
 {
-    a1 = pn0 : mtoq;
-    a2 = pn0 : mtoq2;
-    a3 = pn0 : mtoq3;
+    a1 = (pn0 : mtoq) * pr0;
+    a2 = (pn0 : mtoq2) * pr0;
+    a3 = (pn0 : mtoq3) * pr0;
 
-    b1 = pn1 : mtoq;
-    b2 = pn1 : mtoq2;
-    b3 = pn1 : mtoq3;
+    b1 = (pn1 : mtoq) * pr1;
+    b2 = (pn1 : mtoq2) * pr1;
+    b3 = (pn1 : mtoq3) * pr1;
 
-    c1 = pn2 : mtoq;
-    c2 = pn2 : mtoq2;
-    c3 = pn2 : mtoq3;
+    c1 = (pn2 : mtoq) * pr2;
+    c2 = (pn2 : mtoq2) * pr2;
+    c3 = (pn2 : mtoq3) * pr2;
 };
 
 poly(n) = poly_norm(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);

@@ -271,6 +271,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   const exported = window.__wingieConfigTest.exportObject();
   exported.settings.right.mode = 1;
   exported.settings.shared.midi.left = 16;
+  exported.settings.shared.mpe_enabled = true;
   exported.ratio.ratios[0] = 0.333;
   exported.cave.right[1].frequencies[0] = 444.44;
   exported.cave.right[1].mute[0] = true;
@@ -278,6 +279,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   const imported = mock.snapshot();
   assert(imported.settings.right.mode === 1, "import omitted channel settings");
   assert(imported.settings.shared.midi.left === 16, "import omitted shared settings");
+  assert(imported.settings.shared.mpe_enabled, `import omitted MPE setting: ${JSON.stringify(mock.writes.filter((request) => request.op === "set_param"))}`);
   assert(imported.ratios[0] === 0.333, "import omitted Ratio");
   assert(imported.cave.right[1].frequencies[0] === 444.44 && imported.cave.right[1].mute[0], "import omitted Cave");
   assert(!document.querySelector("[id*='apply']"), "Apply control still exists");
@@ -301,7 +303,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   document.querySelector('[data-mobile-side="right"]').click();
   assert(getComputedStyle(left).display === "none" && getComputedStyle(right).display !== "none", "mobile Right switch failed");
   assert(document.querySelector(".wg-ratio-table").scrollWidth > document.querySelector(".wg-table-wrap").clientWidth, "mobile Ratio table is not horizontally scrollable");
-  const sharedRows = ["#wg-a3", "#wg-tuning", "#wg-pre-clip", "#wg-post-clip", "#wg-midi-left", "#wg-midi-right", "#wg-midi-both"].map((selector) => document.querySelector(selector).closest(".wg-field").offsetTop);
+  const sharedRows = ["#wg-a3", "#wg-tuning", "#wg-pre-clip", "#wg-post-clip", "#wg-midi-left", "#wg-midi-right", "#wg-midi-both", "#wg-mpe-enabled"].map((selector) => document.querySelector(selector).closest(".wg-field").offsetTop);
   assert(new Set(sharedRows).size === sharedRows.length, "mobile shared settings are not single-column");
 })()
 JS
@@ -315,6 +317,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   if (top("#wg-pre-clip") !== top("#wg-post-clip")) throw new Error("clip gains are not on one row");
   if (new Set([top("#wg-midi-left"), top("#wg-midi-right"), top("#wg-midi-both")]).size !== 1) throw new Error("MIDI channels are not on one row");
   if (top("#wg-pre-clip") === top("#wg-midi-left")) throw new Error("clip and MIDI fields share the same row");
+  if (top("#wg-midi-left") === top("#wg-mpe-enabled")) throw new Error("MPE and MIDI channel fields share the same row");
 })()
 JS
 

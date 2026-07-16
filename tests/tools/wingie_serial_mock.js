@@ -25,7 +25,8 @@
       tuning: -1,
       pre_clip_gain: 0.495,
       post_clip_gain: 0.55,
-      midi: {left: 13, right: 14, both: 15}
+      midi: {left: 13, right: 14, both: 15},
+      mpe_enabled: false
     }
   };
 
@@ -76,7 +77,8 @@
       shared: {
         a3_hz: [358.08, 521.91, 0.01, true], tuning: [-1, 7, 1, true],
         pre_clip_gain: [0.0825, 0.99, 0.0825, true], post_clip_gain: [0.385, 0.99, 0.055, true],
-        midi_left: [1, 16, 1, true], midi_right: [1, 16, 1, true], midi_both: [1, 16, 1, true]
+        midi_left: [1, 16, 1, true], midi_right: [1, 16, 1, true], midi_both: [1, 16, 1, true],
+        mpe_enabled: [0, 1, 1, true]
       }
     };
     return specs[target] && specs[target][name];
@@ -98,6 +100,7 @@
     const value = canonicalize(request.value, spec[0], spec[1], spec[2]);
     const previousTuning = settings.shared.tuning;
     if (request.target === "shared" && request.name.startsWith("midi_")) settings.shared.midi[request.name.slice(5)] = value;
+    else if (request.target === "shared" && request.name === "mpe_enabled") settings.shared.mpe_enabled = Boolean(value);
     else settings[request.target][request.name] = value;
     settings.source = "web";
     if (spec[3]) settingsDirty = true;
@@ -119,7 +122,7 @@
     const failed = failIfRequested(request);
     if (failed) return failed;
     if (request.op === "hello") {
-      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings"], config_schema: 3, transport: {baud: 115200, max_frame: 512}};
+      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 3, transport: {baud: 115200, max_frame: 512}};
     }
     if (request.op === "get_settings") {
       return {v: 1, id: request.id, ok: true, op: "get_settings", source: settings.source, dirty: settingsDirty, left: clone(settings.left), right: clone(settings.right), shared: clone(settings.shared)};

@@ -148,6 +148,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "midi_left",
             "midi_right",
             "midi_both",
+            "mpe_enabled",
         ):
             self.assertIn(f'param:shared:{name}', self.source)
         for stale_item in ("Source", "Note", "Fundamental", "Active Cave", "mix", "decay", "volume"):
@@ -187,6 +188,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr))", self.source)
         self.assertEqual(self.source.count('class="wg-field wg-field-half"'), 4)
         self.assertEqual(self.source.count('class="wg-field wg-field-third"'), 3)
+        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 1)
         self.assertIn("border-radius: 4px", self.source)
         self.assertIn("@media (max-width: 760px)", self.source)
         self.assertIn('data-mobile-side="left"', self.source)
@@ -252,6 +254,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("service_preferences_save();", self.main_source)
         self.assertIn("if (!serial_config_ready) return;", self.main_source)
         self.assertIn("tuning_preferences_dirty", self.storage_source)
+        self.assertIn('putBool("mpe_enabled", mpe_enabled)', self.storage_source)
+        self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.firmware_source)
         self.assertRegex(
             self.storage_source,
             r"if \(unq_caves_store\) \{\s*if \(!save_general_preferences\(prefs\)\)",

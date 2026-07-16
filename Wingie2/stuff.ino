@@ -96,6 +96,15 @@ bool save_general_preferences(Preferences &store) {
     }
   }
 
+  if (dirty[10]) {
+    dirty[10] = false;
+    if (store.putBool("mpe_enabled", mpe_enabled)) Serial.printf("mpe_enabled is saved, value is %d.\n", mpe_enabled);
+    else {
+      dirty[10] = true;
+      saved = false;
+    }
+  }
+
   bool tuningSaveNeeded = tuning_preferences_dirty;
   if (unq_caves_store) {
     for (int ch = 0; ch < 2; ch++) {

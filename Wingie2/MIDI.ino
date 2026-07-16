@@ -8,12 +8,13 @@ void handleNoteOn (byte channel, byte pitch, byte velocity) {
   //if (pitch < 96) {
 
   if (velocity) {
+    if (handle_mpe_note_on(channel, pitch)) return;
 
-    if (channel == midi_ch_l) MIDISetPitch(0, Mode[0], pitch);
-    if (channel == midi_ch_r) MIDISetPitch(1, Mode[1], pitch);
+    if (channel == midi_ch_l) MIDISetPitch(0, Mode[0], pitch, channel);
+    if (channel == midi_ch_r) MIDISetPitch(1, Mode[1], pitch, channel);
 
     if (channel == midi_ch_both) {
-      MIDISetPitch(polyFlip, Mode[polyFlip], pitch);
+      MIDISetPitch(polyFlip, Mode[polyFlip], pitch, channel);
       polyFlip = !polyFlip;
     }
 
@@ -21,34 +22,23 @@ void handleNoteOn (byte channel, byte pitch, byte velocity) {
   //}
 }
 
-#if MIDI_DIAGNOSTICS
 void handleNoteOff(byte channel, byte pitch, byte velocity) {
+#if MIDI_DIAGNOSTICS
   recordMidiNoteOff(channel, pitch, velocity);
-}
 #endif
+  handle_mpe_note_off(channel, pitch);
+}
 
-void MIDISetPitch(int ch, int mode, int pitch) {
+void MIDISetPitch(int ch, int mode, int pitch, byte channel) {
 
   if (mode == STRING_MODE || mode == BAR_MODE || mode == RATIO_MODE) {
-    set_channel_note(ch, pitch);
+    set_conventional_channel_note(ch, channel, pitch);
   }
 
   else if (mode == POLY_MODE) {
-    if (currentPoly[ch] == 0) {
-      currentPoly[ch] = 1;
-      if (!ch) dsp.setParamValue("/Wingie/left/poly_note_0", pitch);
-      if (ch) dsp.setParamValue("/Wingie/right/poly_note_0", pitch);
-    }
-    else if (currentPoly[ch] == 1) {
-      currentPoly[ch] = 2;
-      if (!ch) dsp.setParamValue("/Wingie/left/poly_note_1", pitch);
-      if (ch) dsp.setParamValue("/Wingie/right/poly_note_1", pitch);
-    }
-    else if (currentPoly[ch] == 2) {
-      currentPoly[ch] = 0;
-      if (!ch) dsp.setParamValue("/Wingie/left/poly_note_2", pitch);
-      if (ch) dsp.setParamValue("/Wingie/right/poly_note_2", pitch);
-    }
+    conventionalPitchChannel[ch] = channel;
+    conventionalPitchBend[ch] = mpe_state.channelPitchBendSemitones(channel);
+    cycle_poly_voice_note(ch, pitch);
   }
 
 }
@@ -88,6 +78,8 @@ void MIDISetTuning(byte cc, byte value) {
 void handleControlChange (byte channel, byte number, byte value) {
 
   // Serial.printf("MIDI CC -> channel:%hhu, number:%hhu, value:%hhu\n", channel, number, value);
+
+  if (handle_mpe_control_change(channel, number, value)) return;
 
   if (channel == midi_ch_l) MIDISetParam(0, number, value);
   if (channel == midi_ch_r) MIDISetParam(1, number, value);
