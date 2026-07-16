@@ -62,7 +62,6 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "hello",
             "get_settings",
             "get",
-            "status",
             "get_cave",
             "set_param",
             "set",
@@ -92,7 +91,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         block = refresh.group(1)
         self.assertEqual(block.count('request("get_settings")'), 1)
         self.assertEqual(block.count('request("get")'), 1)
-        self.assertEqual(block.count('request("status")'), 1)
+        self.assertNotIn('request("status")', block)
         self.assertEqual(block.count("await readCaveResponses()"), 1)
         cave_reader = re.search(
             r"async function readCaveResponses\(\) \{(.*?)\n      \}",
@@ -105,9 +104,9 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("for (let bank = 0; bank < bankCount; bank += 1)", cave_reader.group(1))
         self.assertIn("#wg-refresh", self.source)
 
-    def test_has_complete_controls_and_live_only_disclosure(self):
+    def test_has_complete_controls_and_omits_runtime_status(self):
         for target in ("left", "right"):
-            for name in ("mode", "mix", "decay", "volume", "threshold"):
+            for name in ("mode", "threshold"):
                 self.assertIn(f'param:{target}:{name}', self.source)
         for name in (
             "a3_hz",
@@ -119,8 +118,13 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "midi_both",
         ):
             self.assertIn(f'param:shared:{name}', self.source)
-        self.assertGreaterEqual(self.source.count("仅当前运行"), 6)
-        self.assertGreaterEqual(self.source.count("实体"), 6)
+        for stale_item in ("Source", "Note", "Fundamental", "Active Cave", "mix", "decay", "volume"):
+            self.assertNotIn(stale_item, self.source)
+        for runtime_key in (
+            "param:left:mix", "param:left:decay", "param:left:volume",
+            "param:right:mix", "param:right:decay", "param:right:volume",
+        ):
+            self.assertNotIn(runtime_key, self.source)
         self.assertIn("Factory Ratio", self.source)
         self.assertIn("Export JSON", self.source)
         self.assertIn("Import JSON", self.source)
@@ -160,7 +164,6 @@ class WingieConfigHtmlTest(unittest.TestCase):
         ):
             self.assertIn(f'request.op === "{operation}"', self.mock_source)
         self.assertIn("setSettings(values)", self.mock_source)
-        self.assertIn("setStatus(values)", self.mock_source)
         self.assertIn("max_frame: 512", self.mock_source)
         self.assertIn("caves_changed: cavesChanged", self.mock_source)
         self.assertNotIn('event: "changed"', self.mock_source)

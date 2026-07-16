@@ -201,38 +201,6 @@
       min-width: 0;
     }
 
-    #wingie-config .wg-readouts {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1px;
-      margin: 14px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #ccc;
-    }
-
-    #wingie-config .wg-readout {
-      min-width: 0;
-      padding: 8px;
-      background: #fff;
-    }
-
-    #wingie-config .wg-readout-label {
-      display: block;
-      color: #666;
-      font-size: 10px;
-      text-transform: uppercase;
-    }
-
-    #wingie-config .wg-readout-value {
-      display: block;
-      overflow: hidden;
-      font-size: 13px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
     #wingie-config .wg-fields,
     #wingie-config .wg-shared-grid {
       display: grid;
@@ -269,13 +237,6 @@
       border-radius: 4px;
       color: #111;
       background: #fff;
-    }
-
-    #wingie-config .wg-control-pair {
-      display: grid;
-      grid-template-columns: minmax(90px, 1fr) 82px;
-      gap: 8px;
-      align-items: center;
     }
 
     #wingie-config input[type="range"] {
@@ -335,7 +296,7 @@
     }
 
     #wingie-config .wg-ratio-table {
-      min-width: 760px;
+      min-width: 420px;
     }
 
     #wingie-config th,
@@ -371,24 +332,6 @@
     #wingie-config .wg-mute-input {
       width: 18px;
       height: 18px;
-    }
-
-    #wingie-config .wg-ratio-notes {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    #wingie-config .wg-ratio-note {
-      padding: 8px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-
-    #wingie-config .wg-ratio-note strong {
-      margin-right: 6px;
     }
 
     #wingie-config .wg-mobile-scroll-note {
@@ -445,10 +388,6 @@
         grid-template-columns: 1fr;
       }
 
-      #wingie-config .wg-readouts {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-
       #wingie-config .wg-mobile-scroll-note {
         display: block;
       }
@@ -488,12 +427,6 @@
               <h2 id="wg-left-title">Left Channel</h2>
               <p class="wg-help">硬件左侧</p>
             </div>
-            <span id="wg-left-source" class="wg-meta">Source —</span>
-          </div>
-          <div class="wg-readouts">
-            <div class="wg-readout"><span class="wg-readout-label">Note</span><span id="wg-left-note" class="wg-readout-value">—</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Fundamental</span><span id="wg-left-fundamental" class="wg-readout-value">—</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Active Cave</span><span id="wg-left-active-bank" class="wg-readout-value">—</span></div>
           </div>
           <div class="wg-fields">
             <div class="wg-field">
@@ -505,21 +438,6 @@
             <div class="wg-field">
               <label for="wg-left-threshold">Input Threshold</label>
               <input id="wg-left-threshold" class="wg-number" data-value-key="param:left:threshold" type="text" inputmode="decimal" disabled>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-mix-number">Mix</label>
-              <div class="wg-control-pair"><input id="wg-left-mix-range" data-range-key="param:left:mix" type="range" disabled><input id="wg-left-mix-number" class="wg-number" data-value-key="param:left:mix" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Mix 旋钮后由旋钮接管。</span>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-decay-number">Decay</label>
-              <div class="wg-control-pair"><input id="wg-left-decay-range" data-range-key="param:left:decay" type="range" disabled><input id="wg-left-decay-number" class="wg-number" data-value-key="param:left:decay" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Decay 旋钮后由旋钮接管。</span>
-            </div>
-            <div class="wg-field">
-              <label for="wg-left-volume-number">Volume</label>
-              <div class="wg-control-pair"><input id="wg-left-volume-range" data-range-key="param:left:volume" type="range" disabled><input id="wg-left-volume-number" class="wg-number" data-value-key="param:left:volume" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Volume 旋钮后由旋钮接管。</span>
             </div>
           </div>
           <div class="wg-divider"></div>
@@ -541,12 +459,6 @@
               <h2 id="wg-right-title">Right Channel</h2>
               <p class="wg-help">硬件右侧</p>
             </div>
-            <span id="wg-right-source" class="wg-meta">Source —</span>
-          </div>
-          <div class="wg-readouts">
-            <div class="wg-readout"><span class="wg-readout-label">Note</span><span id="wg-right-note" class="wg-readout-value">—</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Fundamental</span><span id="wg-right-fundamental" class="wg-readout-value">—</span></div>
-            <div class="wg-readout"><span class="wg-readout-label">Active Cave</span><span id="wg-right-active-bank" class="wg-readout-value">—</span></div>
           </div>
           <div class="wg-fields">
             <div class="wg-field">
@@ -558,21 +470,6 @@
             <div class="wg-field">
               <label for="wg-right-threshold">Input Threshold</label>
               <input id="wg-right-threshold" class="wg-number" data-value-key="param:right:threshold" type="text" inputmode="decimal" disabled>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-mix-number">Mix</label>
-              <div class="wg-control-pair"><input id="wg-right-mix-range" data-range-key="param:right:mix" type="range" disabled><input id="wg-right-mix-number" class="wg-number" data-value-key="param:right:mix" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Mix 旋钮后由旋钮接管。</span>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-decay-number">Decay</label>
-              <div class="wg-control-pair"><input id="wg-right-decay-range" data-range-key="param:right:decay" type="range" disabled><input id="wg-right-decay-number" class="wg-number" data-value-key="param:right:decay" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Decay 旋钮后由旋钮接管。</span>
-            </div>
-            <div class="wg-field">
-              <label for="wg-right-volume-number">Volume</label>
-              <div class="wg-control-pair"><input id="wg-right-volume-range" data-range-key="param:right:volume" type="range" disabled><input id="wg-right-volume-number" class="wg-number" data-value-key="param:right:volume" type="text" inputmode="decimal" disabled></div>
-              <span class="wg-field-note">仅当前运行；移动实体 Volume 旋钮后由旋钮接管。</span>
             </div>
           </div>
           <div class="wg-divider"></div>
@@ -594,17 +491,13 @@
           <div><h2 id="wg-ratio-title">Shared Ratio Profile</h2><p class="wg-help">左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。</p></div>
           <button id="wg-factory" class="wg-button" type="button" disabled>Factory Ratio</button>
         </div>
-        <div class="wg-ratio-notes">
-          <div class="wg-ratio-note"><strong>Left Fundamental</strong><span id="wg-ratio-left-note">—</span></div>
-          <div class="wg-ratio-note"><strong>Right Fundamental</strong><span id="wg-ratio-right-note">—</span></div>
-        </div>
         <p class="wg-help wg-mobile-scroll-note">表格可横向滑动查看左右频率。</p>
-        <div class="wg-table-wrap"><table class="wg-ratio-table" aria-label="Ratio profile"><thead><tr><th>Res.</th><th>Ratio</th><th>Interval</th><th>Left Hz</th><th>Right Hz</th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
+        <div class="wg-table-wrap"><table class="wg-ratio-table" aria-label="Ratio profile"><thead><tr><th>Res.</th><th>Ratio</th><th>Interval</th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
         <p id="wg-ratio-meta" class="wg-meta">范围由设备提供</p>
       </section>
 
       <section class="wg-section" aria-labelledby="wg-shared-title">
-        <div class="wg-section-head"><div><h2 id="wg-shared-title">Shared Settings</h2><p class="wg-help">全局调律、增益与 MIDI 路由。</p></div><span id="wg-settings-source" class="wg-meta">Source —</span></div>
+        <div class="wg-section-head"><div><h2 id="wg-shared-title">Shared Settings</h2><p class="wg-help">全局调律、增益与 MIDI 路由。</p></div></div>
         <div class="wg-shared-grid">
           <div class="wg-field"><label for="wg-a3">A3 Frequency Hz</label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
           <div class="wg-field"><label for="wg-tuning">Tuning</label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1">Standard</option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
@@ -617,7 +510,7 @@
       </section>
 
       <section class="wg-section wg-state" aria-labelledby="wg-state-title">
-        <div><h2 id="wg-state-title">Configuration</h2><p id="wg-state-summary" class="wg-help">连接后读取设备运行状态。</p></div>
+        <div><h2 id="wg-state-title">Configuration</h2><p id="wg-state-summary" class="wg-help">连接后读取设备配置。</p></div>
         <div class="wg-actions">
           <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled>Save to Flash</button>
           <button id="wg-refresh" class="wg-button" type="button" disabled>Refresh</button>
@@ -658,21 +551,14 @@
         import: root.querySelector("#wg-import"),
         importFile: root.querySelector("#wg-import-file"),
         stateSummary: root.querySelector("#wg-state-summary"),
-        settingsSource: root.querySelector("#wg-settings-source"),
         caveRows: {left: root.querySelector("#wg-left-cave-rows"), right: root.querySelector("#wg-right-cave-rows")},
         caveMeta: {left: root.querySelector("#wg-left-cave-meta"), right: root.querySelector("#wg-right-cave-meta")}
       };
 
       const parameterSpecs = {
         "param:left:mode": {target: "left", name: "mode", path: ["left", "mode"], min: 0, max: 4, step: 1, immediate: true},
-        "param:left:mix": {target: "left", name: "mix", path: ["left", "mix"], min: 0, max: 1, step: 0.001, persistent: false},
-        "param:left:decay": {target: "left", name: "decay", path: ["left", "decay"], min: 0.1, max: 10, step: 0.01, persistent: false},
-        "param:left:volume": {target: "left", name: "volume", path: ["left", "volume"], min: 0, max: 1, step: 0.001, persistent: false},
         "param:left:threshold": {target: "left", name: "threshold", path: ["left", "threshold"], min: 0.0825, max: 0.99, step: 0.0825},
         "param:right:mode": {target: "right", name: "mode", path: ["right", "mode"], min: 0, max: 4, step: 1, immediate: true},
-        "param:right:mix": {target: "right", name: "mix", path: ["right", "mix"], min: 0, max: 1, step: 0.001, persistent: false},
-        "param:right:decay": {target: "right", name: "decay", path: ["right", "decay"], min: 0.1, max: 10, step: 0.01, persistent: false},
-        "param:right:volume": {target: "right", name: "volume", path: ["right", "volume"], min: 0, max: 1, step: 0.001, persistent: false},
         "param:right:threshold": {target: "right", name: "threshold", path: ["right", "threshold"], min: 0.0825, max: 0.99, step: 0.0825},
         "param:shared:a3_hz": {target: "shared", name: "a3_hz", path: ["shared", "a3_hz"], min: 358.08, max: 521.91, step: 0.01},
         "param:shared:tuning": {target: "shared", name: "tuning", path: ["shared", "tuning"], min: -1, max: 7, step: 1, immediate: true},
@@ -694,7 +580,6 @@
         pendingRequests: new Map(),
         settings: null,
         ratio: null,
-        status: null,
         cave: {left: [null, null, null], right: [null, null, null]},
         caveCacheValid: false,
         selectedBank: {left: 0, right: 0},
@@ -921,7 +806,6 @@
 
       function normalizeSettings(response) {
         return {
-          source: String(response.source || "unknown"),
           dirty: Boolean(response.dirty),
           left: clone(response.left),
           right: clone(response.right),
@@ -1008,16 +892,10 @@
           state.writeErrors.clear();
           const settingsResponse = await request("get_settings");
           const ratioResponse = await request("get");
-          const statusResponse = await request("status");
           const caveResponses = await readCaveResponses();
           state.settings = normalizeSettings(settingsResponse);
           state.ratio = normalizeRatio(ratioResponse);
-          state.status = statusResponse;
           applyCaveResponses(caveResponses, false);
-          for (const side of sides) {
-            const active = statusResponse.cave_active_bank && Number(statusResponse.cave_active_bank[side]);
-            if (Number.isInteger(active) && active >= 0 && active < bankCount) state.selectedBank[side] = active;
-          }
           clearEditTimers();
           state.edits.clear();
           state.resourceVersions.clear();
@@ -1268,7 +1146,7 @@
       }
 
       async function resetFactoryRatio() {
-        if (!state.ratio || !window.confirm("恢复 Factory Ratio？更改会进入运行状态，Save 后才写入 flash。")) return;
+        if (!state.ratio || !window.confirm("Restore Factory Ratio? / 恢复 Factory Ratio？\n\nThis changes the running state; Save is required to write flash. / 此操作会立即改变运行状态；点击 Save 后才写入 flash。")) return;
         await waitForWrites();
         const response = await request("reset", {expected_revision: state.ratio.revision});
         state.ratio.revision = Number(response.revision);
@@ -1278,19 +1156,13 @@
         state.ratio.dirty = true;
         bumpResource("ratio");
         renderAll();
-        setAlert("已恢复 Factory Ratio；尚未写入 flash。", "success");
-      }
-
-      function activeBank(side) {
-        const value = state.status && state.status.cave_active_bank ? Number(state.status.cave_active_bank[side]) : NaN;
-        if (Number.isInteger(value)) return value;
-        return state.cave[side].findIndex((bank) => bank && bank.active);
+        setAlert("Factory Ratio restored; not saved to flash yet. / 已恢复 Factory Ratio；尚未写入 flash。", "success");
       }
 
       function createRows() {
         for (let index = 0; index < resonatorCount; index += 1) {
           const ratioRow = document.createElement("tr");
-          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="Resonator ${index + 1} ratio" disabled></td><td data-cents="${index}">—</td><td data-ratio-hz="left:${index}">—</td><td data-ratio-hz="right:${index}">—</td>`;
+          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="Resonator ${index + 1} ratio" disabled></td><td data-cents="${index}">—</td>`;
           elements.ratioRows.appendChild(ratioRow);
           for (const side of sides) {
             const row = document.createElement("tr");
@@ -1302,21 +1174,6 @@
 
       function renderSettings() {
         for (const key of Object.keys(parameterSpecs)) syncParameterControls(key);
-        const source = state.settings ? state.settings.source : "—";
-        elements.settingsSource.textContent = `Source ${source}`;
-        for (const side of sides) root.querySelector(`#wg-${side}-source`).textContent = `Source ${source}`;
-      }
-
-      function renderStatus() {
-        for (const side of sides) {
-          const note = state.status && state.status.note ? state.status.note[side] : null;
-          const noteValid = note !== null && note !== undefined && note !== "" && Number.isFinite(Number(note));
-          const fundamental = state.status && state.status.fundamental_hz ? Number(state.status.fundamental_hz[side]) : NaN;
-          root.querySelector(`#wg-${side}-note`).textContent = noteValid ? String(note) : "—";
-          root.querySelector(`#wg-${side}-fundamental`).textContent = Number.isFinite(fundamental) ? `${fundamental.toFixed(3)} Hz` : "—";
-          root.querySelector(`#wg-${side}-active-bank`).textContent = activeBank(side) >= 0 ? `Bank ${activeBank(side) + 1}` : "—";
-          root.querySelector(`#wg-ratio-${side}-note`).textContent = noteValid && Number.isFinite(fundamental) ? `${fundamental.toFixed(3)} Hz · MIDI ${note}` : "—";
-        }
       }
 
       function renderRatio() {
@@ -1330,15 +1187,6 @@
           const value = ratio ? Number(ratio.draft[index]) : NaN;
           const cents = root.querySelector(`[data-cents="${index}"]`);
           cents.textContent = Number.isFinite(value) && value > 0 ? `${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
-          for (const side of sides) {
-            const target = root.querySelector(`[data-ratio-hz="${side}:${index}"]`);
-            const fundamental = state.status && state.status.fundamental_hz ? Number(state.status.fundamental_hz[side]) : NaN;
-            if (!ratio || !Number.isFinite(value) || !Number.isFinite(fundamental)) target.textContent = "—";
-            else {
-              const raw = fundamental * value;
-              target.textContent = `${Math.min(ratio.limits.frequencyMax, Math.max(ratio.limits.frequencyMin, raw)).toFixed(2)} Hz`;
-            }
-          }
         }
         elements.ratioMeta.textContent = ratio ? `Ratio ${ratio.limits.min}–${ratio.limits.max} · revision ${ratio.revision}${ratio.dirty ? " · RAM unsaved" : " · saved"}` : "范围由设备提供";
       }
@@ -1385,16 +1233,15 @@
         elements.export.disabled = !ready || busy;
         elements.import.disabled = !ready || busy;
         if (state.connected && !state.caveCacheValid) elements.stateSummary.textContent = "Cave 状态需要重新读取；请点 Refresh。";
-        else if (!ready) elements.stateSummary.textContent = "连接后读取设备运行状态。";
+        else if (!ready) elements.stateSummary.textContent = "连接后读取设备配置。";
         else if (pendingUiWriteCount()) elements.stateSummary.textContent = `${pendingUiWriteCount()} 项实时写入处理中；Save、Refresh 与 Export 会等待完成。`;
         else if (state.writeErrors.size) elements.stateSummary.textContent = "有实时写入失败；修正后再 Save。";
         else if (dirtyCount()) elements.stateSummary.textContent = `${dirtyCount()} 组运行配置尚未写入 flash。`;
-        else elements.stateSummary.textContent = "运行状态与 flash 已同步。Mix、Decay、Volume 始终仅为当前运行值。";
+        else elements.stateSummary.textContent = "配置与 flash 已同步。";
       }
 
       function renderAll() {
         renderSettings();
-        renderStatus();
         renderRatio();
         for (const side of sides) renderCave(side);
         updateControls();

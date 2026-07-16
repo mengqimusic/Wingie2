@@ -31,25 +31,20 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
     control.dispatchEvent(new InputEvent("input", {bubbles: true, data: value}));
   };
 
-  assert(element("#wg-left-note").textContent === "—" && element("#wg-right-note").textContent === "—", "disconnected Note readouts are not empty-state dashes");
+  for (const selector of ["#wg-left-source", "#wg-right-source", "#wg-left-note", "#wg-right-note", "#wg-left-fundamental", "#wg-right-fundamental", "#wg-left-active-bank", "#wg-right-active-bank", "#wg-left-mix-number", "#wg-right-mix-number", "#wg-left-decay-number", "#wg-right-decay-number", "#wg-left-volume-number", "#wg-right-volume-number"]) assert(!element(selector), `obsolete control remains: ${selector}`);
   const mock = window.__wingieSerialMock;
   mock.failNext("hello", "busy");
   element("#wg-connect").click();
   await waitFor(() => window.__wingieConfigTest.state().connected, "schema 3 connection");
   const initialOps = mock.writes.map((request) => request.op);
   assert(JSON.stringify(initialOps) === JSON.stringify([
-    "hello", "hello", "get_settings", "get", "status",
+    "hello", "hello", "get_settings", "get",
     "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"
   ]), "connection did not retry startup busy before one fixed snapshot");
   const initialCount = mock.writes.length;
   await sleep(350);
   assert(mock.writes.length === initialCount, "page polled after connection");
   assert(element('[data-cave-input="left:0"]').value === "62.00", "Cave values do not show 0.01 Hz precision");
-
-  const mix = element("#wg-left-mix-number");
-  edit(mix, "0.501");
-  await waitFor(() => mock.snapshot().settings.left.mix === 0.501, "live-only mix write");
-  assert(!mock.snapshot().settingsDirty, "live-only Mix marked flash dirty");
 
   const mode = element("#wg-left-mode");
   mode.value = "2";
@@ -175,7 +170,7 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   await waitFor(() => mock.snapshot().settings.left.threshold === 0.33 && !window.__wingieConfigTest.state().refreshing, "Refresh flushed a pending scalar write");
   const refreshAfterEditOps = mock.writes.map((request) => request.op);
   assert(JSON.stringify(refreshAfterEditOps) === JSON.stringify([
-    "set_param", "get_settings", "get", "status",
+    "set_param", "get_settings", "get",
     "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"
   ]), "Refresh did not flush the pending edit before reading its snapshot");
 
@@ -205,21 +200,22 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   await waitFor(() => window.__wingieConfigTest.state().caveCacheValid && !window.__wingieConfigTest.state().refreshing, "Refresh recovered invalid Cave cache");
 
   mock.setSettings({source: "hardware", left: {mode: 3}});
-  mock.setStatus({note: {left: 48}, fundamental_hz: {left: 130.813}, cave_active_bank: {left: 2}});
   mock.clearWrites();
   element("#wg-refresh").click();
-  await waitFor(() => element("#wg-left-mode").value === "3" && element("#wg-left-note").textContent === "48", "manual Refresh snapshot");
+  await waitFor(() => element("#wg-left-mode").value === "3", "manual Refresh snapshot");
   const refreshOps = mock.writes.map((request) => request.op);
   assert(JSON.stringify(refreshOps) === JSON.stringify([
-    "get_settings", "get", "status",
+    "get_settings", "get",
     "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"
   ]), "Refresh did not perform exactly one full snapshot");
-  assert(element('[data-bank-tabs="left"] [data-bank="2"]').getAttribute("aria-pressed") === "true", "Refresh did not select the active Cave bank");
 
-  window.confirm = () => true;
+  let factoryPrompt = "";
+  window.confirm = (message) => { factoryPrompt = message; return true; };
   mock.clearWrites();
   element("#wg-factory").click();
   await waitFor(() => mock.snapshot().ratios[0] === 1, "Factory Ratio");
+  assert(factoryPrompt.includes("Restore Factory Ratio?") && factoryPrompt.includes("恢复 Factory Ratio？"), "Factory confirmation is not bilingual");
+  assert(document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored") && document.querySelector("#wg-alert").textContent.includes("已恢复 Factory Ratio"), "Factory success alert is not bilingual");
   const reset = mock.writes.find((request) => request.op === "reset");
   assert(reset && Number.isInteger(reset.expected_revision), "Factory omitted Ratio revision");
 

@@ -21,9 +21,8 @@
 5. 页面不会自动轮询设备。若实体控件、MIDI 或其他软件改变了设备，请点击 Refresh 重新读取完整快照；
 6. 确认声音后点击“Save to Flash”并确认，才会写入 flash 并在重启后保留。
 
-左右声道分别设置 Mode、Input Threshold、Mix、Decay 与 Volume。Mode 和 Input Threshold 可以
-保存；Mix、Decay、Volume 只影响当前运行状态，不会写入 flash。Wingie2 上的 Mix、Decay、
-Volume 是左右声道共用的实体旋钮，移动任一实体旋钮后，该旋钮会重新接管左右两侧的对应参数。
+左右声道分别设置 Mode 与 Input Threshold。网页不显示或编辑 Mix、Decay、Volume；它们是仅当前
+运行的共享实体旋钮参数，直接由 Wingie2 面板控制，不写入 flash。
 
 Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、左右 Mode 与 Input
 Threshold、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
@@ -48,9 +47,9 @@ not poll the device: if hardware controls, MIDI, or other software changes the i
 to read a new complete snapshot. Use the confirmed “Save to Flash” action only when the current
 persistent settings should be written to flash.
 
-Mode, Input Threshold, Mix, Decay, and Volume are independent for the left and right channels. Mode
-and Input Threshold can be saved; Mix, Decay, and Volume are runtime-only. Moving one of Wingie2's
-shared physical Mix, Decay, or Volume knobs takes over that parameter on both channels again.
+The page exposes independent Mode and Input Threshold controls for the left and right channels. It does
+not display or edit Mix, Decay, or Volume: those are runtime-only shared physical controls on Wingie2
+and are not written to flash.
 
 Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, left/right Mode and Input
 Threshold, the shared Ratio profile, and all three Cave banks for each channel, including frequency

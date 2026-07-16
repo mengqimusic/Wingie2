@@ -137,10 +137,10 @@ Bitwig 后，debug serial 只读观察 35 秒无 WDT；随后发送 35 个 `hell
 刷新。网页连接时读取一次完整设备快照，手动 Refresh 可重新读取；每项编辑直接、单向写入设备，
 无需 Apply，只有 Save 需要按键确认并写入 Preferences。
 
-当前设置页支持左右独立的 Mode、Threshold、Mix、Decay 与 Volume，以及 A3、Tuning、Gain、
-MIDI、Ratio、Cave 等其他设置项目。Mix、Decay、Volume 是运行态参数；设备上的共享实体旋钮移动后
-会重新接管两侧。连接读取、单项写入、Save、断线重连、Import/Export、Ratio/Cave revision 与
-dirty 状态均经过协议和浏览器测试。
+当前设置页支持左右独立的 Mode、Threshold，以及 A3、Tuning、Gain、MIDI、Ratio、Cave 等其他
+设置项目。网页不显示或编辑仅运行态的 Mix、Decay、Volume，也不请求可能很快过期的 Source、Note、
+Fundamental、Active Cave status。连接读取、单项写入、Save、断线重连、Import/Export、Ratio/Cave
+revision 与 dirty 状态均经过协议和浏览器测试。
 
 网页 Save 与实体双键 Save 均在 `loopTask` 串行执行，control task 只提交请求；初始化完成前
 不处理 MIDI。这避免全局 `Preferences` 对象被 control、Web Serial 或启动期 MIDI tuning 并发打开。
