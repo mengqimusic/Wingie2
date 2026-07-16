@@ -49,6 +49,10 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   for (const selector of ["#wg-left-mode", "#wg-left-threshold", '[data-cave-input="left:0"]', '[data-value-key="ratio:0"]', "#wg-a3"]) {
     assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
   }
+  assert(element("#wg-language").textContent === "中文 / EN" && element("#wg-left-title").textContent === "左通道 / Left Channel".split(" / ")[0], "Chinese language did not initialize");
+  element("#wg-language").click();
+  assert(element("#wg-language").textContent === "EN / 中文" && element("#wg-left-title").textContent === "Left Channel", "English language toggle failed");
+  element("#wg-language").click();
 
   window.__wingieConfigTest.stopPolling();
   mock.setSettings({left: {mode: 3}});
@@ -246,8 +250,11 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   mock.clearWrites();
   element("#wg-factory").click();
   await waitFor(() => mock.snapshot().ratios[0] === 1, "Factory Ratio");
-  assert(factoryPrompt.includes("Restore Factory Ratio?") && factoryPrompt.includes("恢复 Factory Ratio？"), "Factory confirmation is not bilingual");
-  assert(document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored") && document.querySelector("#wg-alert").textContent.includes("已恢复 Factory Ratio"), "Factory success alert is not bilingual");
+  assert(factoryPrompt.includes("恢复 Factory Ratio？") && !factoryPrompt.includes("Restore Factory Ratio?"), "Chinese Factory confirmation is wrong");
+  assert(document.querySelector("#wg-alert").textContent.includes("已恢复 Factory Ratio") && !document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored"), "Chinese Factory success alert is wrong");
+  element("#wg-language").click();
+  assert(document.querySelector("#wg-alert").textContent.includes("Factory Ratio restored"), "English Factory success alert is wrong");
+  element("#wg-language").click();
   const reset = mock.writes.find((request) => request.op === "reset");
   assert(reset && Number.isInteger(reset.expected_revision), "Factory omitted Ratio revision");
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wingie2 配置 / Configuration</title>
+  <title>Wingie2 配置 / Wingie2 Configuration</title>
   <style>
     :root {
       color-scheme: light;
@@ -403,11 +403,12 @@
     <div class="wg-shell">
       <header class="wg-header">
         <div>
-          <h1>Wingie2 配置 / Configuration</h1>
-          <p class="wg-subtitle">编辑立即进入运行状态；只有 Save 写入 flash。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。<br>Edit changes the running state immediately; only Save writes flash. The page reads a full snapshot every second and pauses while editing or writing.</p>
+          <h1>Wingie2 配置 / Wingie2 Configuration</h1>
+          <p class="wg-subtitle" data-i18n-zh="编辑立即进入运行状态；只有 Save 写入 flash。页面每秒读取一次完整设备快照，编辑或写入期间自动跳过。" data-i18n-en="Edit changes the running state immediately; only Save writes flash. The page reads a full snapshot every second and pauses while editing or writing."></p>
         </div>
         <div class="wg-connect">
           <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接 / Disconnected</span>
+          <button id="wg-language" class="wg-button" type="button" data-no-localize="true" aria-label="切换语言 / Switch language">中文 / EN</button>
           <button id="wg-connect" class="wg-button wg-button-primary" type="button">连接 Wingie2 / Connect</button>
           <button id="wg-disconnect" class="wg-button" type="button" hidden>断开 / Disconnect</button>
         </div>
@@ -432,7 +433,7 @@
             <div class="wg-field">
               <label for="wg-left-mode">模式 / Mode</label>
               <select id="wg-left-mode" class="wg-select" data-value-key="param:left:mode" disabled>
-                <option value="0">Poly / 复音</option><option value="1">String / 弦</option><option value="2">Bar / 梁</option><option value="3">Cave / Cave</option><option value="4">Ratio / 比率</option>
+                <option value="0">复音 / Poly</option><option value="1">弦 / String</option><option value="2">梁 / Bar</option><option value="3">Cave / Cave</option><option value="4">比率 / Ratio</option>
               </select>
             </div>
             <div class="wg-field">
@@ -464,7 +465,7 @@
             <div class="wg-field">
               <label for="wg-right-mode">模式 / Mode</label>
               <select id="wg-right-mode" class="wg-select" data-value-key="param:right:mode" disabled>
-                <option value="0">Poly / 复音</option><option value="1">String / 弦</option><option value="2">Bar / 梁</option><option value="3">Cave / Cave</option><option value="4">Ratio / 比率</option>
+                <option value="0">复音 / Poly</option><option value="1">弦 / String</option><option value="2">梁 / Bar</option><option value="3">Cave / Cave</option><option value="4">比率 / Ratio</option>
               </select>
             </div>
             <div class="wg-field">
@@ -520,7 +521,7 @@
         </div>
       </section>
 
-      <footer class="wg-footer">桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步<br>Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync</footer>
+      <footer class="wg-footer" data-i18n-zh="桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步" data-i18n-en="Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync"></footer>
     </div>
   </main>
 
@@ -537,6 +538,7 @@
 
       const elements = {
         connection: root.querySelector("#wg-connection"),
+        language: root.querySelector("#wg-language"),
         connect: root.querySelector("#wg-connect"),
         disconnect: root.querySelector("#wg-disconnect"),
         alert: root.querySelector("#wg-alert"),
@@ -596,18 +598,56 @@
         polling: false,
         pollPromise: null,
         pollError: null,
-        connectionEpoch: 0
+        connectionEpoch: 0,
+        language: "zh",
+        alertMessage: "",
+        connectionLabel: "未连接 / Disconnected"
       };
 
+      function languageText(chinese, english) {
+        return state.language === "zh" ? chinese : english;
+      }
+
+      function chooseLanguage(value) {
+        const divider = String(value).indexOf(" / ");
+        if (divider < 0) return String(value);
+        return state.language === "zh" ? String(value).slice(0, divider) : String(value).slice(divider + 3);
+      }
+
+      function applyLanguage() {
+        root.querySelectorAll("[data-i18n-zh]").forEach((element) => {
+          element.textContent = state.language === "zh" ? element.dataset.i18nZh : element.dataset.i18nEn;
+        });
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          const node = walker.currentNode;
+          if (node.parentElement && node.parentElement.closest("script,style,[data-no-localize='true']")) continue;
+          if (!node.__bilingualOriginal && node.nodeValue.includes(" / ")) node.__bilingualOriginal = node.nodeValue;
+          if (node.__bilingualOriginal) node.nodeValue = chooseLanguage(node.__bilingualOriginal);
+        }
+        root.querySelectorAll("[aria-label]").forEach((element) => {
+          const original = element.dataset.bilingualAriaLabel || element.getAttribute("aria-label");
+          if (!original || !original.includes(" / ")) return;
+          element.dataset.bilingualAriaLabel = original;
+          element.setAttribute("aria-label", chooseLanguage(original));
+        });
+        elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
+        elements.connection.textContent = chooseLanguage(state.connectionLabel);
+        elements.alert.textContent = chooseLanguage(state.alertMessage);
+        renderAll();
+      }
+
       function setAlert(message, kind = "info") {
-        elements.alert.textContent = message || "";
+        state.alertMessage = message || "";
+        elements.alert.textContent = chooseLanguage(state.alertMessage);
         elements.alert.dataset.kind = kind;
-        elements.alert.dataset.visible = message ? "true" : "false";
+        elements.alert.dataset.visible = state.alertMessage ? "true" : "false";
       }
 
       function setConnection(stage, label) {
         elements.connection.dataset.state = stage;
-        elements.connection.textContent = label;
+        state.connectionLabel = label;
+        elements.connection.textContent = chooseLanguage(label);
         elements.connect.hidden = stage === "connected" || stage === "connecting";
         elements.disconnect.hidden = stage !== "connected";
       }
@@ -1227,7 +1267,7 @@
       }
 
       async function resetFactoryRatio() {
-        if (!state.ratio || !window.confirm("Restore Factory Ratio? / 恢复 Factory Ratio？\n\nThis changes the running state; Save is required to write flash. / 此操作会立即改变运行状态；点击 Save 后才写入 flash。")) return;
+        if (!state.ratio || !window.confirm(`${languageText("恢复 Factory Ratio？", "Restore Factory Ratio?")}\n\n${languageText("此操作会立即改变运行状态；点击 Save 后才写入 flash。", "This changes the running state; Save is required to write flash.")}`)) return;
         await waitForWrites();
         const response = await request("reset", {expected_revision: state.ratio.revision});
         state.ratio.revision = Number(response.revision);
@@ -1269,7 +1309,7 @@
           const cents = root.querySelector(`[data-cents="${index}"]`);
           cents.textContent = Number.isFinite(value) && value > 0 ? `${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
         }
-        elements.ratioMeta.textContent = ratio ? `Ratio ${ratio.limits.min}–${ratio.limits.max} · 修订 ${ratio.revision} / revision ${ratio.revision}${ratio.dirty ? " · RAM 未保存 / unsaved" : " · 已保存 / saved"}` : "范围由设备提供 / Range provided by device";
+        elements.ratioMeta.textContent = ratio ? `Ratio ${ratio.limits.min}–${ratio.limits.max} · ${languageText(`修订 ${ratio.revision}`, `revision ${ratio.revision}`)}${ratio.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
       }
 
       function renderCave(side) {
@@ -1285,7 +1325,7 @@
           input.disabled = !state.connected || !state.caveCacheValid || !bank || state.saving || state.refreshing;
           if (bank) input.checked = bank.draftMute[index];
         });
-        elements.caveMeta[side].textContent = bank ? `${formatNumber(bank.limits.min, bank.limits.step)}–${formatNumber(bank.limits.max, bank.limits.step)} Hz · 修订 ${bank.revision} / revision ${bank.revision}${bank.dirty ? " · RAM 未保存 / unsaved" : " · 已保存 / saved"}` : "范围由设备提供 / Range provided by device";
+        elements.caveMeta[side].textContent = bank ? `${formatNumber(bank.limits.min, bank.limits.step)}–${formatNumber(bank.limits.max, bank.limits.step)} Hz · ${languageText(`修订 ${bank.revision}`, `revision ${bank.revision}`)}${bank.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
       }
 
       function dirtyCount() {
@@ -1313,13 +1353,13 @@
         elements.refresh.disabled = !state.connected || busy || state.pendingWrites > 0 || state.resourceTimers.size > 0;
         elements.export.disabled = !ready || busy;
         elements.import.disabled = !ready || busy;
-        if (state.connected && !state.caveCacheValid) elements.stateSummary.textContent = "Cave 状态需要重新读取；请点刷新。 / Cave state needs rereading; click Refresh.";
-        else if (!ready) elements.stateSummary.textContent = "连接后读取设备配置。 / Connect to read device configuration.";
-        else if (pendingUiWriteCount()) elements.stateSummary.textContent = `${pendingUiWriteCount()} 项实时写入处理中；保存、刷新与导出 / Save, Refresh and Export 会等待完成 / will wait.`;
-        else if (state.writeErrors.size) elements.stateSummary.textContent = "有实时写入失败；修正后再 Save。 / A live write failed; correct it before Save.";
-        else if (state.pollError) elements.stateSummary.textContent = `后台同步失败：${state.pollError}；请点刷新。 / Background sync failed: ${state.pollError}; click Refresh.`;
-        else if (dirtyCount()) elements.stateSummary.textContent = `${dirtyCount()} 组运行配置尚未写入 flash。 / ${dirtyCount()} running configuration group(s) are not saved to flash.`;
-        else elements.stateSummary.textContent = "配置与 flash 已同步。 / Configuration matches flash.";
+        if (state.connected && !state.caveCacheValid) elements.stateSummary.textContent = languageText("Cave 状态需要重新读取；请点刷新。", "Cave state needs rereading; click Refresh.");
+        else if (!ready) elements.stateSummary.textContent = languageText("连接后读取设备配置。", "Connect to read device configuration.");
+        else if (pendingUiWriteCount()) elements.stateSummary.textContent = languageText(`${pendingUiWriteCount()} 项实时写入处理中；保存、刷新与导出会等待完成。`, `${pendingUiWriteCount()} live write(s) pending; Save, Refresh and Export will wait.`);
+        else if (state.writeErrors.size) elements.stateSummary.textContent = languageText("有实时写入失败；修正后再 Save。", "A live write failed; correct it before Save.");
+        else if (state.pollError) elements.stateSummary.textContent = languageText(`后台同步失败：${state.pollError}；请点刷新。`, `Background sync failed: ${state.pollError}; click Refresh.`);
+        else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入 flash。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
+        else elements.stateSummary.textContent = languageText("配置与 flash 已同步。", "Configuration matches flash.");
       }
 
       function renderAll() {
@@ -1445,6 +1485,10 @@
 
       elements.connect.addEventListener("click", connect);
       elements.disconnect.addEventListener("click", () => disconnect(true));
+      elements.language.addEventListener("click", () => {
+        state.language = state.language === "zh" ? "en" : "zh";
+        applyLanguage();
+      });
       elements.save.addEventListener("click", saveConfiguration);
       elements.refresh.addEventListener("click", () => refreshAll(true).catch((error) => setAlert(`刷新失败 / Refresh failed: ${formatError(error)}`, "error")));
       elements.factory.addEventListener("click", () => resetFactoryRatio().catch((error) => setAlert(`${formatError(error)} / Factory Ratio failed`, "error")));
@@ -1532,7 +1576,7 @@
       }
 
       createRows();
-      renderAll();
+      applyLanguage();
 
       window.__wingieConfigTest = {
         state: () => state,
