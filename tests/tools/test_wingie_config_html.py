@@ -149,6 +149,25 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("Import JSON", self.source)
         self.assertNotIn(">Apply", self.source)
 
+    def test_user_facing_copy_is_bilingual(self):
+        for phrase in (
+            "连接 Wingie2 / Connect",
+            "断开 / Disconnect",
+            "模式 / Mode",
+            "输入阈值 / Input Threshold",
+            "Cave 音库 / Cave Banks",
+            "共享 Ratio 配置 / Shared Ratio Profile",
+            "共享设置 / Shared Settings",
+            "保存到 Flash / Save to Flash",
+            "刷新 / Refresh",
+            "导出 JSON / Export JSON",
+            "导入 JSON / Import JSON",
+            "Device snapshot loaded;",
+            "Full device snapshot refreshed.",
+            "Configuration saved to Wingie2 flash.",
+        ):
+            self.assertIn(phrase, self.source)
+
     def test_minimal_responsive_visual_contract(self):
         self.assertIn("background: #fff", self.source)
         self.assertIn("width: min(1120px, 100%)", self.source)
