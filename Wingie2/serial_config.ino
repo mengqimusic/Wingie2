@@ -608,7 +608,7 @@ bool load_cave_bank_from_preferences(Preferences &store, byte ch, byte bank, boo
 void apply_ratio_profile_to_dsp() {
   for (byte ch = 0; ch < 2; ch++) {
     if (Mode[ch] == RATIO_MODE) {
-      apply_pitched_mode_channel(ch, currentNote[ch]);
+      apply_all_ratio_voice_pitch(ch);
     }
   }
 }

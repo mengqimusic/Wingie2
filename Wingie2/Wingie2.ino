@@ -436,7 +436,7 @@ void apply_pitched_mode_channel(byte ch, int midiNote) {
 void set_channel_pitch(byte ch, int midiNote, float bendSemitones) {
   currentNote[ch] = midiNote;
   currentPitchBend[ch] = bendSemitones;
-  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
     apply_pitched_mode_channel(ch, midiNote);
   }
 }
@@ -447,10 +447,10 @@ void set_channel_note(byte ch, int midiNote) {
 }
 
 void apply_current_mode_parameters(byte ch) {
-  if (Mode[ch] == POLY_MODE) {
+  if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
     unmute_channel_resonators(ch);
-    apply_all_poly_voice_pitch(ch);
-  } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+    apply_all_voice_pitch(ch);
+  } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
     apply_pitched_mode_channel(ch, currentNote[ch]);
   } else if (Mode[ch] == CAVE_MODE) {
     apply_cave_bank_to_dsp(ch, oct[ch] + 1);
@@ -473,7 +473,9 @@ void apply_channel_mode_change(byte ch) {
 
 void apply_note_profiles_to_dsp() {
   for (byte ch = 0; ch < 2; ch++) {
-    if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+    if (Mode[ch] == RATIO_MODE) {
+      apply_all_ratio_voice_pitch(ch);
+    } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
       apply_pitched_mode_channel(ch, currentNote[ch]);
     }
   }

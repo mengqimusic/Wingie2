@@ -31,14 +31,14 @@ void handleNoteOff(byte channel, byte pitch, byte velocity) {
 
 void MIDISetPitch(int ch, int mode, int pitch, byte channel) {
 
-  if (mode == STRING_MODE || mode == BAR_MODE || mode == RATIO_MODE) {
+  if (mode == STRING_MODE || mode == BAR_MODE) {
     set_conventional_channel_note(ch, channel, pitch);
   }
 
-  else if (mode == POLY_MODE) {
+  else if (mode == POLY_MODE || mode == RATIO_MODE) {
     conventionalPitchChannel[ch] = channel;
     conventionalPitchBend[ch] = mpe_state.channelPitchBendSemitones(channel);
-    cycle_poly_voice_note(ch, pitch);
+    cycle_voice_note(ch, pitch);
   }
 
 }

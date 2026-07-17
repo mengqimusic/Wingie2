@@ -341,6 +341,15 @@ void control(void *pvParameters) {
   set_poly_voice_note(1, 1, 4 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
   set_poly_voice_note(1, 2, 7 + BASE_NOTE + POLY_MODE_NOTE_ADD_R);
 
+  // RATIO 通道开机三和弦：{0,4,7} + BASE_NOTE + oct*12 + (ch ? 12 : 0)，后写生效。
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == RATIO_MODE) {
+      set_ratio_voice_note(ch, 0, 0 + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
+      set_ratio_voice_note(ch, 1, 4 + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
+      set_ratio_voice_note(ch, 2, 7 + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
+    }
+  }
+
   dsp.setParamValue("/Wingie/left/decay", 0.1);  // 最小 Startup Decay 避免开机声音过大
   dsp.setParamValue("/Wingie/right/decay", 0.1);
 
@@ -601,13 +610,13 @@ void control(void *pvParameters) {
                 if (firstPress[ch]) {
                   firstPress[ch] = false;
 
-                  if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
+                  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
                     note[ch] = i;
                     tapSequence[ch].reset(uint8_t(i));
                     set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
                   }
                 } else {  // Not First Press
-                  if (Mode[ch] != POLY_MODE && Mode[ch] != CAVE_MODE) {
+                  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
                     note[ch] = i;
                     tapSequence[ch].append(uint8_t(i));
                     set_channel_note(ch, note[ch] + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
@@ -649,6 +658,10 @@ void control(void *pvParameters) {
 
                 if (Mode[ch] == POLY_MODE) {
                   cycle_poly_voice_note(ch, i + BASE_NOTE + oct[ch] * 12 + (ch ? POLY_MODE_NOTE_ADD_R : POLY_MODE_NOTE_ADD_L));
+                }
+
+                if (Mode[ch] == RATIO_MODE) {
+                  cycle_ratio_voice_note(ch, i + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));
                 }
 
               }  // !modeButtonPressed[ch]
@@ -707,6 +720,7 @@ void control(void *pvParameters) {
     trig[1] = dsp.getParamValue("/Wingie/right_trig");
 
     for (int ch = 0; ch < 2; ch++) {
+      if (Mode[ch] != STRING_MODE && Mode[ch] != BAR_MODE) continue;  // Tap Sequencer 仅 STRING/BAR 回放
       if (tapSequence[ch].hasCycle()) {
         if (trig[ch] && !trigged[ch]) {
           trigged[ch] = true;

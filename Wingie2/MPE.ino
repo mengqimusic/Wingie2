@@ -46,6 +46,58 @@ void cycle_poly_voice_note(byte ch, byte noteValue) {
   set_poly_voice_note(ch, voice, noteValue);
 }
 
+// RATIO 复音：声部 v 拥有共鸣器 {3v, 3v+1, 3v+2}，走 cave 通路直写 cave_freq。
+void apply_ratio_voice_pitch(byte ch, byte voice) {
+  const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+  const float fundamental = configured_note_frequency(state.note) * wingie_mpe::pitchRatio(poly_total_bend(ch, voice));
+  for (byte k = 0; k < 3; k++) {
+    const byte index = 3 * voice + k;
+    const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
+                                min(static_cast<float>(wingie_config::kRatioFrequencyMax),
+                                    fundamental * ratio_profile.ratios[index]));
+    cm_freq_set(ch, index, frequency);
+  }
+}
+
+void apply_all_ratio_voice_pitch(byte ch) {
+  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) apply_ratio_voice_pitch(ch, voice);
+}
+
+void unmute_ratio_voice(byte ch, byte voice) {
+  for (byte k = 0; k < 3; k++) cm_mute_set(ch, 3 * voice + k, false);
+}
+
+void set_ratio_voice_note(byte ch, byte voice, byte noteValue) {
+  wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+  state.active = false;
+  state.channel = 0;
+  state.note = noteValue;
+  state.memberBendSemitones = 0.0f;
+  unmute_ratio_voice(ch, voice);
+  apply_ratio_voice_pitch(ch, voice);
+}
+
+void cycle_ratio_voice_note(byte ch, byte noteValue) {
+  const byte voice = currentPoly[ch];
+  currentPoly[ch] = (currentPoly[ch] + 1) % wingie_mpe::kVoiceCount;
+  set_ratio_voice_note(ch, voice, noteValue);
+}
+
+// 按 Mode[ch] 分发的复音声部入口（POLY / RATIO 共用声部分配与弯音语义）。
+void apply_voice_pitch(byte ch, byte voice) {
+  if (Mode[ch] == RATIO_MODE) apply_ratio_voice_pitch(ch, voice);
+  else apply_poly_voice_pitch(ch, voice);
+}
+
+void apply_all_voice_pitch(byte ch) {
+  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) apply_voice_pitch(ch, voice);
+}
+
+void cycle_voice_note(byte ch, byte noteValue) {
+  if (Mode[ch] == RATIO_MODE) cycle_ratio_voice_note(ch, noteValue);
+  else cycle_poly_voice_note(ch, noteValue);
+}
+
 void clear_mpe_mono_assignment(byte ch) {
   mpeMonoState[ch].active = false;
   mpeMonoState[ch].channel = 0;
@@ -60,13 +112,13 @@ void reset_mpe_assignments(byte ch) {
 
 void refresh_mono_pitch(byte ch) {
   currentPitchBend[ch] = mono_total_bend(ch);
-  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+  if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
     apply_pitched_mode_channel(ch, currentNote[ch]);
   }
 }
 
 void refresh_side_pitch(byte ch) {
-  if (Mode[ch] == POLY_MODE) apply_all_poly_voice_pitch(ch);
+  if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) apply_all_voice_pitch(ch);
   else refresh_mono_pitch(ch);
 }
 
@@ -127,10 +179,13 @@ bool handle_mpe_note_on(byte channel, byte pitch) {
   const int8_t side = mpe_note_side();
   if (side < 0) return true;
   const byte ch = static_cast<byte>(side);
-  if (Mode[ch] == POLY_MODE) {
+  if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
     const int voice = mpe_state.allocateVoice(ch, channel, pitch);
-    if (voice >= 0) apply_poly_voice_pitch(ch, voice);
-  } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE || Mode[ch] == RATIO_MODE) {
+    if (voice >= 0) {
+      if (Mode[ch] == RATIO_MODE) unmute_ratio_voice(ch, voice);
+      apply_voice_pitch(ch, voice);
+    }
+  } else if (Mode[ch] == STRING_MODE || Mode[ch] == BAR_MODE) {
     mpeMonoState[ch].active = true;
     mpeMonoState[ch].channel = channel;
     mpeMonoState[ch].note = pitch;
@@ -144,7 +199,7 @@ bool handle_mpe_note_off(byte channel, byte pitch) {
   if (mpe_state.zoneForChannel(channel) != wingie_mpe::kLowerZone) return false;
   // ownership 记录 (channel,note)->(side,voice)，Note Off 需在两侧查找归属。
   for (byte ch = 0; ch < 2; ch++) {
-    if (Mode[ch] == POLY_MODE) {
+    if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
       if (mpe_state.releaseVoice(ch, channel, pitch) >= 0) return true;
     } else if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel && mpeMonoState[ch].note == pitch) {
       mpeMonoState[ch].active = false;
