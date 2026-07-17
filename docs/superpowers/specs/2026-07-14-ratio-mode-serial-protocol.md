@@ -226,6 +226,31 @@ Reset 语义必须另行确认。
 }
 ```
 
+### 2026-07-17 增补 / Addendum：`status` 新增 `cave_revision`
+
+自 2026-07-17 起，当前固件的 `status` 响应在 `cave_active_bank` 之后追加一个字段：
+
+```json
+"cave_revision": {"left": [u32, u32, u32], "right": [u32, u32, u32]}
+```
+
+例如 `"cave_revision": {"left": [12, 7, 3], "right": [4, 9, 1]}`。
+
+- 格式与含义：左、右声道各 3 个 Cave bank 的当前 revision（无符号 32 位整数），与
+  `get_cave` 返回的对应 bank `revision` 一致；
+- 用途：网页的每秒轮询改为只请求 `status`（与 `get_settings`），仅当 `profile_revision`
+  变化时才重读 Ratio 全量、当 `cave_revision` 或 active bank 变化时才重读对应 Cave bank；
+- 向后兼容：该字段为纯追加，`config_schema` 保持 `4` 不变，旧客户端忽略未知字段即可；
+  网页检测到 `status` 响应中没有 `cave_revision` 的旧固件时，自动回退为每秒全量快照轮询。
+
+Addendum (2026-07-17): current firmware appends `cave_revision` — three u32 bank revisions per
+channel — to `status` after `cave_active_bank`. It is purely additive: `config_schema` stays `4`,
+older clients ignore the unknown field, and the page falls back to full per-second snapshot polling
+when the field is absent.
+
+（本增补记录当前已实现协议的行为，仅在此留档；上文正文仍为 schema 1 历史草案，现行协议
+事实记录见 [2026-07-16-schema3-configuration-protocol.md](./2026-07-16-schema3-configuration-protocol.md)。）
+
 Profile 的导出、导入和本地历史由 HTML 在浏览器中完成，不增加设备命令。
 
 ## 错误
