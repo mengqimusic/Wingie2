@@ -391,7 +391,7 @@ void sendHello(uint32_t id) {
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"hello\","
                   "\"device\":\"Wingie2\","
                   "\"capabilities\":[\"settings\",\"ratio_mode\",\"cave_config\",\"mpe\"],"
-                  "\"config_schema\":3,\"transport\":{\"baud\":115200,\"max_frame\":%u}}",
+                  "\"config_schema\":4,\"transport\":{\"baud\":115200,\"max_frame\":%u}}",
                   static_cast<unsigned long>(id), static_cast<unsigned>(wingie_serial::kMaxFrameBytes));
   sendJson(response);
 }

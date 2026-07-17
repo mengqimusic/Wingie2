@@ -224,7 +224,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertNotIn('event: "changed"', self.mock_source)
 
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
-        self.assertIn('"config_schema\\":3', self.firmware_source)
+        self.assertIn('"config_schema\\":4', self.firmware_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
         self.assertIn("kOperationSetParam", self.protocol_source)
         self.assertIn("void sendSettings(uint32_t id)", self.firmware_source)
@@ -254,8 +254,10 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("service_preferences_save();", self.main_source)
         self.assertIn("if (!serial_config_ready) return;", self.main_source)
         self.assertIn("tuning_preferences_dirty", self.storage_source)
-        self.assertIn('putBool("mpe_enabled", mpe_enabled)', self.storage_source)
+        self.assertNotIn("mpe_enabled", self.storage_source)
+        self.assertNotIn("mpe_enabled", self.firmware_source)
         self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.firmware_source)
+        self.assertIn('"config_schema\\\":4', self.firmware_source)
         self.assertRegex(
             self.storage_source,
             r"if \(unq_caves_store\) \{\s*if \(!save_general_preferences\(prefs\)\)",
