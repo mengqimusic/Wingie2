@@ -126,8 +126,12 @@ class WingieConfigHtmlTest(unittest.TestCase):
     def test_poll_status_and_header_controls_are_bilingual(self):
         self.assertIn('id="wg-poll-status"', self.source)
         self.assertIn('class="wg-connect-controls"', self.source)
-        self.assertIn("连接后每秒读取一次完整配置", self.source)
-        self.assertIn("Connect to read the full configuration every second", self.source)
+        self.assertIn("连接后每秒同步设备状态", self.source)
+        self.assertIn("Connect to sync device state every second", self.source)
+        self.assertIn("正在同步设备状态…", self.source)
+        self.assertIn("Syncing device state…", self.source)
+        self.assertIn("每秒同步设备状态；编辑或写入期间自动跳过", self.source)
+        self.assertIn("Syncing device state every second; pauses while editing or writing", self.source)
         self.assertIn("每秒从设备读取一次完整配置", self.source)
         self.assertIn("Reading the full device configuration every second", self.source)
         self.assertIn("实时写入期间暂停轮询", self.source)
@@ -135,6 +139,55 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("justify-items: end", self.source)
         self.assertIn("text-align: right", self.source)
         self.assertIn("updatePollingStatus()", self.source)
+
+    def test_light_poll_uses_status_with_legacy_fallback(self):
+        self.assertIn("lightPolling: true,", self.source)
+        tick = re.search(
+            r"function pollTick\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(tick)
+        self.assertIn("state.lightPolling === false ? pollFullSnapshot() : pollLightSnapshot();", tick.group(1))
+        starter = re.search(
+            r"function startPolling\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(starter)
+        self.assertIn("pollTick().catch(() => undefined);", starter.group(1))
+        light = re.search(
+            r"async function pollLightSnapshot\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(light)
+        block = light.group(1)
+        self.assertIn("if (!state.connected || state.polling || state.refreshing || state.saving || pendingUiWriteCount()) return;", block)
+        self.assertEqual(block.count('request("status")'), 1)
+        self.assertEqual(block.count('request("get_settings")'), 1)
+        self.assertIn("statusResponse.cave_revision", block)
+        self.assertIn("state.lightPolling = false;", block)
+        self.assertIn("if (fallback) await pollFullSnapshot();", block)
+        self.assertIn('Number(statusResponse.profile_revision) !== state.ratio.revision', block)
+        self.assertIn('ratioSnapshot = normalizeRatio(await request("get"));', block)
+        self.assertIn('Number(statusResponse.cave_active_bank[side])', block)
+        self.assertIn('normalizeCave(await request("get_cave", {side, bank}))', block)
+        self.assertIn("if (!state.connected || epoch !== state.connectionEpoch || pendingUiWriteCount()) return;", block)
+        self.assertIn("applyRatioSnapshot(ratioSnapshot, true);", block)
+        self.assertIn("applyCaveBankSnapshot(item.side, item.bank, item.normalized, true);", block)
+        self.assertIn("if (!parameterEditIsPending(edit)) state.edits.delete(key);", block)
+        disconnect = re.search(
+            r"async function disconnect\(announce = true\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(disconnect)
+        self.assertIn("state.lightPolling = true;", disconnect.group(1))
+        self.assertIn("pollTick,", self.source)
+        self.assertIn("setLegacyFirmware(value)", self.mock_source)
+        self.assertIn("cave_revision", self.mock_source)
+        self.assertIn("legacyFirmware", self.mock_source)
 
     def test_has_complete_controls_and_omits_runtime_status(self):
         for target in ("left", "right"):
@@ -328,6 +381,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("config_schema: 4", self.mock_source)
         for operation in (
             "get_settings",
+            "status",
             "set_param",
             "set",
             "set_cave",

@@ -15,6 +15,7 @@
   let ratios = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7];
   let ratioDirty = false;
   let settingsDirty = false;
+  let legacyFirmware = false;
 
   const settings = {
     source: "startup",
@@ -128,7 +129,9 @@
       return {v: 1, id: request.id, ok: true, op: "get", profile: {ratios: ratios.slice(), revision: ratioRevision, dirty: ratioDirty}, factory_profile: {ratios: factoryRatios.slice()}, limits: {min: 0.125, max: 32, step: 0.001, frequency_min: 16, frequency_max: 16000}};
     }
     if (request.op === "status") {
-      return {v: 1, id: request.id, ok: true, op: "status", ...clone(status), profile_revision: ratioRevision};
+      const response = {v: 1, id: request.id, ok: true, op: "status", ...clone(status), profile_revision: ratioRevision};
+      if (!legacyFirmware) response.cave_revision = {left: cave.left.map((bank) => bank.revision), right: cave.right.map((bank) => bank.revision)};
+      return response;
     }
     if (request.op === "get_cave") {
       const bank = cave[request.side] && cave[request.side][request.bank];
@@ -256,6 +259,7 @@
     },
     failNext(operation, code = "mock_failure") { failure = {operation, code}; },
     setResponseDelay(milliseconds) { responseDelay = Math.max(0, Number(milliseconds) || 0); },
+    setLegacyFirmware(value) { legacyFirmware = Boolean(value); },
     disconnect() {
       if (controller) {
         try { controller.error(new DOMException("Mock disconnect", "NetworkError")); } catch {

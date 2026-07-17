@@ -52,12 +52,12 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
     assert(!element(selector).disabled, `${selector} remained disabled after connection snapshot`);
   }
   assert(element("#wg-language").textContent === "中文 / EN" && element("#wg-left-title").textContent === "左通道 / Left Channel".split(" / ")[0], "Chinese language did not initialize");
-  assert(element("#wg-poll-status").textContent === "每秒从设备读取一次完整配置", "Chinese polling status did not show the one-second device read");
+  assert(element("#wg-poll-status").textContent === "每秒同步设备状态；编辑或写入期间自动跳过", "Chinese polling status did not show the one-second device sync");
   assert(getComputedStyle(element(".wg-connect")).justifyItems === "end", "header controls are not right aligned");
   assert(getComputedStyle(element("#wg-poll-status")).textAlign === "right", "polling status is not right aligned");
   element("#wg-language").click();
   assert(element("#wg-language").textContent === "EN / 中文" && element("#wg-left-title").textContent === "Left Channel", "English language toggle failed");
-  assert(element("#wg-poll-status").textContent === "Reading the full device configuration every second", "English polling status did not show the one-second device read");
+  assert(element("#wg-poll-status").textContent === "Syncing device state every second; pauses while editing or writing", "English polling status did not show the one-second device sync");
   assert(document.querySelector("#wg-ratio-title").parentElement.querySelector(".wg-help").textContent === "Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms.", "English Ratio help remained mixed");
   assert(document.querySelector("#wg-shared-title").parentElement.querySelector(".wg-help").textContent === "Global tuning, gain and MIDI routing.", "English Shared Settings help remained mixed");
   assert(document.querySelector(".wg-footer").textContent === "Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync", "English footer was mixed or truncated");
@@ -392,6 +392,73 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   edit(ratioInput, "3.5");
   await waitFor(() => document.querySelector("#wg-alert").textContent.includes("实时写入失败"), "non-conflict failure did not surface the error alert");
   assert(window.__wingieConfigTest.state().writeErrors.size > 0, "non-conflict failure did not record a write error");
+})()
+JS
+
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const element = (selector) => document.querySelector(selector);
+  const mock = window.__wingieSerialMock;
+  const state = () => window.__wingieConfigTest.state();
+  const ops = () => mock.writes.map((request) => request.op);
+
+  window.__wingieConfigTest.stopPolling();
+  await window.__wingieConfigTest.refresh();
+
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(JSON.stringify(ops()) === JSON.stringify(["status", "get_settings"]), "steady light poll did not read only status and get_settings");
+
+  mock.setRatios([0.7, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(JSON.stringify(ops()) === JSON.stringify(["status", "get_settings", "get"]), "light poll did not fetch the ratio profile on revision change");
+  assert(state().ratio.revision === mock.snapshot().ratioRevision && state().ratio.values[0] === 0.7, "light poll did not apply the external ratio change");
+
+  mock.setCave("right", 2, {frequencies: [70, 115, 218, 411, 777, 1500, 2800, 5200, 11000]});
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(JSON.stringify(ops()) === JSON.stringify(["status", "get_settings", "get_cave"]), "light poll did not fetch only the changed cave bank");
+  assert(mock.writes[2].side === "right" && mock.writes[2].bank === 2, "light poll fetched the wrong cave bank");
+  assert(state().cave.right[2].revision === mock.snapshot().cave.right[2].revision && state().cave.right[2].frequencies[0] === 70, "light poll did not apply the external cave change");
+
+  mock.setStatus({cave_active_bank: {left: 1}});
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  const activeFetches = mock.writes.filter((request) => request.op === "get_cave");
+  assert(JSON.stringify(ops().slice(0, 2)) === JSON.stringify(["status", "get_settings"]), "active-bank light poll read unexpected operations");
+  assert(activeFetches.length === 2 && activeFetches.every((request) => request.side === "left"), "active bank change did not refetch exactly the affected banks");
+  assert(state().cave.left[1].active && !state().cave.left[0].active, "light poll did not apply the active bank change");
+
+  mock.setLegacyFirmware(true);
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(state().lightPolling === false, "legacy firmware did not disable light polling");
+  assert(JSON.stringify(ops()) === JSON.stringify(["status", "get_settings", "get", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"]), "legacy first tick did not fall back to one full snapshot");
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(JSON.stringify(ops()) === JSON.stringify(["get_settings", "get", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"]), "legacy fallback did not run the full snapshot directly");
+
+  mock.setLegacyFirmware(false);
+  mock.disconnect();
+  await waitFor(() => !state().connected && !element("#wg-connect").disabled, "legacy test disconnect recovery");
+  element("#wg-connect").click();
+  await waitFor(() => state().connected && !state().refreshing && state().pollTimer !== null, "reconnect after legacy test");
+  assert(state().lightPolling === true, "reconnect did not reset light polling");
+  mock.clearWrites();
+  await window.__wingieConfigTest.pollTick();
+  assert(JSON.stringify(ops()) === JSON.stringify(["status", "get_settings"]), "reconnected light poll did not return to status-only reads");
 })()
 JS
 
