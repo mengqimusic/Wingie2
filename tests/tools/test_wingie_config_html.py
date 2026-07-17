@@ -56,8 +56,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertNotIn("fetch(", self.source)
         self.assertNotIn("WebSocket", self.source)
 
-    def test_uses_schema_three_snapshot_protocol(self):
-        self.assertIn("Number(hello.config_schema) !== 3", self.source)
+    def test_uses_schema_four_snapshot_protocol(self):
+        self.assertIn("Number(hello.config_schema) !== 4", self.source)
         for operation in (
             "hello",
             "get_settings",
@@ -148,9 +148,11 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "midi_left",
             "midi_right",
             "midi_both",
-            "mpe_enabled",
         ):
             self.assertIn(f'param:shared:{name}', self.source)
+        self.assertNotIn("param:shared:mpe_enabled", self.source)
+        self.assertNotIn("wg-mpe-enabled", self.source)
+        self.assertIn("config_schema) !== 4", self.source)
         for stale_item in ("Source", "Note", "Fundamental", "Active Cave", "mix", "decay", "volume"):
             self.assertNotIn(stale_item, self.source)
         for runtime_key in (
@@ -188,7 +190,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr))", self.source)
         self.assertEqual(self.source.count('class="wg-field wg-field-half"'), 4)
         self.assertEqual(self.source.count('class="wg-field wg-field-third"'), 3)
-        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 1)
+        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 0)
         self.assertIn("border-radius: 4px", self.source)
         self.assertIn("@media (max-width: 760px)", self.source)
         self.assertIn('data-mobile-side="left"', self.source)
@@ -208,8 +210,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("await refreshDependentCaves();", self.source)
         self.assertIn("await acknowledge(response", self.source)
 
-    def test_mock_matches_schema_three_without_events(self):
-        self.assertIn("config_schema: 3", self.mock_source)
+    def test_mock_matches_schema_four_without_events(self):
+        self.assertIn("config_schema: 4", self.mock_source)
         for operation in (
             "get_settings",
             "set_param",
