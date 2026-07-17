@@ -86,13 +86,13 @@ void printMidiDiagnostics() {
                 dsp.getParamValue("/Wingie/right/poly_note_0"),
                 dsp.getParamValue("/Wingie/right/poly_note_1"),
                 dsp.getParamValue("/Wingie/right/poly_note_2"));
-  Serial.printf("MPE startup_enabled=%d claimed=0x%04x pb_count=%lu last_pb_ch=%u last_pb=%d\n",
-                mpe_enabled, mpe_state.claimedChannels(),
+  Serial.printf("MPE claimed=0x%04x flip=%d manager_pb=%.3f pb_count=%lu last_pb_ch=%u last_pb=%d\n",
+                mpe_state.claimedChannels(), mpeFlip, mpe_manager_bend(),
                 (unsigned long)midiDiagnostic.pitchBendCount,
                 midiDiagnostic.lastPitchBendChannel, midiDiagnostic.lastPitchBend);
   for (byte ch = 0; ch < 2; ch++) {
-    Serial.printf("MPE side=%u manager_pb=%.3f mono_ch=%u mono_active=%d mono_member_pb=%.3f\n",
-                  ch, mpe_manager_bend(ch), mpeMonoState[ch].channel,
+    Serial.printf("MPE side=%u mono_ch=%u mono_active=%d mono_member_pb=%.3f\n",
+                  ch, mpeMonoState[ch].channel,
                   mpeMonoState[ch].active, mpeMonoState[ch].memberBendSemitones);
     for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
       const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];

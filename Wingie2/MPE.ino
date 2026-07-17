@@ -1,16 +1,16 @@
-float mpe_manager_bend(byte ch) {
-  return mpe_state.managerPitchBendSemitones(ch);
+float mpe_manager_bend() {
+  return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
 
 float mono_total_bend(byte ch) {
   return wingie_mpe::totalPitchBend(mpeMonoState[ch].channel != 0, conventionalPitchBend[ch],
-                                    mpe_manager_bend(ch), mpeMonoState[ch].memberBendSemitones);
+                                    mpe_manager_bend(), mpeMonoState[ch].memberBendSemitones);
 }
 
 float poly_total_bend(byte ch, byte voice) {
   const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
   return wingie_mpe::totalPitchBend(state.channel != 0, conventionalPitchBend[ch],
-                                    mpe_manager_bend(ch), state.memberBendSemitones);
+                                    mpe_manager_bend(), state.memberBendSemitones);
 }
 
 void set_poly_voice_dsp(byte ch, byte voice, byte noteValue, float bendSemitones) {
@@ -95,29 +95,38 @@ void reset_mpe_performance(uint16_t channelMask) {
   }
 }
 
-void configure_mpe_zone(byte zone, byte memberCount) {
-  reset_mpe_performance(mpe_state.configureZone(zone, memberCount));
-  if (serial_config_ready) {
-    refresh_mpe_zone_pitch(wingie_mpe::kLowerZone);
-    refresh_mpe_zone_pitch(wingie_mpe::kUpperZone);
-  }
+void configure_mpe_zone(byte memberCount) {
+  reset_mpe_performance(mpe_state.configureZone(wingie_mpe::kLowerZone, memberCount));
+  if (serial_config_ready) refresh_mpe_zone_pitch();
 }
 
-void configure_mpe_power_on(bool enabled) {
-  const uint16_t before = mpe_state.claimedChannels();
-  mpe_state.configureDefaultDualZones(enabled);
-  reset_mpe_performance(before | mpe_state.claimedChannels());
+void configure_mpe_startup() {
+  configure_mpe_zone(wingie_mpe::kStartupMemberCount);
 }
 
 void initialize_mpe_state() {
   mpe_state.reset();
   memset(mpeMonoState, 0, sizeof(mpeMonoState));
+  mpeFlip = false;
+}
+
+// 单 Zone 逐音交替：Cave 侧不参与分配，音符全部落到可发声侧；两侧均 Cave 时吞掉。
+int8_t mpe_note_side() {
+  const bool leftPlayable = Mode[0] != CAVE_MODE;
+  const bool rightPlayable = Mode[1] != CAVE_MODE;
+  if (!leftPlayable && !rightPlayable) return -1;
+  if (!leftPlayable) return 1;
+  if (!rightPlayable) return 0;
+  const byte side = mpeFlip ? 1 : 0;
+  mpeFlip = !mpeFlip;
+  return side;
 }
 
 bool handle_mpe_note_on(byte channel, byte pitch) {
-  const int8_t zone = mpe_state.zoneForChannel(channel);
-  if (zone == wingie_mpe::kNoZone) return false;
-  const byte ch = static_cast<byte>(zone);
+  if (mpe_state.zoneForChannel(channel) != wingie_mpe::kLowerZone) return false;
+  const int8_t side = mpe_note_side();
+  if (side < 0) return true;
+  const byte ch = static_cast<byte>(side);
   if (Mode[ch] == POLY_MODE) {
     const int voice = mpe_state.allocateVoice(ch, channel, pitch);
     if (voice >= 0) apply_poly_voice_pitch(ch, voice);
@@ -132,13 +141,15 @@ bool handle_mpe_note_on(byte channel, byte pitch) {
 }
 
 bool handle_mpe_note_off(byte channel, byte pitch) {
-  const int8_t zone = mpe_state.zoneForChannel(channel);
-  if (zone == wingie_mpe::kNoZone) return false;
-  const byte ch = static_cast<byte>(zone);
-  if (Mode[ch] == POLY_MODE) {
-    mpe_state.releaseVoice(ch, channel, pitch);
-  } else if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel && mpeMonoState[ch].note == pitch) {
-    mpeMonoState[ch].active = false;
+  if (mpe_state.zoneForChannel(channel) != wingie_mpe::kLowerZone) return false;
+  // ownership 记录 (channel,note)->(side,voice)，Note Off 需在两侧查找归属。
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == POLY_MODE) {
+      if (mpe_state.releaseVoice(ch, channel, pitch) >= 0) return true;
+    } else if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel && mpeMonoState[ch].note == pitch) {
+      mpeMonoState[ch].active = false;
+      return true;
+    }
   }
   return true;
 }
@@ -156,17 +167,34 @@ void set_conventional_channel_note(byte ch, byte channel, byte pitch) {
   set_channel_pitch(ch, pitch, mono_total_bend(ch));
 }
 
-void refresh_mpe_zone_pitch(byte zone) {
-  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
-    wingie_mpe::VoiceState &state = mpe_state.voices[zone][voice];
-    if (state.active && !mpe_state.channelIsManager(state.channel)) {
-      state.memberBendSemitones = mpe_state.memberPitchBendSemitones(state.channel);
+void refresh_mpe_zone_pitch() {
+  for (byte ch = 0; ch < 2; ch++) {
+    for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
+      wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+      if (state.active && !mpe_state.channelIsManager(state.channel)) {
+        state.memberBendSemitones = mpe_state.memberPitchBendSemitones(state.channel);
+      }
     }
+    if (mpeMonoState[ch].active && !mpe_state.channelIsManager(mpeMonoState[ch].channel)) {
+      mpeMonoState[ch].memberBendSemitones = mpe_state.memberPitchBendSemitones(mpeMonoState[ch].channel);
+    }
+    refresh_side_pitch(ch);
   }
-  if (mpeMonoState[zone].active && !mpe_state.channelIsManager(mpeMonoState[zone].channel)) {
-    mpeMonoState[zone].memberBendSemitones = mpe_state.memberPitchBendSemitones(mpeMonoState[zone].channel);
+}
+
+void refresh_mpe_member_pitch(byte channel) {
+  for (byte ch = 0; ch < 2; ch++) {
+    for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
+      wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+      if (state.active && state.channel == channel) {
+        state.memberBendSemitones = mpe_state.memberPitchBendSemitones(channel);
+      }
+    }
+    if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel) {
+      mpeMonoState[ch].memberBendSemitones = mpe_state.memberPitchBendSemitones(channel);
+    }
+    refresh_side_pitch(ch);
   }
-  refresh_side_pitch(zone);
 }
 
 void apply_pitch_bend_range(byte channel, byte controller, byte value) {
@@ -174,9 +202,8 @@ void apply_pitch_bend_range(byte channel, byte controller, byte value) {
   if (controller == 6) range.semitones = value;
   if (controller == 38) range.cents = value;
   mpe_state.setPitchBendRange(channel, range.semitones, range.cents);
-  const int8_t zone = mpe_state.zoneForChannel(channel);
-  if (zone != wingie_mpe::kNoZone) {
-    refresh_mpe_zone_pitch(zone);
+  if (mpe_state.zoneForChannel(channel) == wingie_mpe::kLowerZone) {
+    refresh_mpe_zone_pitch();
     return;
   }
   for (byte ch = 0; ch < 2; ch++) {
@@ -191,9 +218,8 @@ bool handle_mpe_rpn(byte channel, byte number, byte value) {
   }
   if (number != 6 && number != 38) return false;
   if (mpe_state.selectedRpnIs(channel, 0, 6)) {
-    if (number == 6 && (channel == 1 || channel == 16)) {
-      configure_mpe_zone(channel == 1 ? wingie_mpe::kLowerZone : wingie_mpe::kUpperZone, value);
-    }
+    // 单 Zone 策略：仅 Ch1 的 MCM 生效；Ch16 Upper MCM 被消费但忽略（见 MPE.md）。
+    if (number == 6 && channel == 1) configure_mpe_zone(value);
     return true;
   }
   if (mpe_state.selectedRpnIs(channel, 0, 0)) {
@@ -205,9 +231,12 @@ bool handle_mpe_rpn(byte channel, byte number, byte value) {
 
 bool handle_mpe_control_change(byte channel, byte number, byte value) {
   if (handle_mpe_rpn(channel, number, value)) return true;
-  const int8_t zone = mpe_state.zoneForChannel(channel);
-  if (zone == wingie_mpe::kNoZone) return false;
-  if (mpe_state.channelIsManager(channel)) MIDISetParam(zone, number, value);
+  if (mpe_state.zoneForChannel(channel) != wingie_mpe::kLowerZone) return false;
+  if (mpe_state.channelIsManager(channel)) {
+    // 单 Manager 全局语义：Ch1 CC 同时作用左右两侧。
+    MIDISetParam(0, number, value);
+    MIDISetParam(1, number, value);
+  }
   return true;
 }
 
@@ -216,9 +245,13 @@ void handlePitchBend(byte channel, int bend) {
   recordMidiPitchBend(channel, bend);
 #endif
   mpe_state.setPitchBend(channel, bend);
-  const int8_t zone = mpe_state.zoneForChannel(channel);
-  if (zone != wingie_mpe::kNoZone) {
-    refresh_mpe_zone_pitch(zone);
+  if (mpe_state.zoneForChannel(channel) == wingie_mpe::kLowerZone) {
+    if (mpe_state.channelIsManager(channel)) {
+      refresh_side_pitch(0);
+      refresh_side_pitch(1);
+    } else {
+      refresh_mpe_member_pitch(channel);
+    }
     return;
   }
   if (channel == midi_ch_l) set_conventional_side_pitch(0, channel);

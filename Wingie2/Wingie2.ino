@@ -140,11 +140,11 @@ bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false,
 //
 // for MIDI
 //
-bool realtime_value_valid[3] = {true, true, true}, polyFlip = false;
+bool realtime_value_valid[3] = {true, true, true}, polyFlip = false, mpeFlip = false;
 int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use_alt_tuning, alt_tuning_index;
 float a3_freq, currentPitchBend[2] = {0.0f, 0.0f};
 int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // Channel, Type, (MSB, LSB)
-bool unq_caves_store = false, mpe_enabled = false;
+bool unq_caves_store = false;
 wingie_mpe::State mpe_state;
 MpeMonoState mpeMonoState[2];
 float conventionalPitchBend[2] = {0.0f, 0.0f};

@@ -89,9 +89,9 @@ void control(void *pvParameters) {
     prefs.end();
     prefs.begin("settings", RW_MODE);
 
-    prefs.putUChar("midi_ch_l", 1);
-    prefs.putUChar("midi_ch_r", 2);
-    prefs.putUChar("midi_ch_both", 3);
+    prefs.putUChar("midi_ch_l", 8);
+    prefs.putUChar("midi_ch_r", 9);
+    prefs.putUChar("midi_ch_both", 10);
     prefs.putFloat("a3_freq_offset", 0.);
     prefs.putFloat("pre_clip_gain", 0.2475);
     prefs.putFloat("post_clip_gain", 0.825);
@@ -101,7 +101,6 @@ void control(void *pvParameters) {
     prefs.putUChar("right_mode", 0);
     prefs.putUChar("use_alt_tuning", 0);
     prefs.putChar("alt_tuning_idx", -1);
-    prefs.putBool("mpe_enabled", false);
     prefs.putBool("unq_caves_store", false);
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
@@ -130,9 +129,8 @@ void control(void *pvParameters) {
   midi_ch_r = prefs.getUChar("midi_ch_r");
   midi_ch_both = prefs.getUChar("midi_ch_both");
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
-  mpe_enabled = prefs.getBool("mpe_enabled", false);
-  configure_mpe_power_on(mpe_enabled);
-  Serial.printf("mpe_enabled = %d\n", mpe_enabled);
+  configure_mpe_startup();
+  Serial.printf("mpe single zone claimed = 0x%04x\n", mpe_state.claimedChannels());
   float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
   a3_freq = 440. + a3_freq_offset;
   dsp.setParamValue("a3_freq", a3_freq);

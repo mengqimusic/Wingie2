@@ -350,17 +350,6 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     canonical = *midiValues[index];
     return true;
   }
-  if (strcmp(request.name, "mpe_enabled") == 0) {
-    int enabled = 0;
-    if (!quantizeIntegerParameter(request.value, 0, 1, enabled)) return false;
-    if (mpe_enabled != static_cast<bool>(enabled)) {
-      mpe_enabled = enabled;
-      configure_mpe_power_on(mpe_enabled);
-      dirty[10] = true;
-    }
-    canonical = mpe_enabled ? 1.0f : 0.0f;
-    return true;
-  }
   return false;
 }
 
@@ -382,10 +371,9 @@ void sendSettings(uint32_t id) {
   appendChannelSettings(response, 1);
   response.append(",\"shared\":{\"a3_hz\":%.2f,\"tuning\":%d,"
                   "\"pre_clip_gain\":%.4f,\"post_clip_gain\":%.4f,"
-                  "\"midi\":{\"left\":%d,\"right\":%d,\"both\":%d},\"mpe_enabled\":%s}}",
+                  "\"midi\":{\"left\":%d,\"right\":%d,\"both\":%d}}}",
                   a3_freq, use_alt_tuning ? alt_tuning_index : -1,
-                  pre_clip_gain, post_clip_gain, midi_ch_l, midi_ch_r, midi_ch_both,
-                  mpe_enabled ? "true" : "false");
+                  pre_clip_gain, post_clip_gain, midi_ch_l, midi_ch_r, midi_ch_both);
   sendJson(response);
 }
 
