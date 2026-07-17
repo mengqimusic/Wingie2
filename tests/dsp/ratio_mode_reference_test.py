@@ -10,6 +10,7 @@ from ratio_mode_reference import (
     mtof,
     note_frequency,
     ratio_mode_frequencies,
+    ratio_poly_voice_frequencies,
     string_mode_frequencies,
 )
 
@@ -108,9 +109,40 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("cm_ms[ch][bank][index]", cave_block)
         self.assertIn("unmute_channel_resonators(ch);", pitched_block)
         self.assertNotIn("cm_ms", pitched_block)
-        self.assertIn("if (Mode[ch] == POLY_MODE)", current_mode_block)
+        self.assertIn("if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE)", current_mode_block)
         self.assertIn("unmute_channel_resonators(ch);", current_mode_block)
         self.assertIn("else if (Mode[ch] == CAVE_MODE)", current_mode_block)
+
+    def test_ratio_poly_uses_cave_path_voice_groups(self):
+        mpe = (REPO_ROOT / "Wingie2/MPE.ino").read_text(encoding="utf-8")
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+        serial_config = (REPO_ROOT / "Wingie2/serial_config.ino").read_text(encoding="utf-8")
+
+        ratio_voice_block = extract_braced_block(mpe, "void apply_ratio_voice_pitch")
+        self.assertIn("const byte index = 3 * voice + k;", ratio_voice_block)
+        self.assertIn("fundamental * ratio_profile.ratios[index]", ratio_voice_block)
+        self.assertIn("configured_note_frequency(state.note)", ratio_voice_block)
+        self.assertIn("poly_total_bend(ch, voice)", ratio_voice_block)
+        self.assertIn("cm_freq_set(ch, index, frequency);", ratio_voice_block)
+
+        unmute_block = extract_braced_block(mpe, "void unmute_ratio_voice")
+        self.assertIn("cm_mute_set(ch, 3 * voice + k, false);", unmute_block)
+
+        # RATIO 与 POLY 共用声部分配/弯音语义：统一分发入口按 Mode[ch] 分流。
+        self.assertIn("void cycle_voice_note(byte ch, byte noteValue)", mpe)
+        self.assertIn("void apply_all_voice_pitch(byte ch)", mpe)
+        self.assertIn("if (Mode[ch] == RATIO_MODE) cycle_ratio_voice_note(ch, noteValue);", mpe)
+
+        # 设备按键保持 Ratio 原有 +0/+12 偏移，而非 Poly 的 +12/+24。
+        self.assertIn(
+            "cycle_ratio_voice_note(ch, i + BASE_NOTE + oct[ch] * 12 + (ch ? 12 : 0));",
+            control,
+        )
+        # Tap Sequencer 回放仅 STRING/BAR。
+        self.assertIn("if (Mode[ch] != STRING_MODE && Mode[ch] != BAR_MODE) continue;", control)
+
+        # ratio profile 更新时全声部重应用。
+        self.assertIn("apply_all_ratio_voice_pitch(ch);", serial_config)
 
     def test_cave_bank_updates_only_when_octave_changes(self):
         control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
@@ -183,6 +215,60 @@ class RatioModeReferenceTest(unittest.TestCase):
         )
         self.assertIn("set_mode_led(ch);", ratio_cycle_block)
         self.assertNotIn("ratio_led_on", firmware + control)
+
+
+class RatioPolyVoiceFrequenciesTest(unittest.TestCase):
+    def test_voice_groups_use_their_own_ratio_slice(self):
+        fundamental = 100.0
+        ratios = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        self.assertEqual(ratio_poly_voice_frequencies(fundamental, ratios, 0), [100.0, 200.0, 300.0])
+        self.assertEqual(ratio_poly_voice_frequencies(fundamental, ratios, 1), [400.0, 500.0, 600.0])
+        self.assertEqual(ratio_poly_voice_frequencies(fundamental, ratios, 2), [700.0, 800.0, 900.0])
+
+    def test_voice_uses_its_slice_not_the_whole_profile(self):
+        fundamental = note_frequency(69)
+        ratios = [0.125, 0.5, 1, 1.5, 2, 3, 4, 5, 9]
+        self.assertAlmostEqual(ratio_poly_voice_frequencies(fundamental, ratios, 1)[0], fundamental * 1.5)
+        self.assertAlmostEqual(ratio_poly_voice_frequencies(fundamental, ratios, 2)[2], fundamental * 9)
+        self.assertEqual(len(ratio_poly_voice_frequencies(fundamental, ratios, 0)), 3)
+
+    def test_clamps_to_frequency_limits_per_voice(self):
+        frequencies = ratio_poly_voice_frequencies(1000, [0.001, 0.125, 1, 2, 4, 8, 16, 32, 100], 2)
+        self.assertEqual(frequencies[0], FREQUENCY_MAX)
+        self.assertEqual(frequencies[2], FREQUENCY_MAX)
+        low = ratio_poly_voice_frequencies(1000, [0.001, 0.125, 1, 2, 4, 8, 16, 32, 100], 0)
+        self.assertEqual(low[0], FREQUENCY_MIN)
+        self.assertEqual(low[2], 1000.0)
+
+    def test_boundary_values_pass_unclamped(self):
+        ratios = [0.016, 16.0, 1, 1, 1, 1, 1, 1, 1]
+        frequencies = ratio_poly_voice_frequencies(1000.0, ratios, 0)
+        self.assertEqual(frequencies[0], FREQUENCY_MIN)
+        self.assertEqual(frequencies[1], FREQUENCY_MAX)
+
+    def test_rejects_invalid_fundamental(self):
+        ratios = [1] * 9
+        for bad in (0.0, -440.0, math.nan, math.inf, -math.inf):
+            with self.assertRaises(ValueError):
+                ratio_poly_voice_frequencies(bad, ratios, 0)
+
+    def test_rejects_invalid_ratio_profile(self):
+        with self.assertRaises(ValueError):
+            ratio_poly_voice_frequencies(440, [1, 2, 3], 0)
+        with self.assertRaises(ValueError):
+            ratio_poly_voice_frequencies(440, [1, 2, 3, 4, math.nan, 6, 7, 8, 9], 0)
+        with self.assertRaises(ValueError):
+            ratio_poly_voice_frequencies(440, [1, 2, 3, 4, math.inf, 6, 7, 8, 9], 0)
+        with self.assertRaises(ValueError):
+            ratio_poly_voice_frequencies(440, [1, 2, 3, 4, 0, 6, 7, 8, 9], 0)
+        with self.assertRaises(ValueError):
+            ratio_poly_voice_frequencies(440, [1, 2, 3, 4, -5, 6, 7, 8, 9], 0)
+
+    def test_rejects_invalid_voice(self):
+        ratios = [1] * 9
+        for bad in (-1, 3, 4, 1.5, "0", None, True):
+            with self.assertRaises(ValueError):
+                ratio_poly_voice_frequencies(440, ratios, bad)
 
 
 if __name__ == "__main__":

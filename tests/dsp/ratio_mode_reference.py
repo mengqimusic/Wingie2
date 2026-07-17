@@ -29,6 +29,17 @@ def ratio_mode_frequencies(fundamental, ratios):
     return [min(FREQUENCY_MAX, max(FREQUENCY_MIN, fundamental * ratio)) for ratio in ratios]
 
 
+def ratio_poly_voice_frequencies(fundamental, ratios, voice):
+    if not math.isfinite(fundamental) or fundamental <= 0:
+        raise ValueError("fundamental must be finite and positive")
+    if len(ratios) != RATIO_COUNT or not all(math.isfinite(value) and value > 0 for value in ratios):
+        raise ValueError("ratio profile must contain nine finite positive values")
+    if not isinstance(voice, int) or isinstance(voice, bool) or voice not in (0, 1, 2):
+        raise ValueError("voice must be an integer in {0, 1, 2}")
+    base = 3 * voice
+    return [min(FREQUENCY_MAX, max(FREQUENCY_MIN, fundamental * ratios[base + k])) for k in range(3)]
+
+
 def string_mode_frequencies(fundamental):
     return ratio_mode_frequencies(fundamental, [index + 1 for index in range(RATIO_COUNT)])
 
