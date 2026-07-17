@@ -20,8 +20,8 @@ Alternate tuning also affects Caves mode; see below for details.
 ## Alternate Tuning from an MPE Source
 
 An MPE source can express an external tuning by sending each Member Channel's initial Pitch Bend before
-its Note On. Wingie2 tracks that pre-note value and applies it to the allocated Poly voice or to the current
-String, Bar, or Ratio note. The Member Pitch Bend range defaults to ±48 semitones and follows RPN 0.
+its Note On. Wingie2 tracks that pre-note value and applies it to the allocated Poly or Ratio voice, or to
+the current String or Bar note. The Member Pitch Bend range defaults to ±48 semitones and follows RPN 0.
 
 MPE Pitch Bend is applied after Wingie2's internal tuning. Select Standard in the USB configuration page
 when the MIDI source should be the only tuning authority. The MPE zone layout (Manager Channel 1, Member Channels 2–7, alternating sides) is documented in

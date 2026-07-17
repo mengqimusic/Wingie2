@@ -26,7 +26,9 @@
 
 Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、左右 Mode 与 Input
 Threshold、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
-左右声道共用；Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频率范围为
+左右声道共用，9 个 ratio 按每 3 个一组分为槽 1/2/3；Ratio 复音模式下声部 1/2/3 分别使用
+槽 1/2/3 的比例，页面提供“复制槽 1 到槽 2、3”按钮将槽 1 的比例复制到另外两个槽。
+Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频率范围为
 `16.00–16000.00 Hz`，以 `0.01 Hz` 为步进；页面不提供 Cave factory reset。
 
 若页面放在 iframe 中，iframe 需要 `allow="serial"`，服务器也必须允许相应的
@@ -53,7 +55,10 @@ and are not written to flash.
 
 Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, left/right Mode and Input
 Threshold, the shared Ratio profile, and all three Cave banks for each channel, including frequency
-and mute. Factory Ratio and imported settings first change the running state and still require Save.
+and mute. The shared Ratio profile's nine ratios are grouped into Slots 1/2/3, three ratios per
+slot; in Ratio polyphonic mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively, and the
+“Copy Slot 1 to Slots 2&3” button copies Slot 1's ratios into the other two slots. Factory Ratio
+and imported settings first change the running state and still require Save.
 Cave frequencies cover `16.00–16000.00 Hz` in `0.01 Hz` steps. The page has no Cave factory reset.
 
 For an iframe, add `allow="serial"` and serve a compatible

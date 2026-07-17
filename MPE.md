@@ -22,12 +22,12 @@ Both 10). Channel 16 global-settings CC and Channel 14/15 Cave-frequency CC rema
   order (the same free-running alternation as the conventional Both route). A side in Cave Mode
   is skipped: all notes land on the sounding side; if both sides are in Cave Mode, notes are
   ignored.
-- Poly Mode binds each Note On to one of three voices on its assigned side. A free voice is used
-  first; when all three are active, the oldest voice is replaced.
+- Poly and Ratio Modes each bind a Note On to one of three voices on the assigned side. A free
+  voice is used first; when all three are active, the oldest voice is replaced.
 - Member Pitch Bend changes every active voice owned by that Member Channel, on either side.
 - Manager Pitch Bend (Channel 1) is global: it changes every active MPE voice on both sides.
 - Manager CC (Channel 1) is applied to both sides; Member CC is not mapped.
-- String, Bar, and Ratio use the latest Note On as a monophonic owner on the assigned side. Member
+- String and Bar use the latest Note On as a monophonic owner on the assigned side. Member
   control stops after its matching Note Off, while the last pitch remains latched and Manager
   Pitch Bend remains active.
 - Note Off is routed by (channel, note) ownership across both sides.
