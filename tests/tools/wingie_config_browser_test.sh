@@ -332,6 +332,69 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const element = (selector) => document.querySelector(selector);
+  const edit = (control, value) => {
+    control.focus();
+    control.value = value;
+    control.dispatchEvent(new InputEvent("input", {bubbles: true, data: value}));
+  };
+  const mock = window.__wingieSerialMock;
+
+  window.__wingieConfigTest.stopPolling();
+  mock.clearWrites();
+  mock.setRatios([0.9, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  const ratioInput = element('[data-value-key="ratio:0"]');
+  edit(ratioInput, "2.5");
+  await waitFor(() => mock.writes.filter((request) => request.op === "set").length === 2, "conflicted ratio write did not retry after resync");
+  await window.__wingieConfigTest.idle();
+  await waitFor(() => window.__wingieConfigTest.state().ratio.revision === mock.snapshot().ratioRevision, "ratio revision did not resync after conflict");
+  const ratioWrites = mock.writes.filter((request) => request.op === "set");
+  assert(ratioWrites[1].expected_revision === ratioWrites[0].expected_revision + 1, "ratio conflict retry did not use the resynced revision");
+  assert(mock.snapshot().ratios[0] === 2.5, "ratio conflict retry did not apply the user draft");
+  assert(window.__wingieConfigTest.state().ratio.draft[0] === 2.5, "ratio conflict resync lost the pending draft");
+  assert(window.__wingieConfigTest.state().writeErrors.size === 0, "ratio conflict self-heal left a write error");
+  assert(!document.querySelector("#wg-alert").textContent.includes("revision_conflict"), "ratio conflict self-heal surfaced an error alert");
+
+  mock.clearWrites();
+  mock.setCave("left", 0, {frequencies: [65, 115, 218, 411, 777, 1500, 2800, 5200, 11000]});
+  edit(element('[data-cave-input="left:0"]'), "123.45");
+  await waitFor(() => mock.writes.filter((request) => request.op === "set_cave").length === 2, "conflicted cave write did not retry after resync");
+  await window.__wingieConfigTest.idle();
+  await waitFor(() => window.__wingieConfigTest.state().cave.left[0].revision === mock.snapshot().cave.left[0].revision, "cave revision did not resync after conflict");
+  assert(mock.snapshot().cave.left[0].frequencies[0] === 123.45, "cave conflict retry did not apply the user draft");
+  assert(window.__wingieConfigTest.state().cave.left[0].draftFrequencies[0] === 123.45, "cave conflict resync lost the pending draft");
+  assert(window.__wingieConfigTest.state().writeErrors.size === 0, "cave conflict self-heal left a write error");
+
+  window.confirm = () => true;
+  mock.setRatios([0.8, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  mock.clearWrites();
+  element("#wg-factory").click();
+  await waitFor(() => mock.snapshot().ratios[0] === 1, "factory reset did not retry after conflict");
+  assert(mock.writes.filter((request) => request.op === "reset").length === 2, "factory reset did not retry exactly once after conflict");
+  assert(mock.writes.some((request) => request.op === "get"), "factory reset did not resync before retrying");
+  assert(!document.querySelector("#wg-alert").textContent.includes("失败"), "factory reset self-heal surfaced an error alert");
+
+  mock.clearWrites();
+  mock.failNext("set", "mock_failure");
+  edit(ratioInput, "3.5");
+  await waitFor(() => document.querySelector("#wg-alert").textContent.includes("实时写入失败"), "non-conflict failure did not surface the error alert");
+  assert(window.__wingieConfigTest.state().writeErrors.size > 0, "non-conflict failure did not record a write error");
+})()
+JS
+
 agent-browser --session "$SESSION" set viewport 390 844 >/dev/null
 agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 (() => {

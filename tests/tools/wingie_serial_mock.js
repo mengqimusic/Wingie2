@@ -156,6 +156,7 @@
       return {v: 1, id: request.id, ok: true, op: "set_cave", state: "queued", revision: bank.revision};
     }
     if (request.op === "reset") {
+      if (Number(request.expected_revision) !== ratioRevision) return {v: 1, id: request.id, ok: false, error: {code: "revision_conflict", field: "expected_revision"}};
       ratios = factoryRatios.slice();
       ratioRevision += 1;
       ratioDirty = true;

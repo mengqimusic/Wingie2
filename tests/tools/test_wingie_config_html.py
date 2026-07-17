@@ -282,6 +282,48 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("normalized.draftFrequencies = current.draftFrequencies.slice();", block)
         self.assertIn("applyCaveBankSnapshot(side, bank, normalizeCave(responses[side][bank]), preservePending);", self.source)
 
+    def test_revision_conflict_self_heals(self):
+        enqueue = re.search(
+            r"function enqueueWrite\(key, version, execute, acknowledge, rollback\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(enqueue)
+        block = enqueue.group(1)
+        self.assertIn('code === "revision_conflict"', block)
+        self.assertIn("!state.conflictRetries.has(key)", block)
+        self.assertIn("await resyncConflictedResource(key);", block)
+        self.assertIn("state.conflictRetries.delete(key);", block)
+        resync = re.search(
+            r"async function resyncConflictedResource\(key\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(resync)
+        block = resync.group(1)
+        self.assertIn("state.conflictRetries.add(key);", block)
+        self.assertIn('applyRatioSnapshot(normalizeRatio(await request("get")), true);', block)
+        self.assertIn('scheduleResource("ratio", commitRatio, true);', block)
+        self.assertIn('applyCaveBankSnapshot(side, bank, normalizeCave(await request("get_cave", {side, bank})), true);', block)
+        self.assertIn("scheduleResource(key, (version) => commitCave(side, bank, version), true);", block)
+        self.assertIn("conflictRetries: new Set(),", self.source)
+        reset = re.search(
+            r"async function resetFactoryRatio\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(reset)
+        block = reset.group(1)
+        self.assertIn('code !== "revision_conflict"', block)
+        self.assertIn('applyRatioSnapshot(normalizeRatio(await request("get")), true);', block)
+        reset_mock = re.search(
+            r'if \(request\.op === "reset"\) \{(.*?)\n    \}',
+            self.mock_source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(reset_mock)
+        self.assertIn('error: {code: "revision_conflict", field: "expected_revision"}', reset_mock.group(1))
+
     def test_mock_matches_schema_four_without_events(self):
         self.assertIn("config_schema: 4", self.mock_source)
         for operation in (

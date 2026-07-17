@@ -642,6 +642,7 @@
         resourceTimers: new Map(),
         pendingResourceKeys: new Set(),
         writeErrors: new Map(),
+        conflictRetries: new Set(),
         writeChain: Promise.resolve(),
         pendingWrites: 0,
         refreshing: false,
@@ -1141,16 +1142,34 @@
         updateControls();
         const operation = state.writeChain.then(async () => {
           if (state.pollPromise) await state.pollPromise;
-          if (!state.connected || state.resourceVersions.get(key) !== version) return;
+          if (!state.connected || state.resourceVersions.get(key) !== version) {
+            state.conflictRetries.delete(key);
+            return;
+          }
           try {
             const response = await execute();
             state.writeErrors.delete(key);
+            state.conflictRetries.delete(key);
             await acknowledge(response, state.resourceVersions.get(key) === version);
           } catch (error) {
             if (state.resourceVersions.get(key) === version) {
-              state.writeErrors.set(key, error);
-              rollback();
-              setAlert(copy(`实时写入失败：${formatError(error)}`, `Live write failed: ${formatError(error)}`), "error");
+              const code = error.payload && error.payload.error && error.payload.error.code;
+              if (code === "revision_conflict" && !state.conflictRetries.has(key) && (key === "ratio" || key.startsWith("cave:"))) {
+                try {
+                  await resyncConflictedResource(key);
+                  state.writeErrors.delete(key);
+                } catch (resyncError) {
+                  state.conflictRetries.delete(key);
+                  state.writeErrors.set(key, resyncError);
+                  rollback();
+                  setAlert(copy(`实时写入失败：${formatError(resyncError)}`, `Live write failed: ${formatError(resyncError)}`), "error");
+                }
+              } else {
+                state.conflictRetries.delete(key);
+                state.writeErrors.set(key, error);
+                rollback();
+                setAlert(copy(`实时写入失败：${formatError(error)}`, `Live write failed: ${formatError(error)}`), "error");
+              }
             }
           }
         }).finally(() => {
@@ -1159,6 +1178,20 @@
         });
         state.writeChain = operation.catch(() => undefined);
         return operation;
+      }
+
+      async function resyncConflictedResource(key) {
+        state.conflictRetries.add(key);
+        if (key === "ratio") {
+          applyRatioSnapshot(normalizeRatio(await request("get")), true);
+          scheduleResource("ratio", commitRatio, true);
+        } else {
+          const [, side, bankText] = key.split(":");
+          const bank = Number(bankText);
+          applyCaveBankSnapshot(side, bank, normalizeCave(await request("get_cave", {side, bank})), true);
+          scheduleResource(key, (version) => commitCave(side, bank, version), true);
+        }
+        renderAll();
       }
 
       function scheduleParameter(key, raw, focused, immediate = false) {
@@ -1355,7 +1388,15 @@
       async function resetFactoryRatio() {
         if (!state.ratio || !window.confirm(`${languageText("恢复出厂比例？", "Restore Factory Ratio?")}\n\n${languageText("此操作会立即改变运行状态；点击保存后才写入闪存。", "This changes the running state; Save is required to write flash.")}`)) return;
         await waitForWrites();
-        const response = await request("reset", {expected_revision: state.ratio.revision});
+        let response;
+        try {
+          response = await request("reset", {expected_revision: state.ratio.revision});
+        } catch (error) {
+          const code = error.payload && error.payload.error && error.payload.error.code;
+          if (code !== "revision_conflict") throw error;
+          applyRatioSnapshot(normalizeRatio(await request("get")), true);
+          response = await request("reset", {expected_revision: state.ratio.revision});
+        }
         state.ratio.revision = Number(response.revision);
         state.ratio.values = state.ratio.factory.slice();
         state.ratio.draft = state.ratio.factory.slice();
