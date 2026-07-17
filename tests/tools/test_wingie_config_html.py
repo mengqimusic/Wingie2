@@ -183,6 +183,35 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertNotIn("硬件左侧", self.source)
         self.assertNotIn("Hardware left", self.source)
 
+    def test_ratio_slot_groups_and_copy_slot_button(self):
+        self.assertIn("const ratioSlotSize = 3;", self.source)
+        self.assertIn("#wingie-config .wg-ratio-slot td", self.source)
+        self.assertIn('slotRow.className = "wg-ratio-slot";', self.source)
+        self.assertIn("index % ratioSlotSize === 0", self.source)
+        self.assertIn('data-i18n-zh="槽 ${slot}"', self.source)
+        self.assertIn('data-i18n-en="Slot ${slot}"', self.source)
+        for phrase in (
+            'data-i18n-zh="Ratio 复音模式下，声部 1/2/3 分别使用槽 1/2/3 的比例。"',
+            'data-i18n-en="In Ratio poly mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively."',
+            'id="wg-copy-slot1"',
+            'class="wg-button"',
+            'data-i18n-zh="复制槽 1 到槽 2、3"',
+            'data-i18n-en="Copy Slot 1 to Slots 2&amp;3"',
+        ):
+            self.assertIn(phrase, self.source)
+        ratio_section = self.source.split('id="wg-ratio-title"', 1)[1].split("</section>", 1)[0]
+        self.assertLess(ratio_section.index('id="wg-copy-slot1"'), ratio_section.index('id="wg-factory"'))
+        copy_slot = re.search(r"function copySlot1ToSlots\(\) \{(.*?)\n      \}", self.source, re.DOTALL)
+        self.assertIsNotNone(copy_slot)
+        block = copy_slot.group(1)
+        self.assertIn("state.ratio.draft[index] = state.ratio.draft[index % ratioSlotSize]", block)
+        self.assertIn("state.ratio.raw[index] = formatNumber(state.ratio.draft[index], state.ratio.limits.step)", block)
+        self.assertIn('scheduleResource("ratio", commitRatio, false)', block)
+        self.assertNotIn("request(", block)
+        self.assertIn('copySlot1: root.querySelector("#wg-copy-slot1")', self.source)
+        self.assertIn("elements.copySlot1.disabled = !ready || busy || state.pendingWrites > 0;", self.source)
+        self.assertIn('elements.copySlot1.addEventListener("click", copySlot1ToSlots);', self.source)
+
     def test_minimal_responsive_visual_contract(self):
         self.assertIn("background: #fff", self.source)
         self.assertIn("width: min(1120px, 100%)", self.source)

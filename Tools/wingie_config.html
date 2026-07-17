@@ -353,6 +353,17 @@
       text-align: center;
     }
 
+    #wingie-config .wg-ratio-slot td {
+      width: auto;
+      padding: 5px 8px;
+      color: #555;
+      background: #f3f3f3;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
     #wingie-config .wg-mute-cell {
       width: 62px;
       text-align: center;
@@ -524,8 +535,11 @@
 
       <section class="wg-section" aria-labelledby="wg-ratio-title">
         <div class="wg-section-head">
-          <div><h2 id="wg-ratio-title" data-i18n-zh="共享比例配置" data-i18n-en="Shared Ratio Profile"></h2><p class="wg-help" data-i18n-zh="左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。" data-i18n-en="Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms."></p></div>
-          <button id="wg-factory" class="wg-button" type="button" disabled data-i18n-zh="恢复出厂比例" data-i18n-en="Factory Ratio"></button>
+          <div><h2 id="wg-ratio-title" data-i18n-zh="共享比例配置" data-i18n-en="Shared Ratio Profile"></h2><p class="wg-help" data-i18n-zh="左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。" data-i18n-en="Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms."></p><p class="wg-help" data-i18n-zh="Ratio 复音模式下，声部 1/2/3 分别使用槽 1/2/3 的比例。" data-i18n-en="In Ratio poly mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively."></p></div>
+          <div class="wg-actions">
+            <button id="wg-copy-slot1" class="wg-button" type="button" disabled data-i18n-zh="复制槽 1 到槽 2、3" data-i18n-en="Copy Slot 1 to Slots 2&amp;3"></button>
+            <button id="wg-factory" class="wg-button" type="button" disabled data-i18n-zh="恢复出厂比例" data-i18n-en="Factory Ratio"></button>
+          </div>
         </div>
         <p class="wg-help wg-mobile-scroll-note" data-i18n-zh="表格可横向滑动查看左右频率。" data-i18n-en="Swipe horizontally to view both frequencies."></p>
         <div class="wg-table-wrap"><table class="wg-ratio-table" data-i18n-aria-zh="比例配置" data-i18n-aria-en="Ratio profile"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="比例" data-i18n-en="Ratio"></th><th data-i18n-zh="音程" data-i18n-en="Interval"></th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
@@ -568,6 +582,7 @@
       const sides = ["left", "right"];
       const bankCount = 3;
       const resonatorCount = 9;
+      const ratioSlotSize = 3;
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
 
@@ -582,6 +597,7 @@
         mobileSides: root.querySelector("#wg-mobile-sides"),
         ratioRows: root.querySelector("#wg-ratio-rows"),
         ratioMeta: root.querySelector("#wg-ratio-meta"),
+        copySlot1: root.querySelector("#wg-copy-slot1"),
         factory: root.querySelector("#wg-factory"),
         save: root.querySelector("#wg-save"),
         refresh: root.querySelector("#wg-refresh"),
@@ -1331,8 +1347,28 @@
         setAlert(copy("已恢复出厂比例；尚未写入闪存。", "Factory Ratio restored; not saved to flash yet."), "success");
       }
 
+      function copySlot1ToSlots() {
+        if (!state.ratio) return;
+        const active = document.activeElement;
+        if (active && active.classList && active.classList.contains("wg-ratio-input")) active.blur();
+        for (let index = ratioSlotSize; index < resonatorCount; index += 1) {
+          state.ratio.draft[index] = state.ratio.draft[index % ratioSlotSize];
+          state.ratio.raw[index] = formatNumber(state.ratio.draft[index], state.ratio.limits.step);
+        }
+        scheduleResource("ratio", commitRatio, false);
+        renderRatio();
+        updateControls();
+      }
+
       function createRows() {
         for (let index = 0; index < resonatorCount; index += 1) {
+          if (index % ratioSlotSize === 0) {
+            const slot = index / ratioSlotSize + 1;
+            const slotRow = document.createElement("tr");
+            slotRow.className = "wg-ratio-slot";
+            slotRow.innerHTML = `<td colspan="3" data-i18n-zh="槽 ${slot}" data-i18n-en="Slot ${slot}"></td>`;
+            elements.ratioRows.appendChild(slotRow);
+          }
           const ratioRow = document.createElement("tr");
           ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`)}" disabled></td><td data-cents="${index}">—</td>`;
           elements.ratioRows.appendChild(ratioRow);
@@ -1404,6 +1440,7 @@
         const ready = state.connected && state.settings && state.ratio && state.caveCacheValid && sides.every((side) => state.cave[side].every(Boolean));
         const busy = state.saving || state.refreshing;
         elements.factory.disabled = !ready || busy || state.pendingWrites > 0;
+        elements.copySlot1.disabled = !ready || busy || state.pendingWrites > 0;
         elements.save.disabled = !ready || busy;
         elements.refresh.disabled = !state.connected || busy || state.pendingWrites > 0 || state.resourceTimers.size > 0;
         elements.export.disabled = !ready || busy;
@@ -1547,6 +1584,7 @@
       elements.save.addEventListener("click", saveConfiguration);
       elements.refresh.addEventListener("click", () => refreshAll(true).catch((error) => setAlert(copy(`刷新失败：${formatError(error)}`, `Refresh failed: ${formatError(error)}`), "error")));
       elements.factory.addEventListener("click", () => resetFactoryRatio().catch((error) => setAlert(copy(`出厂比例失败：${formatError(error)}`, `Factory Ratio failed: ${formatError(error)}`), "error")));
+      elements.copySlot1.addEventListener("click", copySlot1ToSlots);
       elements.export.addEventListener("click", downloadExport);
       elements.import.addEventListener("click", () => elements.importFile.click());
       elements.importFile.addEventListener("change", () => {
