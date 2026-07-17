@@ -293,6 +293,45 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const element = (selector) => document.querySelector(selector);
+  const edit = (control, value) => {
+    control.focus();
+    control.value = value;
+    control.dispatchEvent(new InputEvent("input", {bubbles: true, data: value}));
+  };
+  const mock = window.__wingieSerialMock;
+
+  window.__wingieConfigTest.stopPolling();
+  mock.clearWrites();
+  mock.setResponseDelay(120);
+  const pollPromise = window.__wingieConfigTest.poll();
+  await waitFor(() => mock.writes.some((request) => request.op === "get_settings"), "race poll started");
+  const ratioInput = element('[data-value-key="ratio:0"]');
+  edit(ratioInput, "1.5");
+  await pollPromise;
+  await window.__wingieConfigTest.idle();
+  await waitFor(() => window.__wingieConfigTest.state().ratio.revision === mock.snapshot().ratioRevision, "raced poll rolled back the local ratio revision");
+  assert(window.__wingieConfigTest.state().writeErrors.size === 0, "raced poll left a write error");
+  assert(!document.querySelector("#wg-alert").textContent.includes("revision_conflict"), "raced poll triggered a revision conflict");
+  assert(mock.snapshot().ratios[0] === 1.5, "raced ratio write did not reach the device");
+  assert(window.__wingieConfigTest.state().ratio.draft[0] === 1.5, "raced poll overwrote the committed ratio draft");
+  mock.setResponseDelay(0);
+})()
+JS
+
 agent-browser --session "$SESSION" set viewport 390 844 >/dev/null
 agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 (() => {

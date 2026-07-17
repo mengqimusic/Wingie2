@@ -985,18 +985,29 @@
         return responses;
       }
 
+      function applyCaveBankSnapshot(side, bank, normalized, preservePending) {
+        const current = state.cave[side][bank];
+        if (preservePending && current) {
+          if (state.pendingResourceKeys.has(caveKey(side, bank)) || current.focused.some(Boolean)) {
+            normalized.draftFrequencies = current.draftFrequencies.slice();
+            normalized.raw = current.raw.slice();
+            normalized.focused = current.focused.slice();
+            normalized.draftMute = current.draftMute.slice();
+          }
+          if (normalized.revision < current.revision) {
+            normalized.revision = current.revision;
+            normalized.frequencies = current.frequencies.slice();
+            normalized.mute = current.mute.slice();
+            normalized.dirty = current.dirty;
+          }
+        }
+        state.cave[side][bank] = normalized;
+      }
+
       function applyCaveResponses(responses, preservePending) {
         for (const side of sides) {
           for (let bank = 0; bank < bankCount; bank += 1) {
-            const normalized = normalizeCave(responses[side][bank]);
-            const current = state.cave[side][bank];
-            if (preservePending && current && (state.pendingResourceKeys.has(caveKey(side, bank)) || current.focused.some(Boolean))) {
-              normalized.draftFrequencies = current.draftFrequencies.slice();
-              normalized.raw = current.raw.slice();
-              normalized.focused = current.focused.slice();
-              normalized.draftMute = current.draftMute.slice();
-            }
-            state.cave[side][bank] = normalized;
+            applyCaveBankSnapshot(side, bank, normalizeCave(responses[side][bank]), preservePending);
           }
         }
         state.caveCacheValid = true;
@@ -1023,10 +1034,17 @@
 
       function applyRatioSnapshot(ratio, preservePending) {
         const previous = state.ratio;
-        if (preservePending && previous && (state.pendingResourceKeys.has("ratio") || previous.focused.some(Boolean))) {
-          ratio.draft = previous.draft.slice();
-          ratio.raw = previous.raw.slice();
-          ratio.focused = previous.focused.slice();
+        if (preservePending && previous) {
+          if (state.pendingResourceKeys.has("ratio") || previous.focused.some(Boolean)) {
+            ratio.draft = previous.draft.slice();
+            ratio.raw = previous.raw.slice();
+            ratio.focused = previous.focused.slice();
+          }
+          if (ratio.revision < previous.revision) {
+            ratio.revision = previous.revision;
+            ratio.values = previous.values.slice();
+            ratio.dirty = previous.dirty;
+          }
         }
         state.ratio = ratio;
       }
@@ -1075,7 +1093,7 @@
         state.pollPromise = new Promise((resolve) => { finishPoll = resolve; });
         try {
           const snapshot = await readFullSnapshot();
-          if (!state.connected || epoch !== state.connectionEpoch) return;
+          if (!state.connected || epoch !== state.connectionEpoch || pendingUiWriteCount()) return;
           applyFullSnapshot(snapshot, true);
           state.pollError = null;
           renderAll();
@@ -1122,6 +1140,7 @@
         state.pendingWrites += 1;
         updateControls();
         const operation = state.writeChain.then(async () => {
+          if (state.pollPromise) await state.pollPromise;
           if (!state.connected || state.resourceVersions.get(key) !== version) return;
           try {
             const response = await execute();

@@ -239,6 +239,49 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("await refreshDependentCaves();", self.source)
         self.assertIn("await acknowledge(response", self.source)
 
+    def test_write_poll_race_guards(self):
+        enqueue = re.search(
+            r"function enqueueWrite\(key, version, execute, acknowledge, rollback\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(enqueue)
+        self.assertIn("if (state.pollPromise) await state.pollPromise;", enqueue.group(1))
+        poll = re.search(
+            r"async function pollFullSnapshot\(\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(poll)
+        self.assertIn(
+            "if (!state.connected || epoch !== state.connectionEpoch || pendingUiWriteCount()) return;",
+            poll.group(1),
+        )
+        ratio_apply = re.search(
+            r"function applyRatioSnapshot\(ratio, preservePending\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(ratio_apply)
+        block = ratio_apply.group(1)
+        self.assertIn("ratio.revision = previous.revision;", block)
+        self.assertIn("ratio.values = previous.values.slice();", block)
+        self.assertIn("ratio.dirty = previous.dirty;", block)
+        self.assertIn("ratio.draft = previous.draft.slice();", block)
+        cave_apply = re.search(
+            r"function applyCaveBankSnapshot\(side, bank, normalized, preservePending\) \{(.*?)\n      \}",
+            self.source,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(cave_apply)
+        block = cave_apply.group(1)
+        self.assertIn("normalized.revision = current.revision;", block)
+        self.assertIn("normalized.frequencies = current.frequencies.slice();", block)
+        self.assertIn("normalized.mute = current.mute.slice();", block)
+        self.assertIn("normalized.dirty = current.dirty;", block)
+        self.assertIn("normalized.draftFrequencies = current.draftFrequencies.slice();", block)
+        self.assertIn("applyCaveBankSnapshot(side, bank, normalizeCave(responses[side][bank]), preservePending);", self.source)
+
     def test_mock_matches_schema_four_without_events(self):
         self.assertIn("config_schema: 4", self.mock_source)
         for operation in (
