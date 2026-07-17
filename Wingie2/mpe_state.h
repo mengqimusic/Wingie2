@@ -13,6 +13,7 @@ static const uint8_t kVoiceCount = 3;
 static const uint8_t kLowerZone = 0;
 static const uint8_t kUpperZone = 1;
 static const int8_t kNoZone = -1;
+static const uint8_t kStartupMemberCount = 6;
 static const int16_t kPitchBendMinimum = -8192;
 static const int16_t kPitchBendMaximum = 8191;
 
@@ -156,17 +157,6 @@ struct State {
           beforeManager[channel - 1] != channelIsManager(channel)) changed |= channelBit(channel);
     }
     return changed;
-  }
-
-  uint16_t configureDefaultDualZones(bool enabled) {
-    const uint16_t before = claimedChannels();
-    zones[kLowerZone].memberMask = 0;
-    zones[kUpperZone].memberMask = 0;
-    if (enabled) {
-      configureZone(kLowerZone, kVoiceCount);
-      configureZone(kUpperZone, kVoiceCount);
-    }
-    return before ^ claimedChannels();
   }
 
   void selectRpn(uint8_t channel, uint8_t controller, uint8_t value) {

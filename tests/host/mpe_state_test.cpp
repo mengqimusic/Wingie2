@@ -5,21 +5,21 @@
 
 using namespace wingie_mpe;
 
-void testDefaultDualZones() {
+void testStartupZoneClaimsSevenChannels() {
   State state;
   state.reset();
   assert(state.claimedChannels() == 0);
-  state.configureDefaultDualZones(true);
-  assert(state.zoneForChannel(1) == kLowerZone);
-  assert(state.zoneForChannel(2) == kLowerZone);
-  assert(state.zoneForChannel(4) == kLowerZone);
-  assert(state.zoneForChannel(5) == kNoZone);
-  assert(state.zoneForChannel(12) == kNoZone);
-  assert(state.zoneForChannel(13) == kUpperZone);
-  assert(state.zoneForChannel(15) == kUpperZone);
-  assert(state.zoneForChannel(16) == kUpperZone);
+  state.configureZone(kLowerZone, kStartupMemberCount);
+  assert(state.claimedChannels() == 0x007F);
+  for (uint8_t channel = 1; channel <= 7; channel++) {
+    assert(state.zoneForChannel(channel) == kLowerZone);
+  }
+  assert(state.zoneForChannel(8) == kNoZone);
+  assert(state.zoneForChannel(16) == kNoZone);
   assert(state.channelIsManager(1));
-  assert(state.channelIsManager(16));
+  assert(!state.channelIsManager(2));
+  assert(state.pitchBendRange(1).semitones == 2);
+  assert(state.pitchBendRange(2).semitones == 48);
 }
 
 void testRecentZoneConfigurationWins() {
@@ -42,7 +42,7 @@ void testRecentZoneConfigurationWins() {
 void testPitchBendRangesAndEndpoints() {
   State state;
   state.reset();
-  state.configureDefaultDualZones(true);
+  state.configureZone(kLowerZone, kStartupMemberCount);
   state.setPitchBend(2, kPitchBendMaximum);
   assert(fabsf(state.channelPitchBendSemitones(2) - 48.0f) < 0.0001f);
   state.setPitchBend(2, kPitchBendMinimum);
@@ -57,15 +57,17 @@ void testPitchBendRangesAndEndpoints() {
 void testVoiceOwnershipAndStealing() {
   State state;
   state.reset();
-  state.configureDefaultDualZones(true);
+  state.configureZone(kLowerZone, kStartupMemberCount);
   state.setPitchBend(2, 4096);
   assert(state.allocateVoice(0, 2, 60) == 0);
   assert(fabsf(state.voices[0][0].memberBendSemitones - 24.0f) < 0.01f);
-  assert(state.allocateVoice(0, 3, 62) == 1);
-  assert(state.allocateVoice(0, 4, 64) == 2);
-  assert(state.allocateVoice(0, 2, 65) == 0);
+  assert(state.allocateVoice(1, 3, 62) == 0);
+  assert(fabsf(state.voices[1][0].memberBendSemitones - 0.0f) < 0.0001f);
+  assert(state.allocateVoice(0, 3, 64) == 1);
+  assert(state.allocateVoice(0, 4, 65) == 2);
+  assert(state.allocateVoice(0, 2, 67) == 0);
   assert(state.releaseVoice(0, 2, 60) == -1);
-  assert(state.releaseVoice(0, 2, 65) == 0);
+  assert(state.releaseVoice(0, 2, 67) == 0);
   assert(!state.voices[0][0].active);
   const float releasedBend = state.voices[0][0].memberBendSemitones;
   state.setPitchBend(2, 0);
@@ -80,7 +82,7 @@ void testConventionalAndMpePitchRemainIsolated() {
 }
 
 int main() {
-  testDefaultDualZones();
+  testStartupZoneClaimsSevenChannels();
   testRecentZoneConfigurationWins();
   testPitchBendRangesAndEndpoints();
   testVoiceOwnershipAndStealing();
