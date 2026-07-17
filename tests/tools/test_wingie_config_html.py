@@ -225,8 +225,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "applyLanguage()",
             "data-i18n-zh=\"连接 Wingie2\"",
             "data-i18n-en=\"Connect Wingie2\"",
-            "data-i18n-zh=\"共享比例配置\"",
-            "data-i18n-en=\"Shared Ratio Profile\"",
+            "data-i18n-zh=\"自定义比例模式设定\"",
+            "data-i18n-en=\"Ratio Mode Profile\"",
             "data-i18n-zh=\"保存到闪存\"",
             "data-i18n-en=\"Save to Flash\"",
         ):
