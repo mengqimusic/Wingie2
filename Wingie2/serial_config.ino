@@ -441,15 +441,27 @@ void sendCaveBank(uint32_t id, byte ch, byte bank) {
 void sendStatus(uint32_t id) {
   const int leftNote = currentNote[0];
   const int rightNote = currentNote[1];
+  uint32_t caveRevision[2][wingie_config::kCaveBankCount];
+  noInterrupts();
+  for (byte ch = 0; ch < 2; ch++) {
+    for (byte bank = 0; bank < wingie_config::kCaveBankCount; bank++) {
+      caveRevision[ch][bank] = cave_config_revision[ch][bank];
+    }
+  }
+  interrupts();
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"status\","
                   "\"mode\":{\"left\":%d,\"right\":%d},"
                   "\"note\":{\"left\":%d,\"right\":%d},"
                   "\"fundamental_hz\":{\"left\":%.3f,\"right\":%.3f},"
-                  "\"profile_revision\":%lu,\"cave_active_bank\":{\"left\":%u,\"right\":%u}}",
+                  "\"profile_revision\":%lu,\"cave_active_bank\":{\"left\":%u,\"right\":%u},"
+                  "\"cave_revision\":{\"left\":[%lu,%lu,%lu],\"right\":[%lu,%lu,%lu]}}",
                   static_cast<unsigned long>(id), Mode[0], Mode[1], leftNote, rightNote,
                   configured_note_frequency(leftNote), configured_note_frequency(rightNote),
-                  static_cast<unsigned long>(ratio_profile.revision), activeCaveBank(0), activeCaveBank(1));
+                  static_cast<unsigned long>(ratio_profile.revision), activeCaveBank(0), activeCaveBank(1),
+                  static_cast<unsigned long>(caveRevision[0][0]), static_cast<unsigned long>(caveRevision[0][1]),
+                  static_cast<unsigned long>(caveRevision[0][2]), static_cast<unsigned long>(caveRevision[1][0]),
+                  static_cast<unsigned long>(caveRevision[1][1]), static_cast<unsigned long>(caveRevision[1][2]));
   sendJson(response);
 }
 
