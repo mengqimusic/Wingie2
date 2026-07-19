@@ -263,6 +263,9 @@ void setup() {
   WiFi.mode(WIFI_MODE_NULL);
   btStop();
 
+  // TRS MIDI IN 只用 RX(GPIO16)。先以 RX-only 初始化 Serial2：txPin 为负表示不接管该脚，
+  // 避免 MIDI.begin 内部的 begin(baud) 把 TX2 接到默认 GPIO17（与 Wire I2C SDA 冲突）。
+  Serial2.begin(MySettings::BaudRate, SERIAL_8N1, 16, -1);
   MIDI.begin(MIDI_CHANNEL_OMNI);
   MIDI.setHandleNoteOn(handleNoteOn);
   MIDI.setHandleNoteOff(handleNoteOff);
