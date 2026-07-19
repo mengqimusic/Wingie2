@@ -48,9 +48,13 @@ esp_err_t AC101::InitI2C(void)
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = I2C_MASTER_FREQ_HZ;
     i2c_param_config(i2c_master_port, &conf);
-    return i2c_driver_install(i2c_master_port, conf.mode,
+    static bool driverInstalled = false;
+    if (driverInstalled) return ESP_OK;
+    const esp_err_t installResult = i2c_driver_install(i2c_master_port, conf.mode,
                               I2C_MASTER_RX_BUF_DISABLE,
                               I2C_MASTER_TX_BUF_DISABLE, 0);
+    if (installResult == ESP_OK) driverInstalled = true;
+    return installResult;
 }
 
 // AC101 begin

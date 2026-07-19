@@ -44,11 +44,15 @@ void control(void *pvParameters) {
 
   Serial.println("AC101 : Connecting...");
 
-  while (not ac.begin()) {
-    Serial.println("AC101 : Failed! Trying...");
+  esp_err_t acError = ESP_OK;
+  for (int attempt = 1; attempt <= 5; attempt++) {
+    acError = ac.begin();
+    if (acError == ESP_OK) break;
+    Serial.printf("AC101 : Init failed (err %d), retry %d/5\n", acError, attempt);
     delay(100);
   }
-  Serial.println("AC101 : Connected");
+  if (acError == ESP_OK) Serial.println("AC101 : Connected");
+  else Serial.printf("AC101 : Init failed (err %d), continuing without codec\n", acError);
 
   acWriteReg(ADC_SRCBST_CTRL, MIC_BOOST);
   acWriteReg(OMIXER_BST1_CTRL, 0x56DB);
