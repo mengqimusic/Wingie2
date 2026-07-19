@@ -56,8 +56,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertNotIn("fetch(", self.source)
         self.assertNotIn("WebSocket", self.source)
 
-    def test_uses_schema_four_snapshot_protocol(self):
-        self.assertIn("Number(hello.config_schema) !== 4", self.source)
+    def test_uses_schema_five_snapshot_protocol(self):
+        self.assertIn("Number(hello.config_schema) !== 5", self.source)
         for operation in (
             "hello",
             "get_settings",
@@ -201,11 +201,11 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "midi_left",
             "midi_right",
             "midi_both",
+            "mpe_enabled",
         ):
             self.assertIn(f'param:shared:{name}', self.source)
-        self.assertNotIn("param:shared:mpe_enabled", self.source)
-        self.assertNotIn("wg-mpe-enabled", self.source)
-        self.assertIn("config_schema) !== 4", self.source)
+        self.assertIn("wg-mpe-enabled", self.source)
+        self.assertIn("config_schema) !== 5", self.source)
         for stale_item in ("Source", "Note", "Fundamental", "Active Cave", "mix", "decay", "volume"):
             self.assertNotIn(stale_item, self.source)
         for runtime_key in (
@@ -272,7 +272,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr))", self.source)
         self.assertEqual(self.source.count('class="wg-field wg-field-half"'), 4)
         self.assertEqual(self.source.count('class="wg-field wg-field-third"'), 3)
-        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 0)
+        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 1)
         self.assertIn("border-radius: 4px", self.source)
         self.assertIn("@media (max-width: 760px)", self.source)
         self.assertIn('data-mobile-side="left"', self.source)
@@ -377,8 +377,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIsNotNone(reset_mock)
         self.assertIn('error: {code: "revision_conflict", field: "expected_revision"}', reset_mock.group(1))
 
-    def test_mock_matches_schema_four_without_events(self):
-        self.assertIn("config_schema: 4", self.mock_source)
+    def test_mock_matches_schema_five_without_events(self):
+        self.assertIn("config_schema: 5", self.mock_source)
         for operation in (
             "get_settings",
             "status",
@@ -403,7 +403,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("readable.locked", self.mock_source)
 
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
-        self.assertIn('"config_schema\\":4', self.firmware_source)
+        self.assertIn('"config_schema\\":5', self.firmware_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
         self.assertIn("kOperationSetParam", self.protocol_source)
         self.assertIn("void sendSettings(uint32_t id)", self.firmware_source)
@@ -433,10 +433,10 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("service_preferences_save();", self.main_source)
         self.assertIn("if (!serial_config_ready) return;", self.main_source)
         self.assertIn("tuning_preferences_dirty", self.storage_source)
-        self.assertNotIn("mpe_enabled", self.storage_source)
-        self.assertNotIn("mpe_enabled", self.firmware_source)
+        self.assertIn('putBool("mpe_enabled", mpe_enabled)', self.storage_source)
+        self.assertIn('"mpe_enabled\\":%s', self.firmware_source)
         self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.firmware_source)
-        self.assertIn('"config_schema\\\":4', self.firmware_source)
+        self.assertIn('"config_schema\\\":5', self.firmware_source)
         self.assertRegex(
             self.storage_source,
             r"if \(unq_caves_store\) \{\s*if \(!save_general_preferences\(prefs\)\)",

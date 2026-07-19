@@ -518,4 +518,43 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  const element = (selector) => document.querySelector(selector);
+  const state = () => window.__wingieConfigTest.state();
+  const mock = window.__wingieSerialMock;
+
+  // MPE 开关：OFF 时三通道可编辑；ON 时写 mpe_enabled 且通道字段置灰；关回恢复
+  if (!state().connected) {
+    element("#wg-connect").click();
+    await waitFor(() => state().connected, "connect before MPE toggle test");
+  }
+  for (const selector of ["#wg-midi-left", "#wg-midi-right", "#wg-midi-both"]) {
+    assert(!element(selector).disabled, `${selector} should be editable with MPE off`);
+  }
+  assert(element("#wg-mpe-enabled").value === "0", "MPE select did not reflect mock default off");
+
+  mock.clearWrites();
+  const mpe = element("#wg-mpe-enabled");
+  mpe.value = "1";
+  mpe.dispatchEvent(new Event("change", {bubbles: true}));
+  await waitFor(() => mock.writes.some((request) => request.op === "set_param" && request.name === "mpe_enabled" && request.value === 1), "mpe_enabled on write");
+  await waitFor(() => element("#wg-midi-left").disabled && element("#wg-midi-right").disabled && element("#wg-midi-both").disabled, "MIDI channel fields did not grey out with MPE on");
+
+  mpe.value = "0";
+  mpe.dispatchEvent(new Event("change", {bubbles: true}));
+  await waitFor(() => mock.writes.some((request) => request.op === "set_param" && request.name === "mpe_enabled" && request.value === 0), "mpe_enabled off write");
+  await waitFor(() => !element("#wg-midi-left").disabled && !element("#wg-midi-right").disabled && !element("#wg-midi-both").disabled, "MIDI channel fields did not restore with MPE off");
+})()
+JS
+
 printf 'Wingie2 schema 4 configuration browser mock tests passed.\n'
