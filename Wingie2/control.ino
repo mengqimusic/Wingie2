@@ -129,28 +129,31 @@ void control(void *pvParameters) {
     prefs.begin("settings", RO_MODE);
   }
 
-  midi_ch_l = prefs.getUChar("midi_ch_l");
-  midi_ch_r = prefs.getUChar("midi_ch_r");
-  midi_ch_both = prefs.getUChar("midi_ch_both");
+  midi_ch_l = prefs.getUChar("midi_ch_l", 8);
+  midi_ch_r = prefs.getUChar("midi_ch_r", 9);
+  midi_ch_both = prefs.getUChar("midi_ch_both", 10);
+  if (midi_ch_l < 1 || midi_ch_l > 16) midi_ch_l = 8;
+  if (midi_ch_r < 1 || midi_ch_r > 16) midi_ch_r = 9;
+  if (midi_ch_both < 1 || midi_ch_both > 16) midi_ch_both = 10;
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
   configure_mpe_startup();
   Serial.printf("mpe single zone claimed = 0x%04x\n", mpe_state.claimedChannels());
-  float a3_freq_offset = prefs.getFloat("a3_freq_offset", 99);
+  float a3_freq_offset = prefs.getFloat("a3_freq_offset", 0);
   a3_freq = 440. + a3_freq_offset;
   dsp.setParamValue("a3_freq", a3_freq);
   Serial.printf("a3_freq = %.2f\n", a3_freq);
-  pre_clip_gain = prefs.getFloat("pre_clip_gain", 0);
+  pre_clip_gain = prefs.getFloat("pre_clip_gain", 0.2475);
   dsp.setParamValue("pre_clip_gain", pre_clip_gain);
   Serial.printf("pre_clip_gain = %.4f\n", pre_clip_gain);
-  post_clip_gain = prefs.getFloat("post_clip_gain", 0);
+  post_clip_gain = prefs.getFloat("post_clip_gain", 0.825);
   dsp.setParamValue("post_clip_gain", post_clip_gain);
   Serial.printf("post_clip_gain = %.4f\n", post_clip_gain);
 
-  left_thresh = prefs.getFloat("left_thresh", 0);
+  left_thresh = prefs.getFloat("left_thresh", 0.4125);
   dsp.setParamValue("left_thresh", left_thresh);
   Serial.printf("left_thresh = %.4f\n", left_thresh);
 
-  right_thresh = prefs.getFloat("right_thresh", 0);
+  right_thresh = prefs.getFloat("right_thresh", 0.4125);
   dsp.setParamValue("right_thresh", right_thresh);
   Serial.printf("right_thresh = %.4f\n", right_thresh);
 
@@ -162,12 +165,12 @@ void control(void *pvParameters) {
         if (!ch) snprintf(buff, sizeof(buff), "l_cf_%d_%d", cave, v);
         else snprintf(buff, sizeof(buff), "r_cf_%d_%d", cave, v);
         const char *addr = buff;
-        cm_freq[ch][cave][v] = prefs.getUShort(addr);
+        cm_freq[ch][cave][v] = prefs.getUShort(addr, static_cast<uint16_t>(lroundf(cm_freq_prev[ch][cave][v])));
 
         if (!ch) snprintf(buff, sizeof(buff), "l_cms_%d_%d", cave, v);
         else snprintf(buff, sizeof(buff), "r_cms_%d_%d", cave, v);
         addr = buff;
-        cm_ms[ch][cave][v] = prefs.getBool(addr);
+        cm_ms[ch][cave][v] = prefs.getBool(addr, cm_ms_prev[ch][cave][v]);
         cm_ms_prev[ch][cave][v] = cm_ms[ch][cave][v];
       }
 
@@ -208,7 +211,7 @@ void control(void *pvParameters) {
           if (!ch) snprintf(buff, sizeof(buff), "l_cf_unq_%d_%d", cave, v);
           else snprintf(buff, sizeof(buff), "r_cf_unq_%d_%d", cave, v);
           const char *addr = buff;
-          cm_freq_stored_unq[ch][cave][v] = prefs.getUShort(addr);
+          cm_freq_stored_unq[ch][cave][v] = prefs.getUShort(addr, static_cast<uint16_t>(lroundf(cm_freq[ch][cave][v])));
         }
 
         if (!load_cave_bank_from_preferences(prefs, ch, cave, true)) {
@@ -232,17 +235,21 @@ void control(void *pvParameters) {
     }
   }
 
-  Mode[0] = prefs.getUChar("left_mode");
+  Mode[0] = prefs.getUChar("left_mode", POLY_MODE);
+  if (Mode[0] > RATIO_MODE) Mode[0] = POLY_MODE;
   set_channel_dsp_mode(0);
   Serial.printf("left_mode = %d\n", Mode[0]);
 
-  Mode[1] = prefs.getUChar("right_mode");
+  Mode[1] = prefs.getUChar("right_mode", POLY_MODE);
+  if (Mode[1] > RATIO_MODE) Mode[1] = POLY_MODE;
   set_channel_dsp_mode(1);
   Serial.printf("right_mode = %d\n", Mode[1]);
 
   use_alt_tuning = prefs.getUChar("use_alt_tuning", 0);
+  if (use_alt_tuning > 1) use_alt_tuning = 0;
   dsp.setParamValue("use_alt_tuning", use_alt_tuning);
   alt_tuning_index = prefs.getChar("alt_tuning_idx", -1);
+  if (alt_tuning_index < -1 || alt_tuning_index > 7) alt_tuning_index = -1;
   Serial.printf("use_alt_tuning = %d, alt_tuning_index = %d\n", use_alt_tuning, alt_tuning_index);
 
   load_ratio_profile_from_preferences();
