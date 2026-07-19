@@ -625,6 +625,7 @@
 
       const state = {
         connected: false,
+        disconnecting: false,
         port: null,
         reader: null,
         writer: null,
@@ -764,7 +765,7 @@
 
       async function readSerialLoop() {
         try {
-          while (state.port && state.port.readable) {
+          while (!state.disconnecting && state.port && state.port.readable) {
             state.reader = state.port.readable.getReader();
             try {
               while (true) {
@@ -851,6 +852,7 @@
         elements.connect.disabled = true;
         setConnection("connecting", copy("正在连接…", "Connecting…"));
         try {
+          state.disconnecting = false;
           state.port = await navigator.serial.requestPort();
           await state.port.open({baudRate: 115200});
           state.writer = state.port.writable.getWriter();
@@ -887,6 +889,7 @@
 
       async function disconnect(announce = true) {
         stopPolling();
+        state.disconnecting = true;
         state.connectionEpoch += 1;
         state.connected = false;
         state.pollError = null;
@@ -898,6 +901,11 @@
         } catch {
         }
         try {
+          // 等读循环完全退出并 releaseLock，否则 close() 会一直等锁（页面冻结的根因）
+          if (state.readLoop) await state.readLoop;
+        } catch {
+        }
+        try {
           if (state.writer) {
             state.writer.releaseLock();
             state.writer = null;
@@ -906,6 +914,7 @@
         } catch {
         }
         state.port = null;
+        state.disconnecting = false;
         state.inputBuffer = "";
         state.caveCacheValid = false;
         elements.connect.disabled = false;

@@ -489,4 +489,33 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  const element = (selector) => document.querySelector(selector);
+  const state = () => window.__wingieConfigTest.state();
+
+  // 手动断开必须完成且页面保持可交互（回归：读循环在 cancel 后重新取锁，close 永远等不到锁，页面冻结）
+  if (!state().connected) {
+    element("#wg-connect").click();
+    await waitFor(() => state().connected, "connect before manual disconnect test");
+  }
+  element("#wg-disconnect").click();
+  await waitFor(() => !state().connected && !element("#wg-connect").disabled, "manual disconnect completes");
+  assert(state().port === null, "port was not released after disconnect");
+  element("#wg-connect").click();
+  await waitFor(() => state().connected && state().pollTimer !== null, "reconnect after manual disconnect");
+  element("#wg-disconnect").click();
+  await waitFor(() => !state().connected, "second manual disconnect completes");
+})()
+JS
+
 printf 'Wingie2 schema 4 configuration browser mock tests passed.\n'

@@ -206,6 +206,13 @@
       this.writable = new WritableStream({write: processChunk});
     },
     async close() {
+      const readable = this.readable;
+      const writable = this.writable;
+      // 与 Chrome WebSerial 一致：close() 等到 readable/writable 的锁全部释放才真正关闭，
+      // 等待期间流对象保持存在（可继续被 getReader）。
+      while ((readable && readable.locked) || (writable && writable.locked)) {
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
       if (controller) {
         try { controller.close(); } catch {
         }

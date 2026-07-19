@@ -393,6 +393,15 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("caves_changed: cavesChanged", self.mock_source)
         self.assertNotIn('event: "changed"', self.mock_source)
 
+    def test_disconnect_releases_read_loop_before_closing(self):
+        self.assertIn("state.disconnecting = true;", self.source)
+        self.assertIn("!state.disconnecting && state.port && state.port.readable", self.source)
+        self.assertIn("await state.readLoop;", self.source)
+        self.assertIn("state.disconnecting = false;", self.source)
+        disconnect_block = self.source.split("async function disconnect(", 1)[1]
+        self.assertLess(disconnect_block.index("await state.readLoop"), disconnect_block.index("state.port.close"))
+        self.assertIn("readable.locked", self.mock_source)
+
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
         self.assertIn('"config_schema\\":4', self.firmware_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
