@@ -1,20 +1,36 @@
 # Wingie2 MPE
 
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
-Pitch Bend path over its existing MIDI 1.0 input, as a single always-on Lower Zone with per-note
+Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
 left/right alternating engine assignment. This scope does not map Channel Pressure or CC 74 to
 synthesis parameters.
 
-## Zone and Routing
+## The MPE Switch
 
-MPE is always on: there is no enable switch. At startup Wingie2 claims one Lower Zone — Manager
-Channel 1 with 6 Member Channels 2–7. RPN 6 MPE Configuration Messages on Channel 1 may resize or
-disable the Zone at runtime; a restart restores the startup layout. MCM received on Channel 16
-(Upper Zone) is consumed but ignored, so a dual-zone controller must be reconfigured to a single
-zone or its upper-zone notes on Channels 13–15 will not sound.
+MPE is governed by a single switch, exposed as `mpe_enabled` in the USB configuration page
+(config schema 5) and stored in flash. Factory default: **off**. The switch is the only zone
+authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
+but ignored while the switch is off. A restart restores the switched layout.
 
-Channels 8–16 keep the conventional Left/Right/Both routing (factory defaults: Left 8, Right 9,
-Both 10). Channel 16 global-settings CC and Channel 14/15 Cave-frequency CC remain reachable.
+### Switch off — conventional routing
+
+No zone exists. Channels 1–16 are all conventional and follow the configurable Left/Right/Both
+routing (factory defaults: Left 8, Right 9, Both 10). Notes on channels not assigned to a route
+do not sound. Channel 13 tuning CC, Channel 14/15 Cave-frequency CC, and Channel 16
+global-settings CC are all reachable.
+
+### Switch on — standard Lower Zone
+
+One Lower Zone claims every channel: Manager Channel 1, Member Channels 2–16. All notes and
+Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Per-channel CC
+beyond the manager is not mapped, which means the conventional control channels are not reachable
+while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all consumed
+by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
+global settings.
+
+Because the zone covers all 16 channels, notes from dual-zone controllers also sound — both
+zones' notes are merged into Wingie2's single zone (per-zone separation is lost, nothing is
+dropped).
 
 ## Note Assignment and Pitch Bend
 
@@ -30,7 +46,8 @@ Both 10). Channel 16 global-settings CC and Channel 14/15 Cave-frequency CC rema
 - String and Bar use the latest Note On as a monophonic owner on the assigned side. Member
   control stops after its matching Note Off, while the last pitch remains latched and Manager
   Pitch Bend remains active.
-- Note Off is routed by (channel, note) ownership across both sides.
+- Note Off is routed by (channel, note) ownership across both sides. A Note On with velocity 0
+  is treated as Note Off.
 
 Member Pitch Bend defaults to ±48 semitones and Manager Pitch Bend defaults to ±2 semitones. RPN 0
 is accepted on Manager and Member Channels; a Member range received on one channel applies to
@@ -45,13 +62,13 @@ Note On. Select Standard internal tuning when the source should be the only tuni
 an internal alternate tuning remains enabled, the internal interval and MPE offset are both
 applied.
 
-## Migrating from the dual-zone firmware
+## Migrating from the always-on firmware
 
-- MPE no longer has an on/off preference; the USB configuration page's MPE field is removed and
-  `get_settings` no longer reports `mpe_enabled` (config schema 4).
-- The Zone occupies Channels 1–7, so conventional routes saved as Channels 1/2/3 no longer apply.
-  Set Left/Right/Both to Channels 8+ in the USB configuration page (factory defaults for new
-  devices are 8/9/10; existing saved settings are not rewritten by the firmware).
-- A conventional (non-MPE) controller should use Channel 1 or Channels 8–16. On Channels 2–7 its
-  Pitch Bend is interpreted as MPE Member Pitch Bend (default ±48 semitones) and its CC is not
-  mapped.
+- The MPE switch is back as `mpe_enabled` in the USB configuration page (config schema 5),
+  persisted in flash, factory default off.
+- With the switch on, the zone covers Channels 2–16 instead of the previous startup layout
+  (Channels 2–7): the earlier silent drop on Channels 11–15 no longer exists.
+- With the switch off, Channels 1–7 are conventional again (previously they were always claimed
+  by the zone), so a non-MPE controller on Channel 1 behaves like any other conventional channel.
+- The Upper-Zone dual-zone warning is gone: dual-zone controllers now sound on every channel,
+  merged into the single zone.
