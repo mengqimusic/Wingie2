@@ -7,18 +7,21 @@ void handleNoteOn (byte channel, byte pitch, byte velocity) {
 
   //if (pitch < 96) {
 
-  if (velocity) {
-    if (handle_mpe_note_on(channel, pitch)) return;
-
-    if (channel == midi_ch_l) MIDISetPitch(0, Mode[0], pitch, channel);
-    if (channel == midi_ch_r) MIDISetPitch(1, Mode[1], pitch, channel);
-
-    if (channel == midi_ch_both) {
-      MIDISetPitch(polyFlip, Mode[polyFlip], pitch, channel);
-      polyFlip = !polyFlip;
-    }
-
+  if (!velocity) {  // Note On velocity 0 按 MIDI 规范等价 Note Off
+    handle_mpe_note_off(channel, pitch);
+    return;
   }
+
+  if (handle_mpe_note_on(channel, pitch)) return;
+
+  if (channel == midi_ch_l) MIDISetPitch(0, Mode[0], pitch, channel);
+  if (channel == midi_ch_r) MIDISetPitch(1, Mode[1], pitch, channel);
+
+  if (channel == midi_ch_both) {
+    MIDISetPitch(polyFlip, Mode[polyFlip], pitch, channel);
+    polyFlip = !polyFlip;
+  }
+
   //}
 }
 
