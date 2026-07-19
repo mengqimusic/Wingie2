@@ -93,9 +93,9 @@ void control(void *pvParameters) {
     prefs.end();
     prefs.begin("settings", RW_MODE);
 
-    prefs.putUChar("midi_ch_l", 8);
-    prefs.putUChar("midi_ch_r", 9);
-    prefs.putUChar("midi_ch_both", 10);
+    prefs.putUChar("midi_ch_l", 1);
+    prefs.putUChar("midi_ch_r", 2);
+    prefs.putUChar("midi_ch_both", 3);
     prefs.putFloat("a3_freq_offset", 0.);
     prefs.putFloat("pre_clip_gain", 0.2475);
     prefs.putFloat("post_clip_gain", 0.825);
@@ -130,12 +130,12 @@ void control(void *pvParameters) {
     prefs.begin("settings", RO_MODE);
   }
 
-  midi_ch_l = prefs.getUChar("midi_ch_l", 8);
-  midi_ch_r = prefs.getUChar("midi_ch_r", 9);
-  midi_ch_both = prefs.getUChar("midi_ch_both", 10);
-  if (midi_ch_l < 1 || midi_ch_l > 16) midi_ch_l = 8;
-  if (midi_ch_r < 1 || midi_ch_r > 16) midi_ch_r = 9;
-  if (midi_ch_both < 1 || midi_ch_both > 16) midi_ch_both = 10;
+  midi_ch_l = prefs.getUChar("midi_ch_l", 1);
+  midi_ch_r = prefs.getUChar("midi_ch_r", 2);
+  midi_ch_both = prefs.getUChar("midi_ch_both", 3);
+  if (midi_ch_l < 1 || midi_ch_l > 16) midi_ch_l = 1;
+  if (midi_ch_r < 1 || midi_ch_r > 16) midi_ch_r = 2;
+  if (midi_ch_both < 1 || midi_ch_both > 16) midi_ch_both = 3;
   Serial.printf("midi_ch_l = %d / midi_ch_r = %d / midi_ch_both = %d\n", midi_ch_l, midi_ch_r, midi_ch_both);
   mpe_enabled = prefs.getBool("mpe_enabled", false);
   configure_mpe_startup();

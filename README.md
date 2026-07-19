@@ -82,22 +82,29 @@ origins are not supported.
 
 ## MPE
 
-MPE 常开，无开关：Lower Zone 固定 Manager Channel 1 + Member Channels 2–7，每个 Note On 按到达
-顺序在左右引擎间交替分配（Cave 侧跳过）；Manager Pitch Bend/CC 为全局（作用两侧），Member
-Pitch Bend 逐音；Channel 8–16 保留常规 Left/Right/Both 路由（出厂默认 8/9/10）。RPN 6 可在
-运行时调整或撤销 Zone，Channel 16 的 Upper MCM 被忽略；RPN 0 支持 Manager/Member 弯音量程
-（默认 ±2 / ±48）。MPE 来源可在 Note On 前发送逐音 Pitch Bend 实现外部 alternate tuning，
-详见 [`MPE.md`](MPE.md) 与 [`ALT_TUNING.md`](ALT_TUNING.md)。当前实现范围是 Zone、逐音
-ownership 与 Pitch Bend，不映射 Channel Pressure 或 CC 74。
+MPE 由网页配置的开关控制（config schema 5，出厂默认关闭，闪存持久）。关闭时无 Zone，
+Channel 1–16 全部走可配置常规 Left/Right/Both 路由（出厂默认 1/2/3），Channel 13 调律、
+14/15 Cave 频率、16 全局设置 CC 均可用。开启时为标准 Lower Zone（Manager Channel 1 +
+Member Channels 2–16）：每个 Note On 按到达顺序在左右引擎间交替分配（Cave 侧跳过），
+Manager Pitch Bend/CC 全局（两侧），Member Pitch Bend 逐音；此时常规路由与 Channel
+13–16 控制 CC 均被 Zone 接管（调律用逐音 Pitch Bend，Cave/全局设置走网页）。开关是 Zone
+唯一权威：MCM（RPN 6）仅在开启时可调整 Zone，关闭时被忽略。RPN 0 支持 Manager/Member
+弯音量程（默认 ±2 / ±48）。MPE 来源可在 Note On 前发送逐音 Pitch Bend 实现外部
+alternate tuning，详见 [`MPE.md`](MPE.md) 与 [`ALT_TUNING.md`](ALT_TUNING.md)。当前实现
+范围是 Zone、逐音 ownership 与 Pitch Bend，不映射 Channel Pressure 或 CC 74。
 
-MPE is always on: a single Lower Zone (Manager Channel 1, Member Channels 2–7) assigns each
-Note On to the left/right engines in alternating arrival order (Cave-mode sides are skipped).
-Manager Pitch Bend/CC is global (both sides); Member Pitch Bend is per-note. Channels 8–16 keep
-the conventional Left/Right/Both routing (factory defaults 8/9/10). RPN 6 may resize or disable
-the Zone at runtime; Upper-Zone MCM on Channel 16 is ignored. RPN 0 sets Manager/Member bend
-ranges (±2/±48 default). An MPE source can provide alternate tuning via per-note Pitch Bend
-before Note On — see [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure
-and CC 74 are not mapped.
+MPE is controlled by a switch in the USB configuration page (config schema 5, factory default
+off, persisted in flash). Off: no zone — Channels 1–16 all follow the configurable conventional
+Left/Right/Both routing (factory defaults 1/2/3); Channel 13 tuning, 14/15 Cave-frequency and
+16 global-settings CCs remain reachable. On: a standard Lower Zone (Manager Channel 1, Member
+Channels 2–16) — each Note On is assigned to the left/right engines in alternating arrival
+order (Cave-mode sides are skipped); Manager Pitch Bend/CC is global (both sides), Member Pitch
+Bend is per-note; the conventional routes and the Channel 13–16 control CCs are consumed by the
+zone (use per-note Pitch Bend for tuning and the configuration page for Cave/global settings).
+The switch is the only zone authority: MCM (RPN 6) may resize the zone only while on and is
+ignored while off. RPN 0 sets Manager/Member bend ranges (±2/±48 default). An MPE source can
+provide alternate tuning via per-note Pitch Bend before Note On — see [`MPE.md`](MPE.md) and
+[`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure and CC 74 are not mapped.
 
 ## 网页刷机 / Web Flasher
 

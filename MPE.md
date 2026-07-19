@@ -15,7 +15,7 @@ but ignored while the switch is off. A restart restores the switched layout.
 ### Switch off — conventional routing
 
 No zone exists. Channels 1–16 are all conventional and follow the configurable Left/Right/Both
-routing (factory defaults: Left 8, Right 9, Both 10). Notes on channels not assigned to a route
+routing (factory defaults: Left 1, Right 2, Both 3). Notes on channels not assigned to a route
 do not sound. Channel 13 tuning CC, Channel 14/15 Cave-frequency CC, and Channel 16
 global-settings CC are all reachable.
 
@@ -72,3 +72,5 @@ applied.
   by the zone), so a non-MPE controller on Channel 1 behaves like any other conventional channel.
 - The Upper-Zone dual-zone warning is gone: dual-zone controllers now sound on every channel,
   merged into the single zone.
+- Factory default routing for fresh devices is Left 1, Right 2, Both 3. Existing saved settings
+  are not rewritten by the firmware; change the channels in the configuration page if needed.
