@@ -5,21 +5,33 @@
 
 using namespace wingie_mpe;
 
-void testStartupZoneClaimsSevenChannels() {
+void testFullZoneClaimsAllChannels() {
   State state;
   state.reset();
   assert(state.claimedChannels() == 0);
-  state.configureZone(kLowerZone, kStartupMemberCount);
-  assert(state.claimedChannels() == 0x007F);
-  for (uint8_t channel = 1; channel <= 7; channel++) {
+  state.configureZone(kLowerZone, kFullZoneMemberCount);
+  assert(state.claimedChannels() == 0xFFFF);
+  for (uint8_t channel = 1; channel <= 16; channel++) {
     assert(state.zoneForChannel(channel) == kLowerZone);
   }
-  assert(state.zoneForChannel(8) == kNoZone);
-  assert(state.zoneForChannel(16) == kNoZone);
   assert(state.channelIsManager(1));
   assert(!state.channelIsManager(2));
+  assert(!state.channelIsManager(16));
   assert(state.pitchBendRange(1).semitones == 2);
   assert(state.pitchBendRange(2).semitones == 48);
+  assert(state.pitchBendRange(16).semitones == 48);
+}
+
+void testEmptyZoneClaimsNothing() {
+  State state;
+  state.reset();
+  state.configureZone(kLowerZone, kFullZoneMemberCount);
+  assert(state.claimedChannels() == 0xFFFF);
+  state.configureZone(kLowerZone, 0);
+  assert(state.claimedChannels() == 0);
+  assert(state.zoneForChannel(1) == kNoZone);
+  assert(state.zoneForChannel(8) == kNoZone);
+  assert(state.zoneForChannel(16) == kNoZone);
 }
 
 void testRecentZoneConfigurationWins() {
@@ -42,7 +54,7 @@ void testRecentZoneConfigurationWins() {
 void testPitchBendRangesAndEndpoints() {
   State state;
   state.reset();
-  state.configureZone(kLowerZone, kStartupMemberCount);
+  state.configureZone(kLowerZone, 6);
   state.setPitchBend(2, kPitchBendMaximum);
   assert(fabsf(state.channelPitchBendSemitones(2) - 48.0f) < 0.0001f);
   state.setPitchBend(2, kPitchBendMinimum);
@@ -57,7 +69,7 @@ void testPitchBendRangesAndEndpoints() {
 void testVoiceOwnershipAndStealing() {
   State state;
   state.reset();
-  state.configureZone(kLowerZone, kStartupMemberCount);
+  state.configureZone(kLowerZone, 6);
   state.setPitchBend(2, 4096);
   assert(state.allocateVoice(0, 2, 60) == 0);
   assert(fabsf(state.voices[0][0].memberBendSemitones - 24.0f) < 0.01f);
@@ -82,7 +94,8 @@ void testConventionalAndMpePitchRemainIsolated() {
 }
 
 int main() {
-  testStartupZoneClaimsSevenChannels();
+  testFullZoneClaimsAllChannels();
+  testEmptyZoneClaimsNothing();
   testRecentZoneConfigurationWins();
   testPitchBendRangesAndEndpoints();
   testVoiceOwnershipAndStealing();

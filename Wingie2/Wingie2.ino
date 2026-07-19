@@ -148,6 +148,7 @@ int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // C
 bool unq_caves_store = false;
 wingie_mpe::State mpe_state;
 MpeMonoState mpeMonoState[2];
+bool mpe_enabled = false; // 网页开关：OFF = 三通道常规路由（midi_ch_l/r/both）；ON = 标准 Lower Zone（Ch1 manager + Ch2–16 members）
 float conventionalPitchBend[2] = {0.0f, 0.0f};
 byte conventionalPitchChannel[2] = {0, 0};
 

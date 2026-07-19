@@ -13,7 +13,7 @@ static const uint8_t kVoiceCount = 3;
 static const uint8_t kLowerZone = 0;
 static const uint8_t kUpperZone = 1;
 static const int8_t kNoZone = -1;
-static const uint8_t kStartupMemberCount = 6;
+static const uint8_t kFullZoneMemberCount = 15;
 static const int16_t kPitchBendMinimum = -8192;
 static const int16_t kPitchBendMaximum = 8191;
 

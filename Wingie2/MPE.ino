@@ -153,7 +153,8 @@ void configure_mpe_zone(byte memberCount) {
 }
 
 void configure_mpe_startup() {
-  configure_mpe_zone(wingie_mpe::kStartupMemberCount);
+  // MPE 开关是唯一权威：ON 建标准全 Lower Zone，OFF 不建 Zone（全常规路由）。
+  configure_mpe_zone(mpe_enabled ? wingie_mpe::kFullZoneMemberCount : 0);
 }
 
 void initialize_mpe_state() {
@@ -274,7 +275,8 @@ bool handle_mpe_rpn(byte channel, byte number, byte value) {
   if (number != 6 && number != 38) return false;
   if (mpe_state.selectedRpnIs(channel, 0, 6)) {
     // 单 Zone 策略：仅 Ch1 的 MCM 生效；Ch16 Upper MCM 被消费但忽略（见 MPE.md）。
-    if (number == 6 && channel == 1) configure_mpe_zone(value);
+    // MPE 开关关闭时 MCM 同样消费但忽略——开关是 Zone 的唯一权威。
+    if (number == 6 && channel == 1 && mpe_enabled) configure_mpe_zone(value);
     return true;
   }
   if (mpe_state.selectedRpnIs(channel, 0, 0)) {
