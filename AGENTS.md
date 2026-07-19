@@ -14,6 +14,12 @@ arduino-cli lib install "MIDI Library" "Adafruit AW9523"
 arduino-cli compile --fqbn esp32:esp32:esp32 --libraries Libraries Wingie2
 ```
 
+Flashing always uses `UploadSpeed=460800`; the default 921600 fails intermittently at sync over the desk USB hub / CH340 link:
+
+```bash
+arduino-cli upload --fqbn esp32:esp32:esp32:UploadSpeed=460800 -p /dev/cu.usbserial-11410 Wingie2
+```
+
 After changing `Wingie2.dsp`, run `faust2esp32 -ac101 -lib Wingie2.dsp`, replace the generated sketch outputs together, and review the generated diff.
 
 ## Coding Style & Naming Conventions
