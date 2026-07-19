@@ -454,10 +454,12 @@ void sendStatus(uint32_t id) {
                   "\"mode\":{\"left\":%d,\"right\":%d},"
                   "\"note\":{\"left\":%d,\"right\":%d},"
                   "\"fundamental_hz\":{\"left\":%.3f,\"right\":%.3f},"
+                  "\"midi_rx\":%lu,"
                   "\"profile_revision\":%lu,\"cave_active_bank\":{\"left\":%u,\"right\":%u},"
                   "\"cave_revision\":{\"left\":[%lu,%lu,%lu],\"right\":[%lu,%lu,%lu]}}",
                   static_cast<unsigned long>(id), Mode[0], Mode[1], leftNote, rightNote,
                   configured_note_frequency(leftNote), configured_note_frequency(rightNote),
+                  static_cast<unsigned long>(midi_rx_count),
                   static_cast<unsigned long>(ratio_profile.revision), activeCaveBank(0), activeCaveBank(1),
                   static_cast<unsigned long>(caveRevision[0][0]), static_cast<unsigned long>(caveRevision[0][1]),
                   static_cast<unsigned long>(caveRevision[0][2]), static_cast<unsigned long>(caveRevision[1][0]),
