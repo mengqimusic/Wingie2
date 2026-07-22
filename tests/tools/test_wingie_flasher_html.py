@@ -99,34 +99,36 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_LICENSES -->"), 1)
         self.assertEqual(self.source.count("<!-- WINGIE_TEST_MOCK -->"), 1)
 
-    def test_visible_copy_is_basic_bilingual_changelog_and_instructions(self):
+    def test_changelog_and_instructions_carry_both_languages_as_i18n(self):
         parser = VisibleTextParser()
         parser.feed(self.source)
         visible_text = " ".join(" ".join(parser.text).split())
+        # The default (zh) text is rendered statically in the markup.
         for fragment in (
             "更新内容",
             "操作说明",
-            "Changelog",
-            "Instructions",
-            "Firmware version",
             "新的稳定滤波器内核",
             "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
             "啸叫抑制功能",
             "以减少过载风险",
+            "银色 Wingie2 需要使用 USB A–C 线",
+            "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
+        ):
+            self.assertIn(fragment, visible_text)
+        # The English copy lives in data-i18n-en attributes (toggled at runtime).
+        for fragment in (
+            "Changelog",
+            "Instructions",
             "stable resonator filter core",
             "64 steps per side",
             "feedback suppression",
             "reducing overload risk",
-            "银色 Wingie2 需要使用 USB A–C 线",
             "Silver Wingie2 units require a USB-A-to-USB-C cable",
-            "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
-            "点击“连接 Wingie2 / Connect”，在弹出的列表中选择 Wingie2 的 USB 串口",
             "Connect Wingie2, and close serial monitors",
             "choose the Wingie2 USB serial port from the list",
-            "连接 Wingie2 / Connect",
-            "安装固件 / Install",
         ):
-            self.assertIn(fragment, visible_text)
+            self.assertIn(fragment, self.source)
+        # No technical detail should leak into the visible markup.
         for fragment in (
             "安全边界",
             "发布固件",
@@ -145,6 +147,12 @@ class WingieFlasherHtmlTest(unittest.TestCase):
             "overload and distortion",
         ):
             self.assertNotIn(fragment, visible_text)
+
+    def test_language_toggle_button_is_present(self):
+        self.assertIn('id="wg-language"', self.source)
+        self.assertIn('data-i18n-aria-zh="切换语言"', self.source)
+        self.assertIn('data-i18n-aria-en="Switch language"', self.source)
+        self.assertIn("state.language = state.language === \"zh\" ? \"en\" : \"zh\"", self.source)
 
     def test_uses_strict_wingie_manifest_and_fixed_offsets(self):
         for field in (
@@ -166,7 +174,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn("actual !== part.sha256", self.source)
         self.assertIn("state.images[index] = await downloadImage", self.source)
         self.assertIn("elements.connect.disabled = !state.packageReady", self.source)
-        self.assertIn("elements.version.textContent = `Firmware ${manifest.version}`", self.source)
+        self.assertIn("state.versionLabel = copy(`固件 ${manifest.version}`, `Firmware ${manifest.version}`)", self.source)
 
     def test_generated_standalone_uses_embedded_images_and_runtime(self):
         for fragment in (
@@ -176,7 +184,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
             "await loadEmbeddedImages(manifest)",
             "state.runtime = await withTimeout(runtimeReady",
             "withTimeout(runtimeReady, 5000",
-            'embeddedRelease ? "正在读取内嵌固件…"',
+            'embeddedRelease ? copy("正在读取内嵌固件…", "Reading embedded firmware…")',
             "请改用发布包中的 standalone HTML",
             "请从官方 GitHub Pages HTTPS 地址重新打开页面",
         ):

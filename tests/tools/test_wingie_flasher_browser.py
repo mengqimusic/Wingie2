@@ -148,55 +148,34 @@ class WingieFlasherBrowserTest(unittest.TestCase):
     def evaluate(self, javascript):
         return self.browser("eval", "--stdin", javascript=javascript)
 
-    def test_visible_page_is_basic_bilingual_and_hides_technical_details(self):
+    def test_default_chinese_then_toggle_to_english_hides_technical_details(self):
         for width in (390, 1280):
             with self.subTest(width=width):
                 self.browser("set", "viewport", str(width), "900")
                 self.open_scenario("current")
+                # Default language is Chinese.
                 self.evaluate(
                     """
                     (() => {
                       const visible = document.body.innerText;
-                      const required = [
+                      const chinese = [
                         "更新内容",
                         "操作说明",
-                        "Changelog",
-                        "Instructions",
-                        "Firmware v9.9.9-test",
                         "新的稳定滤波器内核",
                         "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
                         "啸叫抑制功能",
-                        "以减少过载风险",
-                        "stable resonator filter core",
-                        "64 steps per side",
-                        "feedback suppression",
-                        "reducing overload risk",
                         "银色 Wingie2 需要使用 USB A–C 线",
-                        "Silver Wingie2 units require a USB-A-to-USB-C cable",
                         "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
-                        "点击“连接 Wingie2 / Connect”，在弹出的列表中选择 Wingie2 的 USB 串口",
-                        "Connect Wingie2, and close serial monitors",
-                        "choose the Wingie2 USB serial port from the list",
-                        "连接 Wingie2 / Connect",
-                        "安装固件 / Install"
+                        "连接 Wingie2"
                       ];
-                      required.forEach(text => {
-                        if (!visible.includes(text)) throw new Error(`Missing visible copy: ${text}`);
+                      chinese.forEach(text => {
+                        if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
-                      const changelogOrders = Array.from(
-                        document.querySelectorAll("section[lang] > ul"),
-                        list => Array.from(list.children, item => item.dataset.change).join(",")
-                      );
-                      if (changelogOrders.length !== 2 || changelogOrders[0] !== "filter,sequencer,feedback" || changelogOrders[1] !== changelogOrders[0]) {
-                        throw new Error(`Changelog order differs by language: ${JSON.stringify(changelogOrders)}`);
-                      }
-                      const instructionOrders = Array.from(
-                        document.querySelectorAll("section[lang] > ol"),
-                        list => Array.from(list.children, item => item.dataset.step).join(",")
-                      );
-                      if (instructionOrders.length !== 2 || instructionOrders[0] !== "1,2,3,4,5" || instructionOrders[1] !== instructionOrders[0]) {
-                        throw new Error(`Instruction order differs by language: ${JSON.stringify(instructionOrders)}`);
-                      }
+                      // English must not be visible until toggled.
+                      const english = ["Changelog", "Instructions", "stable resonator filter core"];
+                      english.forEach(text => {
+                        if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
+                      });
                       const forbidden = [
                         "安全边界",
                         "发布固件",
@@ -216,7 +195,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       forbidden.forEach(text => {
                         if (visible.includes(text)) throw new Error(`Technical detail is visible: ${text}`);
                       });
-                      ["#wg-version", "#wg-connect", "#wg-flash", "#wg-install-detail", "[role='progressbar']"].forEach(selector => {
+                      ["#wg-version", "#wg-language", "#wg-connect", "#wg-flash", "#wg-install-detail", "[role='progressbar']"].forEach(selector => {
                         const node = document.querySelector(selector);
                         const rect = node && node.getBoundingClientRect();
                         if (!rect || rect.width <= 0 || rect.height <= 0) throw new Error(`Hidden control: ${selector}`);
@@ -224,6 +203,33 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       if (document.documentElement.scrollWidth > document.documentElement.clientWidth) {
                         throw new Error("Page has horizontal overflow");
                       }
+                      return "PASS";
+                    })()
+                    """
+                )
+                # Toggle to English and verify the English copy is now visible.
+                self.evaluate("document.querySelector('#wg-language').click(); 'CLICKED'")
+                self.evaluate(
+                    """
+                    (() => {
+                      const visible = document.body.innerText;
+                      const english = [
+                        "Changelog",
+                        "Instructions",
+                        "stable resonator filter core",
+                        "64 steps per side",
+                        "feedback suppression",
+                        "Silver Wingie2 units require a USB-A-to-USB-C cable",
+                        "Connect Wingie2, and close serial monitors",
+                        "Connect Wingie2"
+                      ];
+                      english.forEach(text => {
+                        if (!visible.includes(text)) throw new Error(`Missing English copy after toggle: ${text}`);
+                      });
+                      // Chinese headings should now be gone.
+                      ["更新内容", "操作说明"].forEach(text => {
+                        if (visible.includes(text)) throw new Error(`Chinese leaked after toggle: ${text}`);
+                      });
                       return "PASS";
                     })()
                     """

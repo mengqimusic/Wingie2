@@ -273,10 +273,11 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertEqual(self.source.count('class="wg-field wg-field-half"'), 4)
         self.assertEqual(self.source.count('class="wg-field wg-field-third"'), 3)
         self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 1)
-        self.assertIn("border-radius: 4px", self.source)
         self.assertIn("@media (max-width: 760px)", self.source)
         self.assertIn('data-mobile-side="left"', self.source)
         self.assertIn("overflow-x: auto", self.source)
+        # Web 1.0 aesthetic: square corners, no shadows, no gradients.
+        self.assertNotIn("border-radius: 4px", self.source)
         self.assertNotIn("box-shadow", self.source)
         self.assertNotIn("linear-gradient", self.source)
         self.assertNotIn("radial-gradient", self.source)
