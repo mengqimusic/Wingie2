@@ -5,31 +5,61 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wingie2 配置</title>
   <style>
+    /* ============================================================
+       Web 1.0 instrument-manual aesthetic.
+       Hand-coded feel: serif body, 90s bevel buttons, full-grid
+       tables, desaturated semantic state colours. Layout grids,
+       responsive breakpoints, class names and data/aria hooks are
+       unchanged — only the visual layer was rewritten.
+       ============================================================ */
+
     :root {
       color-scheme: light;
     }
 
-    body {
-      margin: 0;
-      color: #111;
-      background: #fff;
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.45;
-    }
-
-    #wingie-config,
-    #wingie-config * {
+    html {
       box-sizing: border-box;
     }
 
-    #wingie-config {
-      min-height: 100vh;
-      padding: 32px 24px;
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      color: #000;
+      background: #c0c0c0;
+      font: 16px/1.55 "Times New Roman", Times, "Noto Serif", serif;
       font-variant-numeric: tabular-nums;
     }
 
-    #wingie-config .wg-shell {
+    a {
+      color: #0000EE;
+      text-decoration: underline;
+    }
+
+    a:visited {
+      color: #551A8B;
+    }
+
+    a:active {
+      color: #FF0000;
+    }
+
+    #wingie-config {
       width: min(1120px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 18px;
+      border: 2px outset #fff;
+      background: #fff;
+    }
+
+    #wingie-config .wg-shell {
+      width: 100%;
       margin: 0 auto;
     }
 
@@ -41,26 +71,35 @@
     }
 
     #wingie-config h1 {
-      margin-bottom: 4px;
-      font-size: 32px;
-      line-height: 1.15;
+      margin-bottom: 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .01em;
     }
 
     #wingie-config h2 {
-      margin-bottom: 3px;
-      font-size: 20px;
+      margin-bottom: 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 700;
+      border-bottom: 2px solid #000;
+      padding-bottom: 2px;
     }
 
     #wingie-config h3 {
       margin-bottom: 0;
-      font-size: 16px;
+      font-size: 17px;
+      font-weight: 700;
     }
 
     #wingie-config .wg-subtitle,
     #wingie-config .wg-help,
     #wingie-config .wg-meta,
     #wingie-config .wg-footer {
-      color: #555;
+      color: #444;
     }
 
     #wingie-config .wg-subtitle,
@@ -68,14 +107,20 @@
     #wingie-config .wg-meta {
       margin-bottom: 0;
       font-size: 13px;
+      font-style: italic;
     }
 
+    #wingie-config .wg-subtitle {
+      text-align: center;
+    }
+
+    /* ---- header / connect bar ---- */
     #wingie-config .wg-header {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
-      gap: 24px;
+      gap: 20px;
       align-items: end;
-      margin-bottom: 24px;
+      margin-bottom: 18px;
     }
 
     #wingie-config .wg-connect-controls,
@@ -85,7 +130,7 @@
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     #wingie-config .wg-connect {
@@ -104,80 +149,129 @@
     }
 
     #wingie-config .wg-connection {
-      min-height: 36px;
-      padding: 7px 10px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      color: #555;
-      background: #fff;
-      font-size: 13px;
+      display: inline-block;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 2px inset #ddd;
+      border-radius: 0;
+      color: #333;
+      background: #f5f5dc;
+      font-size: 12px;
+      font-family: "Courier New", monospace;
       white-space: nowrap;
     }
 
     #wingie-config .wg-connection[data-state="connected"] {
-      color: #111;
-      border-color: #267326;
-      background: #f2fff2;
+      color: #143d14;
+      border-color: #1a6b1a;
+      background: #d8ecd0;
     }
 
     #wingie-config .wg-poll-status {
-      min-height: 1.45em;
-      color: #555;
+      min-height: 1.55em;
+      color: #444;
       font-size: 13px;
+      font-style: italic;
       text-align: right;
     }
 
+    /* ---- form controls: raised grey bevels ---- */
     #wingie-config .wg-button,
     #wingie-config input,
     #wingie-config select {
-      font: inherit;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 15px;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
     }
 
+    #wingie-config .wg-number,
+    #wingie-config .wg-select,
+    #wingie-config .wg-frequency-input,
+    #wingie-config .wg-ratio-input {
+      width: 100%;
+      min-height: 32px;
+      padding: 3px 6px;
+      border: 2px inset #ddd;
+      border-radius: 0;
+      color: #000;
+      background: #fff;
+      font-family: "Courier New", "Liberation Mono", monospace;
+      font-size: 14px;
+    }
+
+    #wingie-config input[type="range"] {
+      width: 100%;
+    }
+
+    #wingie-config input:focus-visible,
+    #wingie-config select:focus-visible {
+      outline: 1px dotted #000;
+      outline-offset: -3px;
+    }
+
+    #wingie-config input:invalid {
+      border-color: #8a2424;
+    }
+
+    /* ---- 90s bevel buttons ---- */
     #wingie-config .wg-button {
-      min-height: 38px;
-      padding: 7px 12px;
-      border: 1px solid #888;
-      border-radius: 4px;
-      color: #111;
-      background: #f3f3f3;
+      min-height: 34px;
+      padding: 5px 13px;
+      border: 3px outset #cccccc;
+      border-radius: 0;
+      color: #000;
+      background: #cccccc;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
       cursor: pointer;
     }
 
     #wingie-config .wg-button:hover:not(:disabled) {
-      background: #e8e8e8;
+      background: #d8d8d8;
+    }
+
+    #wingie-config .wg-button:active:not(:disabled) {
+      border-style: inset;
     }
 
     #wingie-config .wg-button-primary {
+      border-color: #555;
       color: #fff;
-      border-color: #111;
-      background: #111;
-      font-weight: 700;
+      background: #777;
     }
 
     #wingie-config .wg-button-primary:hover:not(:disabled) {
-      background: #333;
+      background: #666;
+      border-color: #444;
+    }
+
+    #wingie-config .wg-button-primary:active:not(:disabled) {
+      border-style: inset;
     }
 
     #wingie-config .wg-button:disabled,
     #wingie-config input:disabled,
     #wingie-config select:disabled {
       cursor: not-allowed;
-      opacity: 0.48;
+      opacity: 0.5;
     }
 
-    #wingie-config .wg-button:focus-visible,
-    #wingie-config input:focus-visible,
-    #wingie-config select:focus-visible {
-      outline: 2px solid #111;
-      outline-offset: 2px;
+    #wingie-config .wg-button:focus-visible {
+      outline: 1px dotted #000;
+      outline-offset: -4px;
     }
 
+    /* ---- alerts: bevelled box, desaturated retro palette ---- */
     #wingie-config .wg-alert {
       display: none;
-      margin-bottom: 16px;
-      padding: 10px 12px;
-      border: 1px solid #888;
-      border-radius: 4px;
+      margin-bottom: 12px;
+      padding: 8px 11px;
+      border: 2px outset #ddd;
+      border-radius: 0;
+      background: #e8e8e8;
       font-size: 14px;
     }
 
@@ -186,32 +280,36 @@
     }
 
     #wingie-config .wg-alert[data-kind="success"] {
-      border-color: #267326;
-      background: #f2fff2;
+      border-color: #2d5a2d;
+      background: #cfe3c6;
+      color: #1a3a1a;
     }
 
     #wingie-config .wg-alert[data-kind="warning"] {
-      border-color: #9a6a00;
-      background: #fff9e8;
+      border-color: #6b5200;
+      background: #efe2b8;
+      color: #3d3200;
     }
 
     #wingie-config .wg-alert[data-kind="error"] {
-      border-color: #a32626;
-      background: #fff1f1;
+      border-color: #6b2a2a;
+      background: #e6c6c0;
+      color: #3d1414;
     }
 
+    /* ---- section: groove fieldset feel ---- */
     #wingie-config .wg-section {
-      margin-bottom: 16px;
-      padding: 18px;
-      border: 1px solid #bbb;
-      border-radius: 4px;
-      background: #fff;
+      margin-bottom: 14px;
+      padding: 12px 14px 14px;
+      border: 2px groove #cccccc;
+      border-radius: 0;
+      background: #f8f8f0;
     }
 
     #wingie-config .wg-channel-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
+      gap: 12px;
     }
 
     #wingie-config .wg-channel-grid .wg-section {
@@ -222,7 +320,7 @@
     #wingie-config .wg-shared-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 10px;
     }
 
     #wingie-config .wg-shared-grid {
@@ -243,7 +341,8 @@
 
     #wingie-config .wg-field label {
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
       font-size: 12px;
       font-weight: 700;
     }
@@ -251,59 +350,53 @@
     #wingie-config .wg-field-note {
       display: block;
       margin-top: 3px;
-      color: #666;
+      color: #444;
       font-size: 11px;
-    }
-
-    #wingie-config .wg-number,
-    #wingie-config .wg-select,
-    #wingie-config .wg-frequency-input,
-    #wingie-config .wg-ratio-input {
-      width: 100%;
-      min-height: 36px;
-      padding: 6px 8px;
-      border: 1px solid #999;
-      border-radius: 4px;
-      color: #111;
-      background: #fff;
-    }
-
-    #wingie-config input[type="range"] {
-      width: 100%;
-    }
-
-    #wingie-config input:invalid {
-      border-color: #a32626;
+      font-style: italic;
     }
 
     #wingie-config .wg-divider {
-      margin: 18px 0;
-      border-top: 1px solid #bbb;
+      margin: 14px 0;
+      border-top: 2px groove #cccccc;
     }
 
+    /* ---- bank tabs / side toggle: bevel toggle group ---- */
     #wingie-config .wg-bank-tabs,
     #wingie-config .wg-mobile-sides {
       display: inline-grid;
       grid-auto-flow: column;
-      gap: 4px;
+      gap: 0;
     }
 
     #wingie-config .wg-bank-button,
     #wingie-config .wg-side-button {
-      min-height: 34px;
-      padding: 5px 10px;
-      border: 1px solid #aaa;
-      border-radius: 4px;
-      color: #333;
-      background: #fff;
+      min-height: 30px;
+      padding: 4px 11px;
+      border: 3px outset #cccccc;
+      border-radius: 0;
+      color: #000;
+      background: #cccccc;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 13px;
+      line-height: 1;
       cursor: pointer;
+    }
+
+    #wingie-config .wg-bank-button + .wg-bank-button,
+    #wingie-config .wg-side-button + .wg-side-button {
+      border-left-width: 0;
+    }
+
+    #wingie-config .wg-bank-button:active,
+    #wingie-config .wg-side-button:active {
+      border-style: inset;
     }
 
     #wingie-config .wg-bank-button[aria-pressed="true"],
     #wingie-config .wg-side-button[aria-pressed="true"] {
+      border-style: inset;
       color: #fff;
-      border-color: #111;
-      background: #111;
+      background: #999;
     }
 
     #wingie-config .wg-mobile-sides {
@@ -312,11 +405,12 @@
       margin-bottom: 12px;
     }
 
+    /* ---- table: full grid lines, classic cellpadding ---- */
     #wingie-config .wg-table-wrap {
-      margin-top: 12px;
+      margin-top: 10px;
       overflow-x: auto;
-      border: 1px solid #bbb;
-      border-radius: 4px;
+      border: 2px outset #ddd;
+      border-radius: 0;
     }
 
     #wingie-config table {
@@ -330,34 +424,34 @@
 
     #wingie-config th,
     #wingie-config td {
-      padding: 7px 8px;
-      border-bottom: 1px solid #ddd;
+      padding: 5px 8px;
+      border: 1px inset #ccc;
       text-align: right;
       white-space: nowrap;
-    }
-
-    #wingie-config tr:last-child td {
-      border-bottom: 0;
+      background: #fff;
     }
 
     #wingie-config th {
-      color: #555;
-      background: #f3f3f3;
-      font-size: 10px;
+      color: #000;
+      background: #c0c0c0;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
+      text-align: left;
     }
 
     #wingie-config th:first-child,
     #wingie-config td:first-child {
-      width: 46px;
+      width: 40px;
       text-align: center;
     }
 
     #wingie-config .wg-ratio-slot td {
       width: auto;
       padding: 5px 8px;
-      color: #555;
-      background: #f3f3f3;
+      color: #000;
+      background: #d8d8c8;
       font-size: 11px;
       font-weight: 700;
       text-align: left;
@@ -365,13 +459,14 @@
     }
 
     #wingie-config .wg-mute-cell {
-      width: 62px;
+      width: 56px;
       text-align: center;
     }
 
     #wingie-config .wg-mute-input {
-      width: 18px;
-      height: 18px;
+      width: 15px;
+      height: 15px;
+      vertical-align: middle;
     }
 
     #wingie-config .wg-mobile-scroll-note {
@@ -390,13 +485,18 @@
     }
 
     #wingie-config .wg-footer {
-      padding: 4px 0 16px;
-      font-size: 11px;
+      padding: 6px 0 14px;
+      font-size: 12px;
+      font-style: italic;
     }
 
     @media (max-width: 760px) {
+      body {
+        padding: 0;
+      }
+
       #wingie-config {
-        padding: 20px 16px;
+        padding: 14px;
       }
 
       #wingie-config .wg-header,
@@ -438,7 +538,7 @@
       }
 
       #wingie-config .wg-actions .wg-button {
-        flex: 1 1 145px;
+        flex: 1 1 130px;
       }
     }
   </style>

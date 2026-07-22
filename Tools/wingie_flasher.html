@@ -6,44 +6,71 @@
   <link rel="icon" href="data:,">
   <title>Wingie2 Firmware Installer</title>
   <style>
+    /* ============================================================
+       Web 1.0 instrument-manual aesthetic (matches wingie_config).
+       Serif body, 90s bevel buttons, desaturated semantic alerts,
+       bevelled progress bar with retro blue stripes. Markup, IDs,
+       build markers and JS are unchanged — visual layer only.
+       ============================================================ */
+
+    html {
+      box-sizing: border-box;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
     body {
       margin: 0;
-      background: #fff;
+      padding: 16px;
+      background: #c0c0c0;
     }
 
     #wingie-flasher {
       width: min(760px, 100%);
       margin: 0 auto;
-      padding: 32px 20px 48px;
-      box-sizing: border-box;
-      color: #111;
-      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    #wingie-flasher * {
-      box-sizing: border-box;
+      padding: 18px;
+      border: 2px outset #fff;
+      background: #fff;
+      color: #000;
+      font: 16px/1.55 "Times New Roman", Times, "Noto Serif", serif;
+      font-variant-numeric: tabular-nums;
     }
 
     #wingie-flasher h1 {
-      margin: 0 0 4px;
-      font-size: 2rem;
+      margin: 0 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
       line-height: 1.2;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .01em;
     }
 
     #wingie-flasher .wg-version {
-      margin: 0 0 28px;
-      color: #555;
+      margin: 0 0 24px;
+      color: #444;
+      text-align: center;
+      font-family: "Courier New", monospace;
+      font-style: italic;
     }
 
     #wingie-flasher h2 {
-      margin: 24px 0 8px;
-      font-size: 1.2rem;
+      margin: 22px 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 700;
+      border-bottom: 2px solid #000;
+      padding-bottom: 2px;
     }
 
     #wingie-flasher ul,
     #wingie-flasher ol {
-      margin: 8px 0 0;
-      padding-left: 1.5rem;
+      margin: 6px 0 0;
+      padding-left: 1.4em;
     }
 
     #wingie-flasher li + li {
@@ -51,67 +78,86 @@
     }
 
     #wingie-flasher hr {
-      margin: 32px 0;
+      margin: 28px 0;
       border: 0;
-      border-top: 1px solid #bbb;
+      border-top: 4px ridge #999;
     }
 
     #wingie-flasher .wg-controls {
-      margin-top: 36px;
-      padding-top: 24px;
-      border-top: 2px solid #111;
+      margin-top: 28px;
+      padding: 16px 14px 14px;
+      border-top: 4px ridge #999;
+      border-right: 2px groove #cccccc;
+      border-bottom: 2px groove #cccccc;
+      border-left: 2px groove #cccccc;
+      background: #f8f8f0;
     }
 
     #wingie-flasher .wg-status-line {
       margin: 0 0 12px;
-      font-weight: 600;
+      font-weight: 700;
+      color: #000;
     }
 
     #wingie-flasher .wg-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
 
     #wingie-flasher button {
-      min-height: 40px;
-      padding: 7px 13px;
-      border: 1px solid #555;
-      border-radius: 4px;
-      color: #111;
-      background: #f3f3f3;
-      font: inherit;
+      min-height: 34px;
+      padding: 5px 13px;
+      border: 3px outset #cccccc;
+      border-radius: 0;
+      color: #000;
+      background: #cccccc;
+      font: 14px/1 "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-weight: 700;
       cursor: pointer;
     }
 
     #wingie-flasher button:hover:not(:disabled) {
-      background: #e8e8e8;
+      background: #d8d8d8;
+    }
+
+    #wingie-flasher button:active:not(:disabled) {
+      border-style: inset;
     }
 
     #wingie-flasher button:focus-visible {
-      outline: 2px solid #111;
-      outline-offset: 2px;
+      outline: 1px dotted #000;
+      outline-offset: -4px;
     }
 
     #wingie-flasher button:disabled {
       cursor: not-allowed;
-      opacity: 0.45;
+      opacity: 0.5;
     }
 
     #wingie-flasher .wg-button-primary {
+      border-color: #555;
       color: #fff;
-      background: #111;
+      background: #777;
     }
 
     #wingie-flasher .wg-button-primary:hover:not(:disabled) {
-      background: #333;
+      background: #666;
+      border-color: #444;
+    }
+
+    #wingie-flasher .wg-button-primary:active:not(:disabled) {
+      border-style: inset;
     }
 
     #wingie-flasher .wg-alert {
       display: none;
-      margin: 0 0 16px;
-      padding: 10px 12px;
-      border: 1px solid #777;
+      margin: 0 0 12px;
+      padding: 8px 11px;
+      border: 2px outset #ddd;
+      border-radius: 0;
+      background: #e8e8e8;
+      font-size: 14px;
       white-space: pre-line;
     }
 
@@ -120,43 +166,64 @@
     }
 
     #wingie-flasher .wg-alert[data-kind="success"] {
-      border-color: #267326;
-      background: #f2fff2;
+      border-color: #2d5a2d;
+      background: #cfe3c6;
+      color: #1a3a1a;
     }
 
     #wingie-flasher .wg-alert[data-kind="warning"] {
-      border-color: #9a6a00;
-      background: #fff9e8;
+      border-color: #6b5200;
+      background: #efe2b8;
+      color: #3d3200;
     }
 
     #wingie-flasher .wg-alert[data-kind="error"] {
-      border-color: #a32626;
-      background: #fff1f1;
+      border-color: #6b2a2a;
+      background: #e6c6c0;
+      color: #3d1414;
     }
 
     #wingie-flasher .wg-progress {
       width: 100%;
-      height: 12px;
-      margin: 18px 0 6px;
+      height: 22px;
+      margin: 14px 0 6px;
       overflow: hidden;
-      border: 1px solid #777;
-      background: #eee;
+      border: 3px inset #ddd;
+      border-radius: 0;
+      background: #ccc;
     }
 
     #wingie-flasher .wg-progress-fill {
       width: 0;
       height: 100%;
-      background: #111;
+      background: repeating-linear-gradient(90deg, #00f 0 8px, #06f 8px 16px);
     }
 
     #wingie-flasher .wg-progress-label {
       margin: 0;
-      font-size: 0.9rem;
+      font-size: 13px;
+      font-style: italic;
+      color: #444;
+    }
+
+    #wingie-flasher #wg-log {
+      width: 100%;
+      margin-top: 12px;
+      padding: 5px;
+      border: 2px inset #ddd;
+      background: #fff;
+      color: #000;
+      font: 12px/1.4 "Courier New", "Liberation Mono", monospace;
+      white-space: pre-wrap;
     }
 
     @media (max-width: 560px) {
+      body {
+        padding: 0;
+      }
+
       #wingie-flasher {
-        padding: 22px 16px 36px;
+        padding: 14px;
       }
 
       #wingie-flasher .wg-actions button {
