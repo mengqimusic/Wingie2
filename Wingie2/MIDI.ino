@@ -124,9 +124,9 @@ void handleControlChange (byte channel, byte number, byte value) {
 
   if (channel == 16) { // Global Settings
 
-    if (number == CC_MIDI_CH_L) midi_ch_l = value; dirty[0] = true;
-    if (number == CC_MIDI_CH_R) midi_ch_r = value; dirty[1] = true;
-    if (number == CC_MIDI_CH_BOTH) midi_ch_both = value; dirty[2] = true;
+    if (number == CC_MIDI_CH_L && value >= 1 && value <= 16) { midi_ch_l = value; dirty[0] = true; }
+    if (number == CC_MIDI_CH_R && value >= 1 && value <= 16) { midi_ch_r = value; dirty[1] = true; }
+    if (number == CC_MIDI_CH_BOTH && value >= 1 && value <= 16) { midi_ch_both = value; dirty[2] = true; }
 
     if (number == CC_A3_FREQ_MSB || number == CC_A3_FREQ_LSB) {
 
