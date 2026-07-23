@@ -191,7 +191,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
             self.assertIn(fragment, self.source)
 
     def test_rom_chip_check_does_not_depend_on_installed_firmware(self):
-        self.assertIn('await loader.main("default_reset")', self.source)
+        self.assertIn('loader.main("default_reset")', self.source)
         self.assertIn("loader.chip && loader.chip.CHIP_NAME", self.source)
         self.assertIn("chipName !== EXPECTED_CHIP", self.source)
         self.assertIn("await transport.setDTR(false)", self.source)
@@ -200,6 +200,13 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn("await disconnectDevice({quiet: true})", self.source)
         self.assertNotIn('state.loader.after("hard_reset")', self.source)
         self.assertNotIn("readFlash", self.source)
+
+    def test_rom_handshake_and_flash_write_have_timeouts(self):
+        # USB 挂起时 loader.main / writeFlash 会永久阻塞，按钮全禁用只能刷新页面
+        self.assertIn("ROM_HANDSHAKE_TIMEOUT_MS", self.source)
+        self.assertIn("FLASH_WRITE_TIMEOUT_MS", self.source)
+        self.assertIn('withTimeout(loader.main("default_reset"), ROM_HANDSHAKE_TIMEOUT_MS', self.source)
+        self.assertIn("withTimeout(state.loader.writeFlash({", self.source)
         self.assertNotRegex(self.source, r'\{\s*op:\s*["\']hello["\']')
 
     def test_write_options_are_fixed_and_full_erase_is_unreachable(self):

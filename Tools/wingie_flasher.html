@@ -321,6 +321,8 @@
       const NVS_SIZE = 0x5000;
       const MAX_APP_SIZE = 0x140000;
       const BAUDRATE = 460800;
+      const ROM_HANDSHAKE_TIMEOUT_MS = 20000;
+      const FLASH_WRITE_TIMEOUT_MS = 180000;
       const embeddedRelease = window.__WINGIE_EMBEDDED_RELEASE__ || null;
       const EXPECTED_PARTS = [
         {name: "bootloader", offset: 0x1000, label: "Bootloader"},
@@ -815,7 +817,7 @@
           state.chipDetailLabel = copy("正在通过 DTR/RTS 进入 ESP32 ROM bootloader…", "Entering ESP32 ROM bootloader via DTR/RTS…");
           applyLanguage();
           appendLog("开始 ROM bootloader 握手；不查询 Wingie2 firmware hello");
-          const description = await loader.main("default_reset");
+          const description = await withTimeout(loader.main("default_reset"), ROM_HANDSHAKE_TIMEOUT_MS, "ROM bootloader 握手超时（USB 无响应或未进入下载模式）");
           const chipName = loader.chip && loader.chip.CHIP_NAME;
           if (chipName !== EXPECTED_CHIP) {
             const wrongChip = chipName || description || "未知芯片";
@@ -871,7 +873,7 @@
             if (typeof localMd5 !== "string" || !/^[0-9a-f]{32}$/i.test(localMd5)) throw new Error("MD5 组件返回了无效结果");
             renderParts();
             appendLog(`写入 ${expected.label} @ ${hexadecimal(image.part.offset)}`);
-            await state.loader.writeFlash({
+            await withTimeout(state.loader.writeFlash({
               fileArray: [{data: image.data, address: image.part.offset}],
               flashMode: "dio",
               flashFreq: "80m",
@@ -884,7 +886,7 @@
                 const overall = ((index + withinPart) / state.images.length) * 100;
                 setProgress(overall, copy(`正在安装… ${Math.round(overall)}%`, `Installing… ${Math.round(overall)}%`));
               }
-            });
+            }), FLASH_WRITE_TIMEOUT_MS, "写入超时（USB 连接可能中断）");
             state.resumeIndex = index + 1;
             renderParts();
           }
