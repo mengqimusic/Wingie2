@@ -151,7 +151,8 @@ void handleControlChange (byte channel, byte number, byte value) {
 void MIDISetParam(int ch, byte number, byte value) {
 
   if (number == CC_MODE) {
-    int modeFromMIDI = value == 127 ? RATIO_MODE : (value >> 5);
+    // 5 模式均分: 0-25 Poly / 26-51 String / 52-76 Bar / 77-102 Cave / 103-127 Ratio
+    int modeFromMIDI = (value * 5) >> 7;
     if (modeFromMIDI <= RATIO_MODE && Mode[ch] != modeFromMIDI) {
       Mode[ch] = modeFromMIDI;
       modeChangingFromMIDI[ch] = true;

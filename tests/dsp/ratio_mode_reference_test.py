@@ -90,7 +90,7 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("return barFactor * barIndex * barIndex;", firmware)
         self.assertIn("fundamental * pitched_mode_ratio(Mode[ch], index)", firmware)
         self.assertIn("set_conventional_channel_note(ch, channel, pitch);", midi)
-        self.assertIn("value == 127 ? RATIO_MODE : (value >> 5)", midi)
+        self.assertIn("(value * 5) >> 7", midi)
 
     def test_faust_compute_uses_iram_with_local_literals(self):
         build_options = (REPO_ROOT / "Wingie2/build_opt.h").read_text(encoding="utf-8")
