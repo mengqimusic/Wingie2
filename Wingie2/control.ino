@@ -366,7 +366,8 @@ void control(void *pvParameters) {
   serial_config_ready = true;
 
   for (;;) {
-    interrupts();
+    // ESP32 Arduino Core 的 interrupts()/noInterrupts() 是空宏（cli()/sei() 均为空），
+    // 不屏蔽任何中断。an[] 是 volatile bool 单字节，读写天然原子，不需要临界区保护。
     currentMillis = millis();
 
     //Serial.println(uxTaskGetStackHighWaterMark(NULL)); // get unused memory
@@ -457,12 +458,6 @@ void control(void *pvParameters) {
         dsp.setParamValue("/Wingie/right/mode_changed", 0);
       }
     }
-
-    //
-    // No Interrupts
-    //
-    noInterrupts();
-
 
     //
     // oct change
