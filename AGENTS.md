@@ -28,7 +28,20 @@ There is no enforced formatter. Match the surrounding file: Arduino tabs general
 
 ## Testing Guidelines
 
-No automated test suite or coverage threshold is configured. Every firmware change must pass the full Arduino CLI compile above. Hardware-facing changes also require a Wingie2 smoke test covering the affected audio channel, MIDI messages, I2C controls, tuning mode, or saved Preferences. Report compilation and physical-device validation separately; a successful build does not prove hardware behavior.
+The repository has two automated test layers. Run them before considering a change verified:
+
+- **Host unit tests** (`tests/host/*.cpp`, 4 files) cover the header-only modules `tap_sequence.h`, `mpe_state.h`, `config_profiles.h`, and `serial_config_protocol.h`. These headers are intentionally Arduino-free (only standard C headers), so compile each test directly:
+  ```bash
+  g++ -std=c++17 -I. tests/host/<name>_test.cpp -o /tmp/<name>_test && /tmp/<name>_test
+  ```
+- **Python tests** (`tests/dsp/`, `tests/tools/`, 89 cases total) cover the web config/flasher HTML pages, the firmware release toolchain, the mode-filter flash tool, DSP reference models, and Faust source extraction:
+  ```bash
+  python3 -m pytest tests/ -q
+  ```
+
+There is no CI runner, no `conftest.py`, and no coverage threshold; tests run locally only. The Faust-generated DSP core (`Wingie2/Wingie2.cpp`) and the main firmware control flow (`Wingie2.ino`, `control.ino`, `MIDI.ino`, `MPE.ino`, `serial_config.ino`) have no host-level tests and rely on compile + hardware validation.
+
+Every firmware change must additionally pass the full Arduino CLI compile above. Hardware-facing changes also require a Wingie2 smoke test covering the affected audio channel, MIDI messages, I2C controls, tuning mode, or saved Preferences. Report compilation and physical-device validation separately; a successful build does not prove hardware behavior.
 
 Do not read back or back up the device's current app0 image before routine product or candidate flashing. If a rollback is needed, check out the known Git commit and rebuild it with the pinned toolchain; Git source and reproducible builds are the recovery source of truth.
 
