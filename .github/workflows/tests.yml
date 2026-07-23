@@ -1,0 +1,35 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  host-and-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install g++
+        run: sudo apt-get update && sudo apt-get install -y g++
+
+      - name: Host C++ unit tests
+        run: |
+          set -e
+          for src in tests/host/*_test.cpp; do
+            name=$(basename "$src" .cpp)
+            g++ -std=c++17 -I. "$src" -o "/tmp/${name}"
+            "/tmp/${name}"
+          done
+
+      - name: Python tests
+        run: |
+          pip install pytest
+          python3 -m pytest tests/ -q
