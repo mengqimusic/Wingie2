@@ -78,12 +78,9 @@ void control(void *pvParameters) {
 
   // Preferences Section Begin
 
-  prefs.begin("counter");
-  unsigned int counter = prefs.getUInt("counter", 0);
-  counter++;
-  Serial.printf("这是此小羽第 %u 次启动。\n", counter);
-  prefs.putUInt("counter", counter);
-  prefs.end();
+  // 开机不再写 counter：每次 boot 写同一 key 会填满 NVS 页面触发压缩擦除
+  // （SPI1 flash 擦除 ~45ms 全局 stall 两个 core），期间 MIDI RX 丢字节。
+  // counter 仅用于 Serial 日志，无逻辑依赖，删除以消除每次开机的不必要擦写。
 
   prefs.begin("settings", RO_MODE);
 

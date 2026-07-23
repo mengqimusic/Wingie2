@@ -164,9 +164,9 @@ void request_preferences_save() {
 
 void service_preferences_save() {
   if (!preferences_save_requested) return;
-  noInterrupts();
+  // preferences_save_requested 是 volatile bool，单字节读写在 ESP32 上天然原子，
+  // noInterrupts() 无法屏蔽 FreeRTOS 任务级抢占，移除无效临界区。
   preferences_save_requested = false;
-  interrupts();
   save_stuff();
 }
 

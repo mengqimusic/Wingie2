@@ -105,7 +105,6 @@ Adafruit_AW9523 aw0; // left channel
 Adafruit_AW9523 aw1; // right channel
 MIDI_CREATE_CUSTOM_INSTANCE(HardwareSerial, Serial2, MIDI, MySettings);
 TaskHandle_t controlCore;
-TaskHandle_t low_priority_handle;
 
 Preferences prefs;
 
