@@ -874,7 +874,10 @@
                 const {value, done} = await state.reader.read();
                 if (done) break;
                 state.inputBuffer += decoder.decode(value, {stream: true});
-                if (state.inputBuffer.length > 16384) state.inputBuffer = state.inputBuffer.slice(-8192);
+                if (state.inputBuffer.length > 16384) {
+                  const lastNewline = state.inputBuffer.lastIndexOf("\n");
+                  state.inputBuffer = lastNewline >= 0 ? state.inputBuffer.slice(lastNewline + 1) : "";
+                }
                 let newline = state.inputBuffer.indexOf("\n");
                 while (newline >= 0) {
                   const line = state.inputBuffer.slice(0, newline).trim();
@@ -1541,6 +1544,7 @@
 
       async function saveConfiguration() {
         if (!state.connected || state.saving) return;
+        if (!window.confirm(`${languageText("保存到闪存？", "Save to Flash?")}\n\n${languageText("当前运行配置将写入闪存，重启后保留。", "Current running settings will be written to flash and retained after restart.")}`)) return;
         state.saving = true;
         updateControls();
         setAlert(copy("正在等待实时写入…", "Waiting for live writes…"), "info");
@@ -1812,6 +1816,14 @@
 
       elements.connect.addEventListener("click", connect);
       elements.disconnect.addEventListener("click", () => disconnect(true));
+      if (navigator.serial && typeof navigator.serial.addEventListener === "function") {
+        navigator.serial.addEventListener("disconnect", event => {
+          if (state.port && event.target === state.port) {
+            setAlert(copy("USB 已断开。请重新插好数据线。", "USB disconnected. Reconnect the cable."), "warning");
+            disconnect(false);
+          }
+        });
+      }
       elements.language.addEventListener("click", () => {
         state.language = state.language === "zh" ? "en" : "zh";
         applyLanguage();

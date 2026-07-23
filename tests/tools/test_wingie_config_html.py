@@ -403,6 +403,22 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertLess(disconnect_block.index("await state.readLoop"), disconnect_block.index("state.port.close"))
         self.assertIn("readable.locked", self.mock_source)
 
+    def test_registers_usb_disconnect_listener(self):
+        # 物理拔 USB 必须触发页面回到断开状态，不能静默失联（flasher 已有此范式）
+        self.assertIn('navigator.serial.addEventListener("disconnect"', self.source)
+        self.assertIn("event.target === state.port", self.source)
+
+    def test_input_buffer_truncation_respects_line_boundaries(self):
+        # 缓冲溢出截断不能从 JSON 行中间切，否则 receiveResponse 永远等不到完整行
+        read_block = self.source.split("async function readSerialLoop()", 1)[1]
+        self.assertIn("lastIndexOf", read_block)
+        self.assertNotIn("slice(-8192)", read_block)
+
+    def test_save_requires_confirmation_dialog(self):
+        # README 要求确认后保存；不可逆 flash 写入必须有防误触
+        save_block = self.source.split("async function saveConfiguration()", 1)[1]
+        self.assertIn("window.confirm", save_block)
+
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
         self.assertIn('"config_schema\\":5', self.firmware_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
