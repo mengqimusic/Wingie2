@@ -5,3 +5,5 @@ compile
 __pycache__/
 *.py[cod]
 /dist/
+.DS_Store
+**/.DS_Store
