@@ -78,9 +78,16 @@ void control(void *pvParameters) {
 
   // Preferences Section Begin
 
-  // 开机不再写 counter：每次 boot 写同一 key 会填满 NVS 页面触发压缩擦除
-  // （SPI1 flash 擦除 ~45ms 全局 stall 两个 core），期间 MIDI RX 丢字节。
-  // counter 仅用于 Serial 日志，无逻辑依赖，删除以消除每次开机的不必要擦写。
+  prefs.begin("counter");
+  unsigned int counter = prefs.getUInt("counter", 0);
+  counter++;
+  Serial.printf("这是此小羽第 %u 次启动。\n", counter);
+  prefs.putUInt("counter", counter);
+  prefs.end();
+  // counter 写入在 serial_config_ready 之前（control 任务初始化阶段），此时 loop()
+  // 里 MIDI.read() 尚未被调用（Wingie2.ino:304 在 serial_config_ready 前 return），
+  // 所以 NVS 擦写的 flash stall 不影响 MIDI 接收。NVS 自带页式 wear levelling，
+  // 5 个 4KB 页面轮转擦除，counter 的磨损开销可忽略。
 
   prefs.begin("settings", RO_MODE);
 
