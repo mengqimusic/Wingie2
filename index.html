@@ -3,12 +3,56 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=./v3.2/">
-  <title>Wingie2 Firmware Installer</title>
-  <link rel="canonical" href="./v3.2/">
-  <script>location.replace("./v3.2/" + location.search + location.hash);</script>
+  <link rel="icon" href="data:,">
+  <title>Wingie2</title>
+  <style>
+    html, body { margin: 0; padding: 0; min-height: 100%; }
+    body {
+      background: #fff;
+      color: #111;
+      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 32px 20px;
+      box-sizing: border-box;
+    }
+    main { width: min(560px, 100%); text-align: center; }
+    h1 { font-size: 1.75rem; margin: 0 0 8px; line-height: 1.2; }
+    p.sub { color: #555; margin: 0 0 32px; }
+    .links { display: flex; flex-direction: column; gap: 16px; }
+    a.card {
+      display: block;
+      padding: 20px 24px;
+      border: 1px solid #d0d0d0;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #111;
+      background: #fafafa;
+      transition: border-color .15s, background .15s;
+    }
+    a.card:hover, a.card:focus { border-color: #888; background: #f0f0f0; }
+    a.card .title { font-size: 1.15rem; font-weight: 600; display: block; }
+    a.card .desc { color: #666; font-size: 0.9rem; display: block; margin-top: 4px; }
+    .lang { color: #999; font-size: 0.85rem; margin-top: 4px; display: block; }
+  </style>
 </head>
 <body>
-  <p><a href="./v3.2/">打开 Wingie2 固件安装器 / Open Wingie2 Firmware Installer</a></p>
+  <main>
+    <h1>Wingie2</h1>
+    <p class="sub">小羽二代 · 选择你要打开的工具 / Choose a tool to open</p>
+    <div class="links">
+      <a class="card" href="./config/">
+        <span class="title">配置 · Configuration</span>
+        <span class="desc">通过 USB 修改和保存小羽的设置 / Modify and save Wingie2 settings over USB</span>
+      </a>
+      <a class="card" href="./v4/">
+        <span class="title">固件安装 · Firmware Installer</span>
+        <span class="desc">安装或升级小羽固件 / Install or upgrade Wingie2 firmware</span>
+      </a>
+    </div>
+  </main>
 </body>
 </html>

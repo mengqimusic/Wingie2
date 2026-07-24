@@ -1,0 +1,1935 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wingie2 配置</title>
+  <style>
+    /* ============================================================
+       Web 1.0 instrument-manual aesthetic.
+       Hand-coded feel: serif body, 90s bevel buttons, full-grid
+       tables, desaturated semantic state colours. Layout grids,
+       responsive breakpoints, class names and data/aria hooks are
+       unchanged — only the visual layer was rewritten.
+       ============================================================ */
+
+    :root {
+      color-scheme: light;
+    }
+
+    html {
+      box-sizing: border-box;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      color: #000;
+      background: #c0c0c0;
+      font: 16px/1.55 "Times New Roman", Times, "Noto Serif", serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    a {
+      color: #0000EE;
+      text-decoration: underline;
+    }
+
+    a:visited {
+      color: #551A8B;
+    }
+
+    a:active {
+      color: #FF0000;
+    }
+
+    #wingie-config {
+      width: min(1120px, 100%);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 18px;
+      border: 2px outset #fff;
+      background: #fff;
+    }
+
+    #wingie-config .wg-shell {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    #wingie-config h1,
+    #wingie-config h2,
+    #wingie-config h3,
+    #wingie-config p {
+      margin-top: 0;
+    }
+
+    #wingie-config h1 {
+      margin-bottom: 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .01em;
+    }
+
+    #wingie-config h2 {
+      margin-bottom: 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 700;
+      border-bottom: 2px solid #000;
+      padding-bottom: 2px;
+    }
+
+    #wingie-config h3 {
+      margin-bottom: 0;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    #wingie-config .wg-subtitle,
+    #wingie-config .wg-help,
+    #wingie-config .wg-meta,
+    #wingie-config .wg-footer {
+      color: #444;
+    }
+
+    #wingie-config .wg-subtitle,
+    #wingie-config .wg-help,
+    #wingie-config .wg-meta {
+      margin-bottom: 0;
+      font-size: 13px;
+      font-style: italic;
+    }
+
+    #wingie-config .wg-subtitle {
+      text-align: center;
+    }
+
+    /* ---- header / connect bar ---- */
+    #wingie-config .wg-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 20px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    #wingie-config .wg-connect-controls,
+    #wingie-config .wg-actions,
+    #wingie-config .wg-section-head,
+    #wingie-config .wg-bank-head {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    #wingie-config .wg-connect {
+      display: grid;
+      justify-items: end;
+      gap: 6px;
+    }
+
+    #wingie-config .wg-connect-controls {
+      justify-content: flex-end;
+    }
+
+    #wingie-config .wg-section-head,
+    #wingie-config .wg-bank-head {
+      justify-content: space-between;
+    }
+
+    #wingie-config .wg-connection {
+      display: inline-block;
+      min-height: 30px;
+      padding: 5px 10px;
+      border: 2px inset #ddd;
+      border-radius: 0;
+      color: #333;
+      background: #f5f5dc;
+      font-size: 12px;
+      font-family: "Courier New", monospace;
+      white-space: nowrap;
+    }
+
+    #wingie-config .wg-connection[data-state="connected"] {
+      color: #143d14;
+      border-color: #1a6b1a;
+      background: #d8ecd0;
+    }
+
+    #wingie-config .wg-poll-status {
+      min-height: 1.55em;
+      color: #444;
+      font-size: 13px;
+      font-style: italic;
+      text-align: right;
+    }
+
+    /* ---- form controls: raised grey bevels ---- */
+    #wingie-config .wg-button,
+    #wingie-config input,
+    #wingie-config select {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 15px;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #wingie-config .wg-number,
+    #wingie-config .wg-select,
+    #wingie-config .wg-frequency-input,
+    #wingie-config .wg-ratio-input {
+      width: 100%;
+      min-height: 32px;
+      padding: 3px 6px;
+      border: 2px inset #ddd;
+      border-radius: 0;
+      color: #000;
+      background: #fff;
+      font-family: "Courier New", "Liberation Mono", monospace;
+      font-size: 14px;
+    }
+
+    #wingie-config input[type="range"] {
+      width: 100%;
+    }
+
+    #wingie-config input:focus-visible,
+    #wingie-config select:focus-visible {
+      outline: 1px dotted #000;
+      outline-offset: -3px;
+    }
+
+    #wingie-config input:invalid {
+      border-color: #8a2424;
+    }
+
+    /* ---- 90s bevel buttons ---- */
+    #wingie-config .wg-button {
+      min-height: 34px;
+      padding: 5px 13px;
+      border: 3px outset #cccccc;
+      border-radius: 0;
+      color: #000;
+      background: #cccccc;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    #wingie-config .wg-button:hover:not(:disabled) {
+      background: #d8d8d8;
+    }
+
+    #wingie-config .wg-button:active:not(:disabled) {
+      border-style: inset;
+    }
+
+    #wingie-config .wg-button-primary {
+      border-color: #555;
+      color: #fff;
+      background: #777;
+    }
+
+    #wingie-config .wg-button-primary:hover:not(:disabled) {
+      background: #666;
+      border-color: #444;
+    }
+
+    #wingie-config .wg-button-primary:active:not(:disabled) {
+      border-style: inset;
+    }
+
+    #wingie-config .wg-button:disabled,
+    #wingie-config input:disabled,
+    #wingie-config select:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    #wingie-config .wg-button:focus-visible {
+      outline: 1px dotted #000;
+      outline-offset: -4px;
+    }
+
+    /* ---- alerts: bevelled box, desaturated retro palette ---- */
+    #wingie-config .wg-alert {
+      display: none;
+      margin-bottom: 12px;
+      padding: 8px 11px;
+      border: 2px outset #ddd;
+      border-radius: 0;
+      background: #e8e8e8;
+      font-size: 14px;
+    }
+
+    #wingie-config .wg-alert[data-visible="true"] {
+      display: block;
+    }
+
+    #wingie-config .wg-alert[data-kind="success"] {
+      border-color: #2d5a2d;
+      background: #cfe3c6;
+      color: #1a3a1a;
+    }
+
+    #wingie-config .wg-alert[data-kind="warning"] {
+      border-color: #6b5200;
+      background: #efe2b8;
+      color: #3d3200;
+    }
+
+    #wingie-config .wg-alert[data-kind="error"] {
+      border-color: #6b2a2a;
+      background: #e6c6c0;
+      color: #3d1414;
+    }
+
+    /* ---- section: groove fieldset feel ---- */
+    #wingie-config .wg-section {
+      margin-bottom: 14px;
+      padding: 12px 14px 14px;
+      border: 2px groove #cccccc;
+      border-radius: 0;
+      background: #f8f8f0;
+    }
+
+    #wingie-config .wg-channel-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    #wingie-config .wg-channel-grid .wg-section {
+      min-width: 0;
+    }
+
+    #wingie-config .wg-fields,
+    #wingie-config .wg-shared-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    #wingie-config .wg-shared-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    #wingie-config .wg-shared-grid .wg-field-half {
+      grid-column: span 3;
+    }
+
+    #wingie-config .wg-shared-grid .wg-field-third {
+      grid-column: span 2;
+    }
+
+    #wingie-config .wg-shared-grid .wg-field-full {
+      grid-column: span 6;
+    }
+
+    #wingie-config .wg-field label {
+      display: block;
+      margin-bottom: 3px;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    #wingie-config .wg-field-note {
+      display: block;
+      margin-top: 3px;
+      color: #444;
+      font-size: 11px;
+      font-style: italic;
+    }
+
+    #wingie-config .wg-divider {
+      margin: 14px 0;
+      border-top: 2px groove #cccccc;
+    }
+
+    /* ---- bank tabs / side toggle: bevel toggle group ---- */
+    #wingie-config .wg-bank-tabs,
+    #wingie-config .wg-mobile-sides {
+      display: inline-grid;
+      grid-auto-flow: column;
+      gap: 0;
+    }
+
+    #wingie-config .wg-bank-button,
+    #wingie-config .wg-side-button {
+      min-height: 30px;
+      padding: 4px 11px;
+      border: 3px outset #cccccc;
+      border-radius: 0;
+      color: #000;
+      background: #cccccc;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 13px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    #wingie-config .wg-bank-button + .wg-bank-button,
+    #wingie-config .wg-side-button + .wg-side-button {
+      border-left-width: 0;
+    }
+
+    #wingie-config .wg-bank-button:active,
+    #wingie-config .wg-side-button:active {
+      border-style: inset;
+    }
+
+    #wingie-config .wg-bank-button[aria-pressed="true"],
+    #wingie-config .wg-side-button[aria-pressed="true"] {
+      border-style: inset;
+      color: #fff;
+      background: #999;
+    }
+
+    #wingie-config .wg-mobile-sides {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    /* ---- table: full grid lines, classic cellpadding ---- */
+    #wingie-config .wg-table-wrap {
+      margin-top: 10px;
+      overflow-x: auto;
+      border: 2px outset #ddd;
+      border-radius: 0;
+    }
+
+    #wingie-config table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #wingie-config .wg-ratio-table {
+      min-width: 420px;
+    }
+
+    #wingie-config th,
+    #wingie-config td {
+      padding: 5px 8px;
+      border: 1px inset #ccc;
+      text-align: right;
+      white-space: nowrap;
+      background: #fff;
+    }
+
+    #wingie-config th {
+      color: #000;
+      background: #c0c0c0;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    #wingie-config th:first-child,
+    #wingie-config td:first-child {
+      width: 40px;
+      text-align: center;
+    }
+
+    #wingie-config .wg-ratio-slot td {
+      width: auto;
+      padding: 5px 8px;
+      color: #000;
+      background: #d8d8c8;
+      font-size: 11px;
+      font-weight: 700;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    #wingie-config .wg-mute-cell {
+      width: 56px;
+      text-align: center;
+    }
+
+    #wingie-config .wg-mute-input {
+      width: 15px;
+      height: 15px;
+      vertical-align: middle;
+    }
+
+    #wingie-config .wg-mobile-scroll-note {
+      display: none;
+    }
+
+    #wingie-config .wg-state {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+    }
+
+    #wingie-config .wg-state .wg-actions {
+      justify-content: flex-end;
+    }
+
+    #wingie-config .wg-footer {
+      padding: 6px 0 14px;
+      font-size: 12px;
+      font-style: italic;
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 0;
+      }
+
+      #wingie-config {
+        padding: 14px;
+      }
+
+      #wingie-config .wg-header,
+      #wingie-config .wg-state {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      #wingie-config .wg-state .wg-actions {
+        justify-content: flex-start;
+      }
+
+      #wingie-config .wg-mobile-sides {
+        display: grid;
+      }
+
+      #wingie-config .wg-channel-grid {
+        display: block;
+      }
+
+      #wingie-config .wg-channel-grid[data-mobile-side="left"] [data-side-panel="right"],
+      #wingie-config .wg-channel-grid[data-mobile-side="right"] [data-side-panel="left"] {
+        display: none;
+      }
+
+      #wingie-config .wg-fields,
+      #wingie-config .wg-shared-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #wingie-config .wg-shared-grid .wg-field-half,
+      #wingie-config .wg-shared-grid .wg-field-third,
+      #wingie-config .wg-shared-grid .wg-field-full {
+        grid-column: 1;
+      }
+
+      #wingie-config .wg-mobile-scroll-note {
+        display: block;
+      }
+
+      #wingie-config .wg-actions .wg-button {
+        flex: 1 1 130px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="wingie-config">
+    <div class="wg-shell">
+      <header class="wg-header">
+        <div>
+          <h1 data-i18n-zh="Wingie2 配置" data-i18n-en="Wingie2 Configuration"></h1>
+          <p class="wg-subtitle" data-i18n-zh="编辑立即进入运行状态；只有保存写入闪存。页面每秒同步设备状态，编辑或写入期间自动跳过。" data-i18n-en="Edit changes the running state immediately; only Save writes flash. The page syncs device state every second and pauses while editing or writing."></p>
+        </div>
+        <div class="wg-connect">
+          <div class="wg-connect-controls">
+            <span id="wg-connection" class="wg-connection" data-state="disconnected" aria-live="polite">未连接</span>
+            <button id="wg-language" class="wg-button" type="button" data-no-localize="true" data-i18n-aria-zh="切换语言" data-i18n-aria-en="Switch language">中文 / EN</button>
+            <button id="wg-connect" class="wg-button wg-button-primary" type="button" data-i18n-zh="连接 Wingie2" data-i18n-en="Connect Wingie2"></button>
+            <button id="wg-disconnect" class="wg-button" type="button" hidden data-i18n-zh="断开" data-i18n-en="Disconnect"></button>
+          </div>
+          <span id="wg-poll-status" class="wg-poll-status">连接后每秒同步设备状态</span>
+        </div>
+      </header>
+
+      <div id="wg-alert" class="wg-alert" data-visible="false" data-kind="info" role="status" aria-live="polite"></div>
+
+      <nav id="wg-mobile-sides" class="wg-mobile-sides" data-i18n-aria-zh="移动端通道选择" data-i18n-aria-en="Mobile channel selection">
+        <button class="wg-side-button" type="button" data-mobile-side="left" aria-pressed="true" data-i18n-zh="左" data-i18n-en="Left"></button>
+        <button class="wg-side-button" type="button" data-mobile-side="right" aria-pressed="false" data-i18n-zh="右" data-i18n-en="Right"></button>
+      </nav>
+
+      <div id="wg-channel-grid" class="wg-channel-grid" data-mobile-side="left">
+        <section class="wg-section" data-side-panel="left" aria-labelledby="wg-left-title">
+          <div class="wg-section-head">
+            <div>
+              <h2 id="wg-left-title" data-i18n-zh="左通道" data-i18n-en="Left Channel"></h2>
+            </div>
+          </div>
+          <div class="wg-fields">
+            <div class="wg-field">
+              <label for="wg-left-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
+              <select id="wg-left-mode" class="wg-select" data-value-key="param:left:mode" disabled>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
+              </select>
+            </div>
+            <div class="wg-field">
+              <label for="wg-left-threshold" data-i18n-zh="输入阈值" data-i18n-en="Input Threshold"></label>
+              <input id="wg-left-threshold" class="wg-number" data-value-key="param:left:threshold" type="text" inputmode="decimal" disabled>
+            </div>
+          </div>
+          <div class="wg-divider"></div>
+          <div class="wg-bank-head">
+            <h3 data-i18n-zh="Cave 音库" data-i18n-en="Cave Banks"></h3>
+            <div class="wg-bank-tabs" data-bank-tabs="left" data-i18n-aria-zh="左 Cave 音库" data-i18n-aria-en="Left Cave banks">
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="0" aria-pressed="true" data-i18n-zh="第 1 组" data-i18n-en="Bank 1"></button>
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="1" aria-pressed="false" data-i18n-zh="第 2 组" data-i18n-en="Bank 2"></button>
+              <button class="wg-bank-button" type="button" data-side="left" data-bank="2" aria-pressed="false" data-i18n-zh="第 3 组" data-i18n-en="Bank 3"></button>
+            </div>
+          </div>
+          <div class="wg-table-wrap"><table data-i18n-aria-zh="左 Cave 音库" data-i18n-aria-en="Left Cave bank"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="频率 Hz" data-i18n-en="Frequency Hz"></th><th class="wg-mute-cell" data-i18n-zh="静音" data-i18n-en="Mute"></th></tr></thead><tbody id="wg-left-cave-rows"></tbody></table></div>
+          <p id="wg-left-cave-meta" class="wg-meta"></p>
+        </section>
+
+        <section class="wg-section" data-side-panel="right" aria-labelledby="wg-right-title">
+          <div class="wg-section-head">
+            <div>
+              <h2 id="wg-right-title" data-i18n-zh="右通道" data-i18n-en="Right Channel"></h2>
+            </div>
+          </div>
+          <div class="wg-fields">
+            <div class="wg-field">
+              <label for="wg-right-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
+              <select id="wg-right-mode" class="wg-select" data-value-key="param:right:mode" disabled>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
+              </select>
+            </div>
+            <div class="wg-field">
+              <label for="wg-right-threshold" data-i18n-zh="输入阈值" data-i18n-en="Input Threshold"></label>
+              <input id="wg-right-threshold" class="wg-number" data-value-key="param:right:threshold" type="text" inputmode="decimal" disabled>
+            </div>
+          </div>
+          <div class="wg-divider"></div>
+          <div class="wg-bank-head">
+            <h3 data-i18n-zh="Cave 音库" data-i18n-en="Cave Banks"></h3>
+            <div class="wg-bank-tabs" data-bank-tabs="right" data-i18n-aria-zh="右 Cave 音库" data-i18n-aria-en="Right Cave banks">
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="0" aria-pressed="true" data-i18n-zh="第 1 组" data-i18n-en="Bank 1"></button>
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="1" aria-pressed="false" data-i18n-zh="第 2 组" data-i18n-en="Bank 2"></button>
+              <button class="wg-bank-button" type="button" data-side="right" data-bank="2" aria-pressed="false" data-i18n-zh="第 3 组" data-i18n-en="Bank 3"></button>
+            </div>
+          </div>
+          <div class="wg-table-wrap"><table data-i18n-aria-zh="右 Cave 音库" data-i18n-aria-en="Right Cave bank"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="频率 Hz" data-i18n-en="Frequency Hz"></th><th class="wg-mute-cell" data-i18n-zh="静音" data-i18n-en="Mute"></th></tr></thead><tbody id="wg-right-cave-rows"></tbody></table></div>
+          <p id="wg-right-cave-meta" class="wg-meta"></p>
+        </section>
+      </div>
+
+      <section class="wg-section" aria-labelledby="wg-ratio-title">
+        <div class="wg-section-head">
+          <div><h2 id="wg-ratio-title" data-i18n-zh="自定义比例模式设定" data-i18n-en="Ratio Mode Profile"></h2><p class="wg-help" data-i18n-zh="左右共用 9 个比例；有效数字编辑在 150 ms 后写入运行状态。" data-i18n-en="Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms."></p><p class="wg-help" data-i18n-zh="Ratio 复音模式下，声部 1/2/3 分别使用槽 1/2/3 的比例。" data-i18n-en="In Ratio poly mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively."></p></div>
+          <div class="wg-actions">
+            <button id="wg-copy-slot1" class="wg-button" type="button" disabled data-i18n-zh="复制槽 1 到槽 2、3" data-i18n-en="Copy Slot 1 to Slots 2&amp;3"></button>
+            <button id="wg-factory" class="wg-button" type="button" disabled data-i18n-zh="恢复出厂比例" data-i18n-en="Factory Ratio"></button>
+          </div>
+        </div>
+        <p class="wg-help wg-mobile-scroll-note" data-i18n-zh="表格可横向滑动查看左右频率。" data-i18n-en="Swipe horizontally to view both frequencies."></p>
+        <div class="wg-table-wrap"><table class="wg-ratio-table" data-i18n-aria-zh="比例配置" data-i18n-aria-en="Ratio profile"><thead><tr><th data-i18n-zh="共鸣器" data-i18n-en="Resonator"></th><th data-i18n-zh="比例" data-i18n-en="Ratio"></th><th data-i18n-zh="音程" data-i18n-en="Interval"></th></tr></thead><tbody id="wg-ratio-rows"></tbody></table></div>
+        <p id="wg-ratio-meta" class="wg-meta"></p>
+      </section>
+
+      <section class="wg-section" aria-labelledby="wg-shared-title">
+        <div class="wg-section-head"><div><h2 id="wg-shared-title" data-i18n-zh="共享设置" data-i18n-en="Shared Settings"></h2><p class="wg-help" data-i18n-zh="全局调律、增益与 MIDI 路由。" data-i18n-en="Global tuning, gain and MIDI routing."></p></div></div>
+        <div class="wg-shared-grid">
+          <div class="wg-field wg-field-half"><label for="wg-a3" data-i18n-zh="A3 频率 Hz" data-i18n-en="A3 Frequency Hz"></label><input id="wg-a3" class="wg-number" data-value-key="param:shared:a3_hz" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-half"><label for="wg-tuning" data-i18n-zh="调律" data-i18n-en="Tuning"></label><select id="wg-tuning" class="wg-select" data-value-key="param:shared:tuning" disabled><option value="-1" data-i18n-zh="标准" data-i18n-en="Standard"></option><option value="0">Centaur</option><option value="1">Harp of New Albion</option><option value="2">Wendy Carlos Harmonic</option><option value="3">Well Tuned Piano</option><option value="4">Meta Slendro</option><option value="5">Bihexany</option><option value="6">Hexachordal Dodecaphonic</option><option value="7">Augmented[12]</option></select></div>
+          <div class="wg-field wg-field-half"><label for="wg-pre-clip" data-i18n-zh="前级削波增益" data-i18n-en="Pre Clip Gain"></label><input id="wg-pre-clip" class="wg-number" data-value-key="param:shared:pre_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-half"><label for="wg-post-clip" data-i18n-zh="后级削波增益" data-i18n-en="Post Clip Gain"></label><input id="wg-post-clip" class="wg-number" data-value-key="param:shared:post_clip_gain" type="text" inputmode="decimal" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-left" data-i18n-zh="MIDI 左通道" data-i18n-en="MIDI Left Channel"></label><input id="wg-midi-left" class="wg-number" data-value-key="param:shared:midi_left" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-right" data-i18n-zh="MIDI 右通道" data-i18n-en="MIDI Right Channel"></label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-third"><label for="wg-midi-both" data-i18n-zh="MIDI 双通道" data-i18n-en="MIDI Both Channel"></label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
+          <div class="wg-field wg-field-full"><label for="wg-mpe-enabled" data-i18n-zh="MPE 模式" data-i18n-en="MPE Mode"></label><select id="wg-mpe-enabled" class="wg-select" data-value-key="param:shared:mpe_enabled" disabled><option value="0" data-i18n-zh="关闭：三通道分立路由" data-i18n-en="Off: three-channel routing"></option><option value="1" data-i18n-zh="开启：标准 Lower Zone（Ch1 + Ch2–16，左右交替）" data-i18n-en="On: standard Lower Zone (Ch1 + Ch2-16, L/R alternating)"></option></select></div>
+        </div>
+      </section>
+
+      <section class="wg-section wg-state" aria-labelledby="wg-state-title">
+        <div><h2 id="wg-state-title" data-i18n-zh="配置" data-i18n-en="Configuration"></h2><p id="wg-state-summary" class="wg-help"></p></div>
+        <div class="wg-actions">
+          <button id="wg-save" class="wg-button wg-button-primary" type="button" disabled data-i18n-zh="保存到闪存" data-i18n-en="Save to Flash"></button>
+          <button id="wg-refresh" class="wg-button" type="button" disabled data-i18n-zh="刷新" data-i18n-en="Refresh"></button>
+          <button id="wg-export" class="wg-button" type="button" disabled data-i18n-zh="导出 JSON" data-i18n-en="Export JSON"></button>
+          <button id="wg-import" class="wg-button" type="button" disabled data-i18n-zh="导入 JSON" data-i18n-en="Import JSON"></button>
+          <input id="wg-import-file" type="file" accept="application/json,.json" hidden>
+        </div>
+      </section>
+
+      <footer class="wg-footer" data-i18n-zh="桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步" data-i18n-en="Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync"></footer>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const root = document.getElementById("wingie-config");
+      const sides = ["left", "right"];
+      const bankCount = 3;
+      const resonatorCount = 9;
+      const ratioSlotSize = 3;
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+
+      const elements = {
+        connection: root.querySelector("#wg-connection"),
+        pollStatus: root.querySelector("#wg-poll-status"),
+        language: root.querySelector("#wg-language"),
+        connect: root.querySelector("#wg-connect"),
+        disconnect: root.querySelector("#wg-disconnect"),
+        alert: root.querySelector("#wg-alert"),
+        channelGrid: root.querySelector("#wg-channel-grid"),
+        mobileSides: root.querySelector("#wg-mobile-sides"),
+        ratioRows: root.querySelector("#wg-ratio-rows"),
+        ratioMeta: root.querySelector("#wg-ratio-meta"),
+        copySlot1: root.querySelector("#wg-copy-slot1"),
+        factory: root.querySelector("#wg-factory"),
+        save: root.querySelector("#wg-save"),
+        refresh: root.querySelector("#wg-refresh"),
+        export: root.querySelector("#wg-export"),
+        import: root.querySelector("#wg-import"),
+        importFile: root.querySelector("#wg-import-file"),
+        stateSummary: root.querySelector("#wg-state-summary"),
+        caveRows: {left: root.querySelector("#wg-left-cave-rows"), right: root.querySelector("#wg-right-cave-rows")},
+        caveMeta: {left: root.querySelector("#wg-left-cave-meta"), right: root.querySelector("#wg-right-cave-meta")}
+      };
+
+      const parameterSpecs = {
+        "param:left:mode": {target: "left", name: "mode", path: ["left", "mode"], min: 0, max: 4, step: 1, immediate: true},
+        "param:left:threshold": {target: "left", name: "threshold", path: ["left", "threshold"], min: 0.0825, max: 0.99, step: 0.0825},
+        "param:right:mode": {target: "right", name: "mode", path: ["right", "mode"], min: 0, max: 4, step: 1, immediate: true},
+        "param:right:threshold": {target: "right", name: "threshold", path: ["right", "threshold"], min: 0.0825, max: 0.99, step: 0.0825},
+        "param:shared:a3_hz": {target: "shared", name: "a3_hz", path: ["shared", "a3_hz"], min: 358.08, max: 521.91, step: 0.01},
+        "param:shared:tuning": {target: "shared", name: "tuning", path: ["shared", "tuning"], min: -1, max: 7, step: 1, immediate: true},
+        "param:shared:pre_clip_gain": {target: "shared", name: "pre_clip_gain", path: ["shared", "pre_clip_gain"], min: 0.0825, max: 0.99, step: 0.0825},
+        "param:shared:post_clip_gain": {target: "shared", name: "post_clip_gain", path: ["shared", "post_clip_gain"], min: 0.385, max: 0.99, step: 0.055},
+        "param:shared:midi_left": {target: "shared", name: "midi_left", path: ["shared", "midi", "left"], min: 1, max: 16, step: 1},
+        "param:shared:midi_right": {target: "shared", name: "midi_right", path: ["shared", "midi", "right"], min: 1, max: 16, step: 1},
+        "param:shared:midi_both": {target: "shared", name: "midi_both", path: ["shared", "midi", "both"], min: 1, max: 16, step: 1},
+        "param:shared:mpe_enabled": {target: "shared", name: "mpe_enabled", path: ["shared", "mpe_enabled"], min: 0, max: 1, step: 1, immediate: true}
+      };
+
+      const state = {
+        connected: false,
+        disconnecting: false,
+        port: null,
+        reader: null,
+        writer: null,
+        readLoop: null,
+        inputBuffer: "",
+        nextId: 1,
+        pendingRequests: new Map(),
+        settings: null,
+        ratio: null,
+        cave: {left: [null, null, null], right: [null, null, null]},
+        caveCacheValid: false,
+        selectedBank: {left: 0, right: 0},
+        edits: new Map(),
+        resourceVersions: new Map(),
+        resourceTimers: new Map(),
+        pendingResourceKeys: new Set(),
+        writeErrors: new Map(),
+        conflictRetries: new Set(),
+        writeChain: Promise.resolve(),
+        pendingWrites: 0,
+        refreshing: false,
+        saving: false,
+        pollTimer: null,
+        polling: false,
+        pollPromise: null,
+        pollError: null,
+        lightPolling: true,
+        connectionEpoch: 0,
+        language: "zh",
+        alertMessage: null,
+        connectionLabel: {zh: "未连接", en: "Disconnected"},
+        pollStatusLabel: {zh: "连接后每秒同步设备状态", en: "Connect to sync device state every second"}
+      };
+
+      function copy(chinese, english) {
+        return {zh: chinese, en: english};
+      }
+
+      function languageText(chinese, english) {
+        return state.language === "zh" ? chinese : english;
+      }
+
+      function localized(message) {
+        if (!message) return "";
+        return typeof message === "string" ? message : message[state.language];
+      }
+
+      function applyLanguage() {
+        root.querySelectorAll("[data-i18n-zh]").forEach((element) => {
+          element.textContent = state.language === "zh" ? element.dataset.i18nZh : element.dataset.i18nEn;
+        });
+        root.querySelectorAll("[data-i18n-aria-zh]").forEach((element) => {
+          element.setAttribute("aria-label", state.language === "zh" ? element.dataset.i18nAriaZh : element.dataset.i18nAriaEn);
+        });
+        document.title = languageText("Wingie2 配置", "Wingie2 Configuration");
+        elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
+        elements.connection.textContent = localized(state.connectionLabel);
+        elements.pollStatus.textContent = localized(state.pollStatusLabel);
+        elements.alert.textContent = localized(state.alertMessage);
+        renderAll();
+      }
+
+      function setAlert(message, kind = "info") {
+        state.alertMessage = message || null;
+        elements.alert.textContent = localized(state.alertMessage);
+        elements.alert.dataset.kind = kind;
+        elements.alert.dataset.visible = state.alertMessage ? "true" : "false";
+      }
+
+      function setConnection(stage, label) {
+        elements.connection.dataset.state = stage;
+        state.connectionLabel = label;
+        elements.connection.textContent = localized(label);
+        elements.connect.hidden = stage === "connected" || stage === "connecting";
+        elements.disconnect.hidden = stage !== "connected";
+        updatePollingStatus();
+      }
+
+      function updatePollingStatus() {
+        let label;
+        const stage = elements.connection.dataset.state;
+        if (stage === "connecting") label = copy("正在连接设备…", "Connecting to device…");
+        else if (!state.connected || stage !== "connected") label = copy("连接后每秒同步设备状态", "Connect to sync device state every second");
+        else if (state.refreshing || state.polling) label = state.lightPolling ? copy("正在同步设备状态…", "Syncing device state…") : copy("正在读取完整设备配置…", "Reading the full device configuration…");
+        else if (state.saving || pendingUiWriteCount()) label = copy("实时写入期间暂停轮询", "Polling pauses during live writes");
+        else if (state.pollError) label = copy(`轮询失败：${state.pollError}`, `Polling failed: ${state.pollError}`);
+        else label = state.lightPolling ? copy("每秒同步设备状态；编辑或写入期间自动跳过", "Syncing device state every second; pauses while editing or writing") : copy("每秒从设备读取一次完整配置", "Reading the full device configuration every second");
+        state.pollStatusLabel = label;
+        elements.pollStatus.textContent = localized(label);
+      }
+
+      function formatError(error) {
+        if (!error) return languageText("未知错误", "Unknown error");
+        if (error.payload && error.payload.error) {
+          const detail = error.payload.error;
+          return [detail.code, detail.field, detail.detail].filter(Boolean).join(" · ");
+        }
+        return error.message || String(error);
+      }
+
+      function assertArray(value, length, label) {
+        if (!Array.isArray(value) || value.length !== length) throw new Error(languageText(`${label} 数量错误。`, `${label} count mismatch.`));
+      }
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function valueAtPath(object, path) {
+        return path.reduce((value, part) => value == null ? undefined : value[part], object);
+      }
+
+      function setAtPath(object, path, value) {
+        let target = object;
+        for (let index = 0; index < path.length - 1; index += 1) target = target[path[index]];
+        target[path[path.length - 1]] = value;
+      }
+
+      function decimalsFor(step) {
+        const text = String(step);
+        return text.includes(".") ? text.length - text.indexOf(".") - 1 : 0;
+      }
+
+      function formatNumber(value, step = 0.001) {
+        if (!Number.isFinite(Number(value))) return "";
+        return Number(value).toFixed(decimalsFor(step));
+      }
+
+      function canonicalize(raw, spec) {
+        if (String(raw).trim() === "") return null;
+        const numeric = Number(raw);
+        if (!Number.isFinite(numeric)) return null;
+        const clipped = Math.min(spec.max, Math.max(spec.min, numeric));
+        const steps = Math.round((clipped - spec.min) / spec.step);
+        return Number((spec.min + steps * spec.step).toFixed(decimalsFor(spec.step)));
+      }
+
+      async function readSerialLoop() {
+        try {
+          while (!state.disconnecting && state.port && state.port.readable) {
+            state.reader = state.port.readable.getReader();
+            try {
+              while (true) {
+                const {value, done} = await state.reader.read();
+                if (done) break;
+                state.inputBuffer += decoder.decode(value, {stream: true});
+                if (state.inputBuffer.length > 16384) {
+                  const lastNewline = state.inputBuffer.lastIndexOf("\n");
+                  state.inputBuffer = lastNewline >= 0 ? state.inputBuffer.slice(lastNewline + 1) : "";
+                }
+                let newline = state.inputBuffer.indexOf("\n");
+                while (newline >= 0) {
+                  const line = state.inputBuffer.slice(0, newline).trim();
+                  state.inputBuffer = state.inputBuffer.slice(newline + 1);
+                  if (line.startsWith("<")) receiveResponse(line.slice(1));
+                  newline = state.inputBuffer.indexOf("\n");
+                }
+              }
+            } finally {
+              state.reader.releaseLock();
+              state.reader = null;
+            }
+          }
+        } catch (error) {
+          if (state.connected) transportLost(error);
+        }
+      }
+
+      function receiveResponse(text) {
+        let payload;
+        try {
+          payload = JSON.parse(text);
+        } catch {
+          return;
+        }
+        if (!Number.isInteger(payload.id)) return;
+        const pending = state.pendingRequests.get(payload.id);
+        if (!pending) return;
+        state.pendingRequests.delete(payload.id);
+        window.clearTimeout(pending.timer);
+        if (payload.ok) pending.resolve(payload);
+        else {
+          const error = new Error(payload.error && payload.error.code ? payload.error.code : "device_error");
+          error.payload = payload;
+          pending.reject(error);
+        }
+      }
+
+      async function sendLine(text) {
+        if (!state.writer) throw new Error(languageText("设备未连接。", "Device is not connected."));
+        await state.writer.write(encoder.encode(text));
+      }
+
+      function request(operation, payload = {}, timeout = 3500) {
+        const id = state.nextId++;
+        const body = {v: 1, id, op: operation, ...payload};
+        return new Promise((resolve, reject) => {
+          const timer = window.setTimeout(() => {
+            state.pendingRequests.delete(id);
+            reject(new Error(`${operation} timeout`));
+          }, timeout);
+          state.pendingRequests.set(id, {resolve, reject, timer});
+          sendLine(`@${JSON.stringify(body)}\n`).catch((error) => {
+            window.clearTimeout(timer);
+            state.pendingRequests.delete(id);
+            reject(error);
+          });
+        });
+      }
+
+      async function helloWhenReady(timeout = 5000) {
+        const deadline = Date.now() + timeout;
+        while (true) {
+          try {
+            return await request("hello");
+          } catch (error) {
+            const code = error.payload && error.payload.error && error.payload.error.code;
+            if (code !== "busy" || Date.now() >= deadline) throw error;
+            setConnection("connecting", copy("Wingie2 正在启动…", "Wingie2 is starting…"));
+            await new Promise((resolve) => window.setTimeout(resolve, 100));
+          }
+        }
+      }
+
+      async function connect() {
+        setAlert("");
+        elements.connect.disabled = true;
+        setConnection("connecting", copy("正在连接…", "Connecting…"));
+        try {
+          state.disconnecting = false;
+          state.port = await navigator.serial.requestPort();
+          await state.port.open({baudRate: 115200});
+          state.writer = state.port.writable.getWriter();
+          state.readLoop = readSerialLoop();
+          const hello = await helloWhenReady();
+          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 5) throw new Error(languageText("需要 Wingie2 配置 schema 5 固件。", "Wingie2 config schema 5 firmware is required."));
+          state.connected = true;
+          await refreshAll(false);
+          startPolling();
+          setConnection("connected", copy("Wingie2 已连接", "Connected"));
+          setAlert(copy("已读取设备快照；页面每秒后台同步，编辑或写入期间自动跳过。", "Device snapshot loaded; the page syncs every second and pauses while editing or writing."), "success");
+        } catch (error) {
+          await disconnect(false);
+          elements.connect.disabled = false;
+          setConnection("disconnected", copy("未连接", "Disconnected"));
+          setAlert(copy(`连接失败：${formatError(error)}`, `Connection failed: ${formatError(error)}`), "error");
+        }
+      }
+
+      function rejectPendingRequests(error) {
+        for (const pending of state.pendingRequests.values()) {
+          window.clearTimeout(pending.timer);
+          pending.reject(error);
+        }
+        state.pendingRequests.clear();
+      }
+
+      function clearEditTimers() {
+        for (const edit of state.edits.values()) if (edit.timer) window.clearTimeout(edit.timer);
+        for (const timer of state.resourceTimers.values()) window.clearTimeout(timer);
+        state.resourceTimers.clear();
+        state.pendingResourceKeys.clear();
+      }
+
+      async function disconnect(announce = true) {
+        stopPolling();
+        state.disconnecting = true;
+        state.connectionEpoch += 1;
+        state.connected = false;
+        state.pollError = null;
+        state.lightPolling = true;
+        clearEditTimers();
+        rejectPendingRequests(new Error("设备已断开。"));
+        try {
+          if (state.reader) await state.reader.cancel();
+        } catch {
+        }
+        try {
+          // 等读循环完全退出并 releaseLock，否则 close() 会一直等锁（页面冻结的根因）
+          if (state.readLoop) await state.readLoop;
+        } catch {
+        }
+        try {
+          if (state.writer) {
+            state.writer.releaseLock();
+            state.writer = null;
+          }
+          if (state.port) await state.port.close();
+        } catch {
+        }
+        state.port = null;
+        state.disconnecting = false;
+        state.inputBuffer = "";
+        state.caveCacheValid = false;
+        elements.connect.disabled = false;
+        setConnection("disconnected", copy("未连接", "Disconnected"));
+        renderAll();
+        if (announce) setAlert(copy("已断开。", "Disconnected."), "info");
+      }
+
+      function transportLost(error) {
+        disconnect(false).finally(() => setAlert(copy(`连接已断开：${formatError(error)}`, `Connection lost: ${formatError(error)}`), "error"));
+      }
+
+      function stopPolling() {
+        if (state.pollTimer !== null) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+      }
+
+      function startPolling() {
+        stopPolling();
+        state.pollTimer = window.setInterval(() => {
+          pollTick().catch(() => undefined);
+        }, 1000);
+        updatePollingStatus();
+      }
+
+      function pollTick() {
+        return state.lightPolling === false ? pollFullSnapshot() : pollLightSnapshot();
+      }
+
+      function normalizeSettings(response) {
+        return {
+          dirty: Boolean(response.dirty),
+          left: clone(response.left),
+          right: clone(response.right),
+          shared: clone(response.shared)
+        };
+      }
+
+      function normalizeRatio(response) {
+        assertArray(response.profile && response.profile.ratios, resonatorCount, "Ratio");
+        assertArray(response.factory_profile && response.factory_profile.ratios, resonatorCount, "Factory Ratio");
+        const step = Number(response.limits.step);
+        return {
+          values: response.profile.ratios.map(Number),
+          draft: response.profile.ratios.map(Number),
+          raw: response.profile.ratios.map((value) => formatNumber(value, step)),
+          focused: Array(resonatorCount).fill(false),
+          revision: Number(response.profile.revision),
+          dirty: Boolean(response.profile.dirty),
+          factory: response.factory_profile.ratios.map(Number),
+          limits: {
+            min: Number(response.limits.min),
+            max: Number(response.limits.max),
+            step,
+            frequencyMin: Number(response.limits.frequency_min),
+            frequencyMax: Number(response.limits.frequency_max)
+          }
+        };
+      }
+
+      function normalizeCave(response) {
+        assertArray(response.frequencies, resonatorCount, "Cave frequency");
+        assertArray(response.mute, resonatorCount, "Cave mute");
+        const step = Number(response.limits.step || 0.01);
+        return {
+          active: Boolean(response.active),
+          frequencies: response.frequencies.map(Number),
+          draftFrequencies: response.frequencies.map(Number),
+          raw: response.frequencies.map((value) => formatNumber(value, step)),
+          focused: Array(resonatorCount).fill(false),
+          mute: response.mute.map(Boolean),
+          draftMute: response.mute.map(Boolean),
+          revision: Number(response.revision),
+          dirty: Boolean(response.dirty),
+          limits: {min: Number(response.limits.min), max: Number(response.limits.max), step}
+        };
+      }
+
+      async function readCaveResponses() {
+        const responses = {left: [], right: []};
+        for (const side of sides) {
+          for (let bank = 0; bank < bankCount; bank += 1) responses[side][bank] = await request("get_cave", {side, bank});
+        }
+        return responses;
+      }
+
+      function applyCaveBankSnapshot(side, bank, normalized, preservePending) {
+        const current = state.cave[side][bank];
+        if (preservePending && current) {
+          if (state.pendingResourceKeys.has(caveKey(side, bank)) || current.focused.some(Boolean)) {
+            normalized.draftFrequencies = current.draftFrequencies.slice();
+            normalized.raw = current.raw.slice();
+            normalized.focused = current.focused.slice();
+            normalized.draftMute = current.draftMute.slice();
+          }
+          if (normalized.revision < current.revision) {
+            normalized.revision = current.revision;
+            normalized.frequencies = current.frequencies.slice();
+            normalized.mute = current.mute.slice();
+            normalized.dirty = current.dirty;
+          }
+        }
+        state.cave[side][bank] = normalized;
+      }
+
+      function applyCaveResponses(responses, preservePending) {
+        for (const side of sides) {
+          for (let bank = 0; bank < bankCount; bank += 1) {
+            applyCaveBankSnapshot(side, bank, normalizeCave(responses[side][bank]), preservePending);
+          }
+        }
+        state.caveCacheValid = true;
+      }
+
+      async function refreshDependentCaves() {
+        applyCaveResponses(await readCaveResponses(), true);
+      }
+
+      async function readFullSnapshot() {
+        const settingsResponse = await request("get_settings");
+        const ratioResponse = await request("get");
+        const caveResponses = await readCaveResponses();
+        return {
+          settings: normalizeSettings(settingsResponse),
+          ratio: normalizeRatio(ratioResponse),
+          caves: caveResponses
+        };
+      }
+
+      function parameterEditIsPending(edit) {
+        return edit.timer || edit.version !== edit.sentVersion || edit.focused;
+      }
+
+      function applyRatioSnapshot(ratio, preservePending) {
+        const previous = state.ratio;
+        if (preservePending && previous) {
+          if (state.pendingResourceKeys.has("ratio") || previous.focused.some(Boolean)) {
+            ratio.draft = previous.draft.slice();
+            ratio.raw = previous.raw.slice();
+            ratio.focused = previous.focused.slice();
+          }
+          if (ratio.revision < previous.revision) {
+            ratio.revision = previous.revision;
+            ratio.values = previous.values.slice();
+            ratio.dirty = previous.dirty;
+          }
+        }
+        state.ratio = ratio;
+      }
+
+      function applyFullSnapshot(snapshot, preservePending) {
+        state.settings = snapshot.settings;
+        applyRatioSnapshot(snapshot.ratio, preservePending);
+        applyCaveResponses(snapshot.caves, preservePending);
+        if (preservePending) {
+          for (const [key, edit] of state.edits) {
+            if (!parameterEditIsPending(edit)) state.edits.delete(key);
+          }
+        }
+      }
+
+      async function refreshAll(announce = true) {
+        if (!state.connected || state.refreshing) return;
+        if (state.pollPromise) await state.pollPromise;
+        if (!state.connected || state.refreshing) return;
+        state.refreshing = true;
+        updateControls();
+        try {
+          flushScheduledWrites();
+          await state.writeChain;
+          state.writeErrors.clear();
+          applyFullSnapshot(await readFullSnapshot(), false);
+          clearEditTimers();
+          state.edits.clear();
+          state.resourceVersions.clear();
+          state.writeErrors.clear();
+          state.pollError = null;
+          renderAll();
+          if (announce) setAlert(copy("已重新读取完整设备快照。", "Full device snapshot refreshed."), "success");
+        } finally {
+          state.refreshing = false;
+          renderAll();
+        }
+      }
+
+      async function pollFullSnapshot() {
+        if (!state.connected || state.polling || state.refreshing || state.saving || pendingUiWriteCount()) return;
+        state.polling = true;
+        updatePollingStatus();
+        const epoch = state.connectionEpoch;
+        let finishPoll;
+        state.pollPromise = new Promise((resolve) => { finishPoll = resolve; });
+        try {
+          const snapshot = await readFullSnapshot();
+          if (!state.connected || epoch !== state.connectionEpoch || pendingUiWriteCount()) return;
+          applyFullSnapshot(snapshot, true);
+          state.pollError = null;
+          renderAll();
+        } catch (error) {
+          if (state.connected && epoch === state.connectionEpoch) {
+            state.pollError = formatError(error);
+            updateControls();
+          }
+        } finally {
+          state.polling = false;
+          state.pollPromise = null;
+          finishPoll();
+          updateControls();
+        }
+      }
+
+      async function pollLightSnapshot() {
+        if (!state.connected || state.polling || state.refreshing || state.saving || pendingUiWriteCount()) return;
+        state.polling = true;
+        updatePollingStatus();
+        const epoch = state.connectionEpoch;
+        let finishPoll;
+        state.pollPromise = new Promise((resolve) => { finishPoll = resolve; });
+        let fallback = false;
+        try {
+          const statusResponse = await request("status");
+          if (!state.connected || epoch !== state.connectionEpoch) return;
+          const caveRevision = statusResponse.cave_revision;
+          if (!caveRevision || !Array.isArray(caveRevision.left) || !Array.isArray(caveRevision.right)) {
+            state.lightPolling = false;
+            fallback = true;
+          } else {
+            const settingsResponse = await request("get_settings");
+            let ratioSnapshot = null;
+            if (state.ratio && Number(statusResponse.profile_revision) !== state.ratio.revision) {
+              ratioSnapshot = normalizeRatio(await request("get"));
+            }
+            const caveSnapshots = [];
+            for (const side of sides) {
+              const activeBank = Number(statusResponse.cave_active_bank[side]);
+              for (let bank = 0; bank < bankCount; bank += 1) {
+                const current = state.cave[side][bank];
+                if (!current || current.revision !== Number(caveRevision[side][bank]) || current.active !== (bank === activeBank)) {
+                  caveSnapshots.push({side, bank, normalized: normalizeCave(await request("get_cave", {side, bank}))});
+                }
+              }
+            }
+            if (!state.connected || epoch !== state.connectionEpoch || pendingUiWriteCount()) return;
+            state.settings = normalizeSettings(settingsResponse);
+            if (ratioSnapshot) applyRatioSnapshot(ratioSnapshot, true);
+            for (const item of caveSnapshots) applyCaveBankSnapshot(item.side, item.bank, item.normalized, true);
+            for (const [key, edit] of state.edits) {
+              if (!parameterEditIsPending(edit)) state.edits.delete(key);
+            }
+            state.pollError = null;
+            renderAll();
+          }
+        } catch (error) {
+          if (state.connected && epoch === state.connectionEpoch) {
+            state.pollError = formatError(error);
+            updateControls();
+          }
+        } finally {
+          state.polling = false;
+          state.pollPromise = null;
+          finishPoll();
+          updateControls();
+        }
+        if (fallback) await pollFullSnapshot();
+      }
+
+      function modelValueForKey(key) {
+        return state.settings ? valueAtPath(state.settings, parameterSpecs[key].path) : undefined;
+      }
+
+      function editFor(key) {
+        if (!state.edits.has(key)) state.edits.set(key, {raw: formatNumber(modelValueForKey(key), parameterSpecs[key].step), focused: false, version: 0, sentVersion: 0, timer: null});
+        return state.edits.get(key);
+      }
+
+      function syncParameterControls(key) {
+        const spec = parameterSpecs[key];
+        const edit = state.edits.get(key);
+        const value = edit ? edit.raw : formatNumber(modelValueForKey(key), spec.step);
+        // MPE 开启时常规三通道路由不生效，对应字段置灰
+        const midiChannelKey = key === "param:shared:midi_left" || key === "param:shared:midi_right" || key === "param:shared:midi_both";
+        const mpeOn = Boolean(state.settings && state.settings.shared && state.settings.shared.mpe_enabled);
+        root.querySelectorAll(`[data-value-key="${key}"]`).forEach((control) => {
+          if (document.activeElement !== control || control.tagName === "SELECT") control.value = value;
+          control.disabled = !state.connected || !state.settings || state.saving || state.refreshing || (midiChannelKey && mpeOn);
+        });
+        root.querySelectorAll(`[data-range-key="${key}"]`).forEach((control) => {
+          control.min = spec.min;
+          control.max = spec.max;
+          control.step = spec.step;
+          if (document.activeElement !== control) control.value = value;
+          control.disabled = !state.connected || !state.settings || state.saving || state.refreshing;
+        });
+      }
+
+      function enqueueWrite(key, version, execute, acknowledge, rollback) {
+        state.pendingWrites += 1;
+        updateControls();
+        const operation = state.writeChain.then(async () => {
+          if (state.pollPromise) await state.pollPromise;
+          if (!state.connected || state.resourceVersions.get(key) !== version) {
+            state.conflictRetries.delete(key);
+            return;
+          }
+          try {
+            const response = await execute();
+            state.writeErrors.delete(key);
+            state.conflictRetries.delete(key);
+            await acknowledge(response, state.resourceVersions.get(key) === version);
+          } catch (error) {
+            if (state.resourceVersions.get(key) === version) {
+              const code = error.payload && error.payload.error && error.payload.error.code;
+              if (code === "revision_conflict" && !state.conflictRetries.has(key) && (key === "ratio" || key.startsWith("cave:"))) {
+                try {
+                  await resyncConflictedResource(key);
+                  state.writeErrors.delete(key);
+                } catch (resyncError) {
+                  state.conflictRetries.delete(key);
+                  state.writeErrors.set(key, resyncError);
+                  rollback();
+                  setAlert(copy(`实时写入失败：${formatError(resyncError)}`, `Live write failed: ${formatError(resyncError)}`), "error");
+                }
+              } else {
+                state.conflictRetries.delete(key);
+                state.writeErrors.set(key, error);
+                rollback();
+                setAlert(copy(`实时写入失败：${formatError(error)}`, `Live write failed: ${formatError(error)}`), "error");
+              }
+            }
+          }
+        }).finally(() => {
+          state.pendingWrites -= 1;
+          renderAll();
+        });
+        state.writeChain = operation.catch(() => undefined);
+        return operation;
+      }
+
+      async function resyncConflictedResource(key) {
+        state.conflictRetries.add(key);
+        if (key === "ratio") {
+          applyRatioSnapshot(normalizeRatio(await request("get")), true);
+          scheduleResource("ratio", commitRatio, true);
+        } else {
+          const [, side, bankText] = key.split(":");
+          const bank = Number(bankText);
+          applyCaveBankSnapshot(side, bank, normalizeCave(await request("get_cave", {side, bank})), true);
+          scheduleResource(key, (version) => commitCave(side, bank, version), true);
+        }
+        renderAll();
+      }
+
+      function scheduleParameter(key, raw, focused, immediate = false) {
+        const spec = parameterSpecs[key];
+        const edit = editFor(key);
+        edit.raw = String(raw);
+        edit.focused = focused;
+        edit.version += 1;
+        state.resourceVersions.set(key, edit.version);
+        if (edit.timer) window.clearTimeout(edit.timer);
+        const canonical = canonicalize(edit.raw, spec);
+        if (canonical === null) {
+          edit.timer = null;
+          syncParameterControls(key);
+          updateControls();
+          return;
+        }
+        const commit = () => {
+          edit.timer = null;
+          if (edit.sentVersion === edit.version) return;
+          edit.sentVersion = edit.version;
+          const version = edit.version;
+          const value = canonicalize(edit.raw, spec);
+          enqueueWrite(key, version,
+            async () => {
+              const response = await request("set_param", {target: spec.target, name: spec.name, value});
+              if (response.caves_changed) {
+                try {
+                  await refreshDependentCaves();
+                } catch (error) {
+                  state.caveCacheValid = false;
+                  response.dependencyError = error;
+                }
+              }
+              return response;
+            },
+            (response, current) => {
+              const acknowledged = Number(response.value);
+              setAtPath(state.settings, spec.path, acknowledged);
+              state.settings.dirty = Boolean(response.dirty);
+              if (current) {
+                edit.raw = formatNumber(acknowledged, spec.step);
+                syncParameterControls(key);
+              }
+              if (response.dependencyError) throw response.dependencyError;
+            },
+            () => {
+              edit.raw = formatNumber(modelValueForKey(key), spec.step);
+              syncParameterControls(key);
+            });
+        };
+        if (immediate || spec.immediate) commit();
+        else edit.timer = window.setTimeout(commit, 150);
+        syncParameterControls(key);
+        updateControls();
+      }
+
+      function resourceVersion(key) {
+        return state.resourceVersions.get(key) || 0;
+      }
+
+      function bumpResource(key) {
+        const version = resourceVersion(key) + 1;
+        state.resourceVersions.set(key, version);
+        return version;
+      }
+
+      function scheduleResource(key, commit, immediate = false) {
+        const version = bumpResource(key);
+        state.pendingResourceKeys.add(key);
+        const existing = state.resourceTimers.get(key);
+        if (existing) window.clearTimeout(existing);
+        const run = () => {
+          state.resourceTimers.delete(key);
+          commit(version);
+        };
+        if (immediate) run();
+        else state.resourceTimers.set(key, window.setTimeout(run, 150));
+        updateControls();
+      }
+
+      function commitRatio(version) {
+        if (!state.ratio || resourceVersion("ratio") !== version) return;
+        const snapshot = state.ratio.draft.slice();
+        enqueueWrite("ratio", version,
+          () => request("set", {expected_revision: state.ratio.revision, ratios: snapshot}),
+          (response, current) => {
+            state.ratio.revision = Number(response.revision);
+            state.ratio.values = snapshot.slice();
+            state.ratio.dirty = true;
+            if (current) {
+              state.ratio.draft = snapshot.slice();
+              state.ratio.raw = snapshot.map((value) => formatNumber(value, state.ratio.limits.step));
+              state.pendingResourceKeys.delete("ratio");
+            }
+          },
+          () => {
+            state.ratio.draft = state.ratio.values.slice();
+            state.ratio.raw = state.ratio.values.map((value) => formatNumber(value, state.ratio.limits.step));
+            state.pendingResourceKeys.delete("ratio");
+          });
+      }
+
+      function caveKey(side, bank) {
+        return `cave:${side}:${bank}`;
+      }
+
+      function commitCave(side, bankIndex, version) {
+        const key = caveKey(side, bankIndex);
+        const bank = state.cave[side][bankIndex];
+        if (!bank || resourceVersion(key) !== version) return;
+        const frequencies = bank.draftFrequencies.slice();
+        const mute = bank.draftMute.slice();
+        enqueueWrite(key, version,
+          () => {
+            if (!state.caveCacheValid) throw new Error(languageText("Cave 状态已失效，请先刷新。", "Cave state is invalid; click Refresh first."));
+            return request("set_cave", {
+              side,
+              bank: bankIndex,
+              expected_revision: state.cave[side][bankIndex].revision,
+              frequencies,
+              mute
+            });
+          },
+          (response, current) => {
+            const currentBank = state.cave[side][bankIndex];
+            currentBank.revision = Number(response.revision);
+            currentBank.frequencies = frequencies.slice();
+            currentBank.mute = mute.slice();
+            currentBank.dirty = true;
+            if (current) {
+              currentBank.draftFrequencies = frequencies.slice();
+              currentBank.draftMute = mute.slice();
+              currentBank.raw = frequencies.map((value) => formatNumber(value, currentBank.limits.step));
+              state.pendingResourceKeys.delete(key);
+            }
+          },
+          () => {
+            const currentBank = state.cave[side][bankIndex];
+            currentBank.draftFrequencies = currentBank.frequencies.slice();
+            currentBank.draftMute = currentBank.mute.slice();
+            currentBank.raw = currentBank.frequencies.map((value) => formatNumber(value, currentBank.limits.step));
+            state.pendingResourceKeys.delete(key);
+          });
+      }
+
+      function flushScheduledWrites() {
+        for (const [key, edit] of state.edits) {
+          if (!edit.timer) continue;
+          window.clearTimeout(edit.timer);
+          edit.timer = null;
+          scheduleParameter(key, edit.raw, false, true);
+        }
+        for (const [key, timer] of Array.from(state.resourceTimers.entries())) {
+          window.clearTimeout(timer);
+          state.resourceTimers.delete(key);
+          const version = resourceVersion(key);
+          if (key === "ratio") commitRatio(version);
+          else {
+            const [, side, bank] = key.split(":");
+            commitCave(side, Number(bank), version);
+          }
+        }
+      }
+
+      async function waitForWrites() {
+        if (state.pollPromise) await state.pollPromise;
+        flushScheduledWrites();
+        await state.writeChain;
+        if (state.writeErrors.size) throw new Error(Array.from(state.writeErrors.values()).map(formatError).join("; "));
+      }
+
+      async function saveConfiguration() {
+        if (!state.connected || state.saving) return;
+        if (!window.confirm(`${languageText("保存到闪存？", "Save to Flash?")}\n\n${languageText("当前运行配置将写入闪存，重启后保留。", "Current running settings will be written to flash and retained after restart.")}`)) return;
+        state.saving = true;
+        updateControls();
+        setAlert(copy("正在等待实时写入…", "Waiting for live writes…"), "info");
+        try {
+          await waitForWrites();
+          setAlert(copy("正在写入闪存…", "Writing to flash…"), "info");
+          await request("save", {}, 6000);
+          if (state.settings) state.settings.dirty = false;
+          if (state.ratio) state.ratio.dirty = false;
+          for (const side of sides) for (const bank of state.cave[side]) if (bank) bank.dirty = false;
+          setAlert(copy("配置已保存到 Wingie2 闪存。", "Configuration saved to Wingie2 flash."), "success");
+        } catch (error) {
+          setAlert(copy(`保存失败：${formatError(error)}`, `Save failed: ${formatError(error)}`), "error");
+        } finally {
+          state.saving = false;
+          renderAll();
+        }
+      }
+
+      async function resetFactoryRatio() {
+        if (!state.ratio || !window.confirm(`${languageText("恢复出厂比例？", "Restore Factory Ratio?")}\n\n${languageText("此操作会立即改变运行状态；点击保存后才写入闪存。", "This changes the running state; Save is required to write flash.")}`)) return;
+        await waitForWrites();
+        let response;
+        try {
+          response = await request("reset", {expected_revision: state.ratio.revision});
+        } catch (error) {
+          const code = error.payload && error.payload.error && error.payload.error.code;
+          if (code !== "revision_conflict") throw error;
+          applyRatioSnapshot(normalizeRatio(await request("get")), true);
+          response = await request("reset", {expected_revision: state.ratio.revision});
+        }
+        state.ratio.revision = Number(response.revision);
+        state.ratio.values = state.ratio.factory.slice();
+        state.ratio.draft = state.ratio.factory.slice();
+        state.ratio.raw = state.ratio.factory.map((value) => formatNumber(value, state.ratio.limits.step));
+        state.ratio.dirty = true;
+        bumpResource("ratio");
+        renderAll();
+        setAlert(copy("已恢复出厂比例；尚未写入闪存。", "Factory Ratio restored; not saved to flash yet."), "success");
+      }
+
+      function copySlot1ToSlots() {
+        if (!state.ratio) return;
+        const active = document.activeElement;
+        if (active && active.classList && active.classList.contains("wg-ratio-input")) active.blur();
+        for (let index = ratioSlotSize; index < resonatorCount; index += 1) {
+          state.ratio.draft[index] = state.ratio.draft[index % ratioSlotSize];
+          state.ratio.raw[index] = formatNumber(state.ratio.draft[index], state.ratio.limits.step);
+        }
+        scheduleResource("ratio", commitRatio, false);
+        renderRatio();
+        updateControls();
+      }
+
+      function createRows() {
+        for (let index = 0; index < resonatorCount; index += 1) {
+          if (index % ratioSlotSize === 0) {
+            const slot = index / ratioSlotSize + 1;
+            const slotRow = document.createElement("tr");
+            slotRow.className = "wg-ratio-slot";
+            slotRow.innerHTML = `<td colspan="3" data-i18n-zh="槽 ${slot}" data-i18n-en="Slot ${slot}"></td>`;
+            elements.ratioRows.appendChild(slotRow);
+          }
+          const ratioRow = document.createElement("tr");
+          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`)}" disabled></td><td data-cents="${index}">—</td>`;
+          elements.ratioRows.appendChild(ratioRow);
+          for (const side of sides) {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${index + 1}</td><td><input class="wg-frequency-input" data-cave-input="${side}:${index}" data-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`${side} 共鸣器 ${index + 1} 频率`, `${side} resonator ${index + 1} frequency`)}" disabled></td><td class="wg-mute-cell"><input class="wg-mute-input" data-cave-mute="${side}:${index}" data-index="${index}" type="checkbox" aria-label="${languageText(`${side} 共鸣器 ${index + 1} 静音`, `${side} resonator ${index + 1} mute`)}" disabled></td>`;
+            elements.caveRows[side].appendChild(row);
+          }
+        }
+      }
+
+      function renderSettings() {
+        for (const key of Object.keys(parameterSpecs)) syncParameterControls(key);
+      }
+
+      function renderRatio() {
+        const ratio = state.ratio;
+        elements.ratioRows.querySelectorAll(".wg-ratio-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`));
+          input.disabled = !state.connected || !ratio || state.saving || state.refreshing;
+          if (!ratio) input.value = "";
+          else if (document.activeElement !== input) input.value = ratio.raw[index];
+        });
+        for (let index = 0; index < resonatorCount; index += 1) {
+          const value = ratio ? Number(ratio.draft[index]) : NaN;
+          const cents = root.querySelector(`[data-cents="${index}"]`);
+          cents.textContent = Number.isFinite(value) && value > 0 ? `${(1200 * Math.log2(value)).toFixed(1)} ¢` : "—";
+        }
+        elements.ratioMeta.textContent = ratio ? `${languageText("比例", "Ratio")} ${ratio.limits.min}–${ratio.limits.max} · ${languageText(`修订 ${ratio.revision}`, `revision ${ratio.revision}`)}${ratio.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
+      }
+
+      function renderCave(side) {
+        const bankIndex = state.selectedBank[side];
+        const bank = state.cave[side][bankIndex];
+        root.querySelectorAll(`[data-bank-tabs="${side}"] [data-bank]`).forEach((button) => button.setAttribute("aria-pressed", Number(button.dataset.bank) === bankIndex ? "true" : "false"));
+        elements.caveRows[side].querySelectorAll(".wg-frequency-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`${side} 共鸣器 ${index + 1} 频率`, `${side} resonator ${index + 1} frequency`));
+          input.disabled = !state.connected || !state.caveCacheValid || !bank || state.saving || state.refreshing;
+          if (!bank) input.value = "";
+          else if (document.activeElement !== input) input.value = bank.raw[index];
+        });
+        elements.caveRows[side].querySelectorAll(".wg-mute-input").forEach((input, index) => {
+          input.setAttribute("aria-label", languageText(`${side} 共鸣器 ${index + 1} 静音`, `${side} resonator ${index + 1} mute`));
+          input.disabled = !state.connected || !state.caveCacheValid || !bank || state.saving || state.refreshing;
+          if (bank) input.checked = bank.draftMute[index];
+        });
+        elements.caveMeta[side].textContent = bank ? `${formatNumber(bank.limits.min, bank.limits.step)}–${formatNumber(bank.limits.max, bank.limits.step)} Hz · ${languageText(`修订 ${bank.revision}`, `revision ${bank.revision}`)}${bank.dirty ? languageText(" · RAM 未保存", " · RAM unsaved") : languageText(" · 已保存", " · saved")}` : languageText("范围由设备提供", "Range provided by device");
+      }
+
+      function dirtyCount() {
+        let count = state.settings && state.settings.dirty ? 1 : 0;
+        if (state.ratio && state.ratio.dirty) count += 1;
+        for (const side of sides) for (const bank of state.cave[side]) if (bank && bank.dirty) count += 1;
+        return count;
+      }
+
+      function scheduledParameterCount() {
+        let count = 0;
+        for (const edit of state.edits.values()) if (edit.timer) count += 1;
+        return count;
+      }
+
+      function pendingUiWriteCount() {
+        return state.pendingWrites + state.resourceTimers.size + scheduledParameterCount();
+      }
+
+      function updateControls() {
+        updatePollingStatus();
+        const ready = state.connected && state.settings && state.ratio && state.caveCacheValid && sides.every((side) => state.cave[side].every(Boolean));
+        const busy = state.saving || state.refreshing;
+        elements.factory.disabled = !ready || busy || state.pendingWrites > 0;
+        elements.copySlot1.disabled = !ready || busy || state.pendingWrites > 0;
+        elements.save.disabled = !ready || busy;
+        elements.refresh.disabled = !state.connected || busy || state.pendingWrites > 0 || state.resourceTimers.size > 0;
+        elements.export.disabled = !ready || busy;
+        elements.import.disabled = !ready || busy;
+        if (state.connected && !state.caveCacheValid) elements.stateSummary.textContent = languageText("Cave 状态需要重新读取；请点刷新。", "Cave state needs rereading; click Refresh.");
+        else if (!ready) elements.stateSummary.textContent = languageText("连接后读取设备配置。", "Connect to read device configuration.");
+        else if (pendingUiWriteCount()) elements.stateSummary.textContent = languageText(`${pendingUiWriteCount()} 项实时写入处理中；保存、刷新与导出会等待完成。`, `${pendingUiWriteCount()} live write(s) pending; Save, Refresh and Export will wait.`);
+        else if (state.writeErrors.size) elements.stateSummary.textContent = languageText("有实时写入失败；修正后再保存。", "A live write failed; correct it before Save.");
+        else if (state.pollError) elements.stateSummary.textContent = languageText(`后台同步失败：${state.pollError}；请点刷新。`, `Background sync failed: ${state.pollError}; click Refresh.`);
+        else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入闪存。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
+        else elements.stateSummary.textContent = languageText("配置与闪存已同步。", "Configuration matches flash.");
+      }
+
+      function renderAll() {
+        renderSettings();
+        renderRatio();
+        for (const side of sides) renderCave(side);
+        updateControls();
+      }
+
+      function ratioInput(event) {
+        const input = event.target.closest(".wg-ratio-input");
+        if (!input || !state.ratio) return;
+        const index = Number(input.dataset.ratioIndex);
+        state.ratio.raw[index] = input.value;
+        state.ratio.focused[index] = document.activeElement === input;
+        const value = canonicalize(input.value, state.ratio.limits);
+        if (value !== null) {
+          state.ratio.draft[index] = value;
+          scheduleResource("ratio", commitRatio, false);
+        }
+        renderRatio();
+        updateControls();
+      }
+
+      function caveInput(side, event) {
+        const bankIndex = state.selectedBank[side];
+        const bank = state.cave[side][bankIndex];
+        if (!bank) return;
+        const frequency = event.target.closest(".wg-frequency-input");
+        if (!frequency) return;
+        const index = Number(frequency.dataset.index);
+        bank.raw[index] = frequency.value;
+        bank.focused[index] = document.activeElement === frequency;
+        const value = canonicalize(frequency.value, bank.limits);
+        if (value !== null) {
+          bank.draftFrequencies[index] = value;
+          const key = caveKey(side, bankIndex);
+          scheduleResource(key, (version) => commitCave(side, bankIndex, version), false);
+        }
+        updateControls();
+      }
+
+      function exportObject() {
+        if (!state.settings || !state.ratio || !state.caveCacheValid) throw new Error(languageText("设备配置尚未完整读取；请先刷新。", "Device configuration is incomplete; click Refresh first."));
+        return {
+          format: "wingie2-config",
+          version: 3,
+          settings: clone({left: state.settings.left, right: state.settings.right, shared: state.settings.shared}),
+          ratio: {ratios: state.ratio.draft.slice()},
+          cave: {
+            left: state.cave.left.map((bank) => ({frequencies: bank.draftFrequencies.slice(), mute: bank.draftMute.slice()})),
+            right: state.cave.right.map((bank) => ({frequencies: bank.draftFrequencies.slice(), mute: bank.draftMute.slice()}))
+          }
+        };
+      }
+
+      function validateImport(value) {
+        if (!value || value.format !== "wingie2-config" || Number(value.version) !== 3) throw new Error(languageText("不是 Wingie2 schema 3 配置文件。", "This is not a Wingie2 schema 3 configuration file."));
+        for (const side of sides) {
+          if (!value.settings || !value.settings[side]) throw new Error(languageText(`缺少 ${side} 设置。`, `Missing ${side} settings.`));
+          assertArray(value.cave && value.cave[side], bankCount, `${side} Cave`);
+          for (const bank of value.cave[side]) {
+            assertArray(bank.frequencies, resonatorCount, "Imported Cave frequency");
+            assertArray(bank.mute, resonatorCount, "Imported Cave mute");
+          }
+        }
+        assertArray(value.ratio && value.ratio.ratios, resonatorCount, "Imported Ratio");
+        return value;
+      }
+
+      async function importObject(value) {
+        const imported = validateImport(clone(value));
+        if (!state.caveCacheValid) throw new Error(languageText("Cave 状态已失效；请先刷新。", "Cave state is invalid; click Refresh first."));
+        await waitForWrites();
+        for (const [key, spec] of Object.entries(parameterSpecs)) {
+          const source = valueAtPath(imported.settings, spec.path);
+          if (source !== undefined) scheduleParameter(key, typeof source === "boolean" ? Number(source) : source, false, true);
+        }
+        await waitForWrites();
+        state.ratio.draft = imported.ratio.ratios.map((value, index) => canonicalize(value, state.ratio.limits) ?? state.ratio.values[index]);
+        state.ratio.raw = state.ratio.draft.map((value) => formatNumber(value, state.ratio.limits.step));
+        scheduleResource("ratio", commitRatio, true);
+        for (const side of sides) {
+          imported.cave[side].forEach((source, bankIndex) => {
+            const bank = state.cave[side][bankIndex];
+            bank.draftFrequencies = source.frequencies.map((value, index) => canonicalize(value, bank.limits) ?? bank.frequencies[index]);
+            bank.raw = bank.draftFrequencies.map((value) => formatNumber(value, bank.limits.step));
+            bank.draftMute = source.mute.map(Boolean);
+            scheduleResource(caveKey(side, bankIndex), (version) => commitCave(side, bankIndex, version), true);
+          });
+        }
+        renderAll();
+        await waitForWrites();
+        setAlert(copy("配置已导入运行状态；保存后才写入闪存。", "Configuration imported into the running state; Save to write flash."), "success");
+      }
+
+      async function downloadExport() {
+        try {
+          await waitForWrites();
+          const blob = new Blob([`${JSON.stringify(exportObject(), null, 2)}\n`], {type: "application/json"});
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `wingie2-config-${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(url);
+        } catch (error) {
+          setAlert(copy(`导出失败：${formatError(error)}`, `Export failed: ${formatError(error)}`), "error");
+        }
+      }
+
+      async function importFile(file) {
+        try {
+          await importObject(JSON.parse(await file.text()));
+        } catch (error) {
+          setAlert(copy(`导入失败：${formatError(error)}`, `Import failed: ${formatError(error)}`), "error");
+        } finally {
+          elements.importFile.value = "";
+        }
+      }
+
+      elements.connect.addEventListener("click", connect);
+      elements.disconnect.addEventListener("click", () => disconnect(true));
+      if (navigator.serial && typeof navigator.serial.addEventListener === "function") {
+        navigator.serial.addEventListener("disconnect", event => {
+          if (state.port && event.target === state.port) {
+            setAlert(copy("USB 已断开。请重新插好数据线。", "USB disconnected. Reconnect the cable."), "warning");
+            disconnect(false);
+          }
+        });
+      }
+      elements.language.addEventListener("click", () => {
+        state.language = state.language === "zh" ? "en" : "zh";
+        applyLanguage();
+      });
+      elements.save.addEventListener("click", saveConfiguration);
+      elements.refresh.addEventListener("click", () => refreshAll(true).catch((error) => setAlert(copy(`刷新失败：${formatError(error)}`, `Refresh failed: ${formatError(error)}`), "error")));
+      elements.factory.addEventListener("click", () => resetFactoryRatio().catch((error) => setAlert(copy(`出厂比例失败：${formatError(error)}`, `Factory Ratio failed: ${formatError(error)}`), "error")));
+      elements.copySlot1.addEventListener("click", copySlot1ToSlots);
+      elements.export.addEventListener("click", downloadExport);
+      elements.import.addEventListener("click", () => elements.importFile.click());
+      elements.importFile.addEventListener("change", () => {
+        const file = elements.importFile.files && elements.importFile.files[0];
+        if (file) importFile(file);
+      });
+
+      root.addEventListener("focusin", (event) => {
+        const key = event.target.dataset.valueKey;
+        if (key && parameterSpecs[key]) editFor(key).focused = true;
+      });
+
+      root.addEventListener("focusout", (event) => {
+        const key = event.target.dataset.valueKey;
+        if (key && parameterSpecs[key]) {
+          const edit = editFor(key);
+          edit.focused = false;
+          if (canonicalize(edit.raw, parameterSpecs[key]) === null) edit.raw = formatNumber(modelValueForKey(key), parameterSpecs[key].step);
+          syncParameterControls(key);
+        }
+        const ratio = event.target.closest && event.target.closest(".wg-ratio-input");
+        if (ratio && state.ratio) {
+          const index = Number(ratio.dataset.ratioIndex);
+          state.ratio.focused[index] = false;
+          if (canonicalize(state.ratio.raw[index], state.ratio.limits) === null) state.ratio.raw[index] = formatNumber(state.ratio.draft[index], state.ratio.limits.step);
+          renderRatio();
+        }
+        const cave = event.target.closest && event.target.closest(".wg-frequency-input");
+        if (cave) {
+          const side = cave.dataset.caveInput.split(":")[0];
+          const bank = state.cave[side][state.selectedBank[side]];
+          const index = Number(cave.dataset.index);
+          bank.focused[index] = false;
+          if (canonicalize(bank.raw[index], bank.limits) === null) bank.raw[index] = formatNumber(bank.draftFrequencies[index], bank.limits.step);
+          renderCave(side);
+        }
+      });
+
+      root.querySelectorAll("[data-value-key]").forEach((control) => {
+        const key = control.dataset.valueKey;
+        if (!parameterSpecs[key]) return;
+        const handler = () => scheduleParameter(key, control.value, document.activeElement === control, control.tagName === "SELECT");
+        control.addEventListener(control.tagName === "SELECT" ? "change" : "input", handler);
+      });
+
+      root.querySelectorAll("[data-range-key]").forEach((control) => {
+        control.addEventListener("input", () => scheduleParameter(control.dataset.rangeKey, control.value, false, false));
+      });
+
+      elements.ratioRows.addEventListener("input", ratioInput);
+      for (const side of sides) {
+        elements.caveRows[side].addEventListener("input", (event) => caveInput(side, event));
+        elements.caveRows[side].addEventListener("change", (event) => {
+          const mute = event.target.closest(".wg-mute-input");
+          if (!mute) return;
+          const bankIndex = state.selectedBank[side];
+          const bank = state.cave[side][bankIndex];
+          bank.draftMute[Number(mute.dataset.index)] = mute.checked;
+          scheduleResource(caveKey(side, bankIndex), (version) => commitCave(side, bankIndex, version), true);
+        });
+      }
+
+      root.querySelectorAll("[data-bank-tabs]").forEach((tabs) => {
+        tabs.addEventListener("click", (event) => {
+          const button = event.target.closest("[data-bank]");
+          if (!button) return;
+          state.selectedBank[button.dataset.side] = Number(button.dataset.bank);
+          renderCave(button.dataset.side);
+        });
+      });
+
+      elements.mobileSides.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-mobile-side]");
+        if (!button) return;
+        elements.channelGrid.dataset.mobileSide = button.dataset.mobileSide;
+        elements.mobileSides.querySelectorAll("[data-mobile-side]").forEach((candidate) => candidate.setAttribute("aria-pressed", candidate === button ? "true" : "false"));
+      });
+
+      if (!("serial" in navigator)) {
+        elements.connect.disabled = true;
+        setAlert(copy("当前浏览器不支持 Web Serial。请使用桌面版 Chrome 或 Edge。", "This browser does not support Web Serial. Use desktop Chrome or Edge."), "warning");
+      }
+
+      createRows();
+      applyLanguage();
+
+      window.__wingieConfigTest = {
+        state: () => state,
+        refresh: () => refreshAll(false),
+        poll: pollFullSnapshot,
+        pollTick,
+        startPolling,
+        stopPolling,
+        exportObject,
+        importObject,
+        idle: waitForWrites
+      };
+    })();
+  </script>
+</body>
+</html>
