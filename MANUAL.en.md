@@ -112,6 +112,8 @@ In Cave Mode, each channel has 9 resonators divided into three octave banks. You
 - Mute all resonators
 - Left and right channels can be tuned separately
 
+![Custom Caves panel operations](img/cave_controls.jpg)
+
 Frequency range `16.00–16000.00 Hz`, resolution `0.01 Hz`. Frequencies can be adjusted from the panel in Cave Mode, via MIDI CC ([Chapter 13](#13-global-settings-midi-cc-table)), or via [USB Web Configuration](#9-usb-web-configuration).
 
 ## 6. Sequencer Threshold
@@ -122,6 +124,8 @@ In String and Bar modes, the sequence advances each time the input volume exceed
 - Left channel sequencer threshold
 
 **Setting on the panel**: Hold the Mode button for the corresponding channel, then press a note button to select the threshold. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.
+
+![Sequencer threshold panel operations](img/seq_threshold.jpg)
 
 Thresholds can also be set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration) (the "Input Threshold" fields).
 
@@ -134,6 +138,8 @@ The clipper's pre-gain and post-gain can be adjusted independently:
 
 **Setting on the panel**: Hold the Mode button for the corresponding channel, then press a note button to select the gain. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.
 
+![Pre and post clip gain panel operations](img/clip_gain.jpg)
+
 Adjust the pre gain for the desired tone, then adjust the post gain for a comfortable dry/wet control response.
 
 Gain can also be set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration).
@@ -141,6 +147,8 @@ Gain can also be set via MIDI CC or [USB Web Configuration](#9-usb-web-configura
 ## 8. MIDI Channels and Control Messages
 
 Wingie2 can be controlled via MIDI. The MIDI interface follows the MMA standard; use standard MIDI cables.
+
+![Standard MIDI wiring](img/midi_wiring.jpg)
 
 ### MIDI Channels
 

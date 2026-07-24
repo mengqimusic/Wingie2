@@ -146,6 +146,10 @@ const CSS = `
     font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
   }
   #wingie-manual strong { font-weight: 700; }
+  #wingie-manual img {
+    max-width: 100%; height: auto; display: block;
+    margin: 16px auto; border: 1px solid #ccc;
+  }
   @media (max-width: 600px) {
     #wingie-manual { padding: 18px 16px; }
     #wingie-manual h1 { font-size: 24px; }
