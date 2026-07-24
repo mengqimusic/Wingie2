@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Wingie2 Alternate Tunings</title>
+  <style>
+  :root { color-scheme: light; }
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; padding: 16px;
+    color: #000; background: #c0c0c0;
+    font: 16px/1.6 "Times New Roman", Times, "Noto Serif", serif;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: #0000EE; text-decoration: underline; }
+  a:visited { color: #551A8B; }
+  a:active { color: #FF0000; }
+  #wingie-manual {
+    width: min(760px, 100%);
+    min-height: calc(100vh - 32px);
+    margin: 0 auto;
+    padding: 28px 32px;
+    border: 2px outset #fff;
+    background: #fff;
+  }
+  #wingie-manual h1 {
+    margin: 0 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px; line-height: 1.25; font-weight: 700;
+    text-align: center; letter-spacing: .01em;
+  }
+  #wingie-manual h2 {
+    margin: 28px 0 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px; font-weight: 700;
+    border-bottom: 2px solid #000; padding-bottom: 3px;
+  }
+  #wingie-manual h3 {
+    margin: 20px 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px; font-weight: 700;
+  }
+  #wingie-manual p { margin: 8px 0; }
+  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  #wingie-manual li + li { margin-top: 4px; }
+  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  #wingie-manual blockquote {
+    margin: 12px 0; padding: 6px 16px;
+    border-left: 3px solid #999; background: #f5f5f5; color: #333;
+  }
+  #wingie-manual blockquote p { margin: 4px 0; }
+  #wingie-manual code {
+    font-family: "Courier New", Courier, monospace;
+    background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
+  }
+  #wingie-manual pre {
+    background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
+    overflow-x: auto; margin: 12px 0;
+  }
+  #wingie-manual pre code { background: none; padding: 0; }
+  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  #wingie-manual table { width: 100%; border-collapse: collapse; }
+  #wingie-manual th, #wingie-manual td {
+    padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
+    vertical-align: top;
+  }
+  #wingie-manual th {
+    background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
+    font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
+  }
+  #wingie-manual strong { font-weight: 700; }
+  @media (max-width: 600px) {
+    #wingie-manual { padding: 18px 16px; }
+    #wingie-manual h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+  <div id="wingie-manual">
+<h1 id="alternate-tuning-support">Alternate Tuning Support</h1>
+<p>By default, Wingie2 uses standard western tuning (equal temperament). As of version 3.1, eight additional tunings are available. These are the currently available tunings (other tunings are possible, but require a source code change and a new firmware build):</p>
+<ul>
+<li>Centaur (Kraig Grady)</li>
+<li>Harp of New Albion (Terry Riley)</li>
+<li>Carlos Harmonic (Wendy Carlos)</li>
+<li>Well Tuned Piano (La Monte Young)</li>
+<li>Meta Slendro (Grady/Wilson)</li>
+<li>bihexany (Gene Ward Smith)</li>
+<li>hexachordal dodecaphonic (Paul Erlich)</li>
+<li>Augmented[12] (Mike Smith, Paul Erlich)</li>
+</ul>
+<p>Alternate tuning is enabled in three ways: by holding down the <strong>left Mode button</strong> when starting the device, using MIDI, or using the USB configuration page. MIDI and USB configuration allow the tuning to be changed without restarting the device.</p>
+<p>Alternate tuning also affects Caves mode; see below for details.</p>
+<p>Alternate tuning honors the Global Tuning (A3) setting.</p>
+<h2 id="alternate-tuning-from-an-mpe-source">Alternate Tuning from an MPE Source</h2>
+<p>An MPE source can express an external tuning by sending each Member Channel's initial Pitch Bend before
+its Note On. Wingie2 tracks that pre-note value and applies it to the allocated Poly or Ratio voice, or to
+the current String or Bar note. The Member Pitch Bend range defaults to ±48 semitones and follows RPN 0.</p>
+<p>MPE Pitch Bend is applied after Wingie2's internal tuning. Select Standard in the USB configuration page
+when the MIDI source should be the only tuning authority. The MPE zone layout (Manager Channel 1, Member Channels 2–7, alternating sides) is documented in
+<a href="MPE.html"><code>MPE.md</code></a>. Leaving an internal alternate tuning enabled
+adds the source's Pitch Bend offset to the internally tuned note rather than replacing it. Cave mode does
+not respond to Pitch Bend.</p>
+<h2 id="enablingdisabling-alternate-tuning-at-startup">Enabling/Disabling Alternate Tuning at Startup</h2>
+<p>Hold down the <strong>left Mode button</strong> before plugging in the USB cable.The positions of the sliders will determine which alternate tuning will be used, as follows:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Left slider</th>
+<th>Middle slider</th>
+<th>right slider</th>
+<th>tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>down</td>
+<td>down</td>
+<td>down</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td>down</td>
+<td>down</td>
+<td>up</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td>down</td>
+<td>up</td>
+<td>down</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td>down</td>
+<td>up</td>
+<td>up</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td>up</td>
+<td>down</td>
+<td>down</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td>up</td>
+<td>down</td>
+<td>up</td>
+<td>bihexany</td>
+</tr>
+<tr>
+<td>up</td>
+<td>up</td>
+<td>down</td>
+<td>hexachordal dodecaphonic</td>
+</tr>
+<tr>
+<td>up</td>
+<td>up</td>
+<td>up</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><p>[For nerds: this method treats the sliders as base-2 digits, where the right slider represents the 1's column, the middle slider represents the 2's column, and the left slider represents the 4's column. Thus, all sliders down indicates 0, all sliders up indicates 7, etc.]</p>
+<p>To disable alternate tuning at startup, hold down the <strong>right Mode button</strong>. The device will then start using standard tuning.</p>
+<h2 id="enablingdisabling-alternate-tuning-using-midi">Enabling/Disabling Alternate Tuning using MIDI</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>channel</th>
+<th>CC</th>
+<th>value</th>
+<th>tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13</td>
+<td>23</td>
+<td>0</td>
+<td>Disable alternate tuning (return to standard tuning)</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>1</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>2</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>3</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>4</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>5</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>6</td>
+<td>bihexany</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>7</td>
+<td>hexachordal dodecaphonic</td>
+</tr>
+<tr>
+<td>-</td>
+<td>-</td>
+<td>8</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="enablingdisabling-alternate-tuning-using-usb-configuration">Enabling/Disabling Alternate Tuning using USB configuration</h2>
+<p>The current USB configuration page requires Wingie2 <code>config schema 3</code> firmware. When it connects, it
+reads the current Tuning and Global Tuning (A3) values as part of one complete device snapshot. Select
+Standard to disable alternate tuning, or select one of the eight alternate tunings to enable it. A
+valid edit changes the running instrument immediately; there is no Apply step.</p>
+<p>The page does not continuously synchronize changes made from the hardware or MIDI. Use Refresh to
+read a new complete snapshot after changing tuning outside the page.</p>
+<h2 id="caves-in-alternate-tuning">Caves in Alternate Tuning</h2>
+<p>When you enable alternate tuning, the caves are also tuned to match the tuning you selected. In
+<code>config schema 3</code> firmware, Cave frequencies cover <code>16.00–16000.00 Hz</code> and are edited and stored at
+<code>0.01 Hz</code> resolution.</p>
+<p>In order to accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:</p>
+<pre><code>C, D, E, F#, G#, A#, C', D', E'
+</code></pre>
+<p>The right channel uses the odd-numbered scale tones, also covering one and one-third octaves:</p>
+<pre><code>C#, D#, F, G, A, B, A#, C#', D#', F'
+</code></pre>
+<p>The three-position toggles switch between three octaves, similar to Poly, String and Bar modes. However, the left and right caves are always in the same octave, so that all scale pitches are covered across the two sides.</p>
+<h2 id="saving-the-tuning-setting">Saving the tuning setting</h2>
+<p>Changing Tuning or Global Tuning (A3) from the USB configuration page affects the running instrument
+immediately but does not write flash automatically. Save the current tuning and related Cave settings
+either by holding down both Mode buttons simultaneously, as described in the manual, or by using the
+confirmed Save to Flash action on the USB configuration page. MIDI tuning changes also take effect
+immediately; enabling alternate tuning preserves the unquantized Cave backup used for later recovery.
+On restart, the saved tuning configuration is restored.</p>
+
+  </div>
+</body>
+</html>

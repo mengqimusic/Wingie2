@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Wingie2 MPE</title>
+  <style>
+  :root { color-scheme: light; }
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; padding: 16px;
+    color: #000; background: #c0c0c0;
+    font: 16px/1.6 "Times New Roman", Times, "Noto Serif", serif;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: #0000EE; text-decoration: underline; }
+  a:visited { color: #551A8B; }
+  a:active { color: #FF0000; }
+  #wingie-manual {
+    width: min(760px, 100%);
+    min-height: calc(100vh - 32px);
+    margin: 0 auto;
+    padding: 28px 32px;
+    border: 2px outset #fff;
+    background: #fff;
+  }
+  #wingie-manual h1 {
+    margin: 0 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px; line-height: 1.25; font-weight: 700;
+    text-align: center; letter-spacing: .01em;
+  }
+  #wingie-manual h2 {
+    margin: 28px 0 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px; font-weight: 700;
+    border-bottom: 2px solid #000; padding-bottom: 3px;
+  }
+  #wingie-manual h3 {
+    margin: 20px 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px; font-weight: 700;
+  }
+  #wingie-manual p { margin: 8px 0; }
+  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  #wingie-manual li + li { margin-top: 4px; }
+  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  #wingie-manual blockquote {
+    margin: 12px 0; padding: 6px 16px;
+    border-left: 3px solid #999; background: #f5f5f5; color: #333;
+  }
+  #wingie-manual blockquote p { margin: 4px 0; }
+  #wingie-manual code {
+    font-family: "Courier New", Courier, monospace;
+    background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
+  }
+  #wingie-manual pre {
+    background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
+    overflow-x: auto; margin: 12px 0;
+  }
+  #wingie-manual pre code { background: none; padding: 0; }
+  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  #wingie-manual table { width: 100%; border-collapse: collapse; }
+  #wingie-manual th, #wingie-manual td {
+    padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
+    vertical-align: top;
+  }
+  #wingie-manual th {
+    background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
+    font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
+  }
+  #wingie-manual strong { font-weight: 700; }
+  @media (max-width: 600px) {
+    #wingie-manual { padding: 18px 16px; }
+    #wingie-manual h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+  <div id="wingie-manual">
+<h1 id="wingie2-mpe">Wingie2 MPE</h1>
+<p>Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
+Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
+left/right alternating engine assignment. This scope does not map Channel Pressure or CC 74 to
+synthesis parameters.</p>
+<h2 id="the-mpe-switch">The MPE Switch</h2>
+<p>MPE is governed by a single switch, exposed as <code>mpe_enabled</code> in the USB configuration page
+(config schema 5) and stored in flash. Factory default: <strong>off</strong>. The switch is the only zone
+authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
+but ignored while the switch is off. A restart restores the switched layout.</p>
+<h3 id="switch-off-—-conventional-routing">Switch off — conventional routing</h3>
+<p>No zone exists. Channels 1–16 are all conventional and follow the configurable Left/Right/Both
+routing (factory defaults: Left 1, Right 2, Both 3). Notes on channels not assigned to a route
+do not sound. Channel 13 tuning CC, Channel 14/15 Cave-frequency CC, and Channel 16
+global-settings CC are all reachable.</p>
+<h3 id="switch-on-—-standard-lower-zone">Switch on — standard Lower Zone</h3>
+<p>One Lower Zone claims every channel: Manager Channel 1, Member Channels 2–16. All notes and
+Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Per-channel CC
+beyond the manager is not mapped, which means the conventional control channels are not reachable
+while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all consumed
+by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
+global settings.</p>
+<p>Because the zone covers all 16 channels, notes from dual-zone controllers also sound — both
+zones' notes are merged into Wingie2's single zone (per-zone separation is lost, nothing is
+dropped).</p>
+<h2 id="note-assignment-and-pitch-bend">Note Assignment and Pitch Bend</h2>
+<ul>
+<li>Each Note On in the Zone is assigned to one engine side, alternating left/right in arrival
+order (the same free-running alternation as the conventional Both route). A side in Cave Mode
+is skipped: all notes land on the sounding side; if both sides are in Cave Mode, notes are
+ignored.</li>
+<li>Poly and Ratio Modes each bind a Note On to one of three voices on the assigned side. A free
+voice is used first; when all three are active, the oldest voice is replaced.</li>
+<li>Member Pitch Bend changes every active voice owned by that Member Channel, on either side.</li>
+<li>Manager Pitch Bend (Channel 1) is global: it changes every active MPE voice on both sides.</li>
+<li>Manager CC (Channel 1) is applied to both sides; Member CC is not mapped.</li>
+<li>String and Bar use the latest Note On as a monophonic owner on the assigned side. Member
+control stops after its matching Note Off, while the last pitch remains latched and Manager
+Pitch Bend remains active.</li>
+<li>Note Off is routed by (channel, note) ownership across both sides. A Note On with velocity 0
+is treated as Note Off.</li>
+</ul>
+<p>Member Pitch Bend defaults to ±48 semitones and Manager Pitch Bend defaults to ±2 semitones. RPN 0
+is accepted on Manager and Member Channels; a Member range received on one channel applies to
+every Member. Pitch Bend state is tracked before Note On so an MPE source can establish a note's
+initial microtonal offset.</p>
+<h2 id="tuning">Tuning</h2>
+<p>Pitch Bend is applied after the base note has been resolved through Wingie2's current A3 and
+tuning. An MPE source can therefore provide alternate tuning by sending per-note Pitch Bend before
+Note On. Select Standard internal tuning when the source should be the only tuning authority. If
+an internal alternate tuning remains enabled, the internal interval and MPE offset are both
+applied.</p>
+<h2 id="migrating-from-the-always-on-firmware">Migrating from the always-on firmware</h2>
+<ul>
+<li>The MPE switch is back as <code>mpe_enabled</code> in the USB configuration page (config schema 5),
+persisted in flash, factory default off.</li>
+<li>With the switch on, the zone covers Channels 2–16 instead of the previous startup layout
+(Channels 2–7): the earlier silent drop on Channels 11–15 no longer exists.</li>
+<li>With the switch off, Channels 1–7 are conventional again (previously they were always claimed
+by the zone), so a non-MPE controller on Channel 1 behaves like any other conventional channel.</li>
+<li>The Upper-Zone dual-zone warning is gone: dual-zone controllers now sound on every channel,
+merged into the single zone.</li>
+<li>Factory default routing for fresh devices is Left 1, Right 2, Both 3. Existing saved settings
+are not rewritten by the firmware; change the channels in the configuration page if needed.</li>
+</ul>
+
+  </div>
+</body>
+</html>

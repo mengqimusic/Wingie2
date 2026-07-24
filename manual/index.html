@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>小羽二代 Wingie2 用户手册 · v4</title>
+  <style>
+  :root { color-scheme: light; }
+  html { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: inherit; }
+  body {
+    margin: 0; padding: 16px;
+    color: #000; background: #c0c0c0;
+    font: 16px/1.6 "Times New Roman", Times, "Noto Serif", serif;
+    font-variant-numeric: tabular-nums;
+  }
+  a { color: #0000EE; text-decoration: underline; }
+  a:visited { color: #551A8B; }
+  a:active { color: #FF0000; }
+  #wingie-manual {
+    width: min(760px, 100%);
+    min-height: calc(100vh - 32px);
+    margin: 0 auto;
+    padding: 28px 32px;
+    border: 2px outset #fff;
+    background: #fff;
+  }
+  #wingie-manual h1 {
+    margin: 0 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 30px; line-height: 1.25; font-weight: 700;
+    text-align: center; letter-spacing: .01em;
+  }
+  #wingie-manual h2 {
+    margin: 28px 0 8px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px; font-weight: 700;
+    border-bottom: 2px solid #000; padding-bottom: 3px;
+  }
+  #wingie-manual h3 {
+    margin: 20px 0 6px;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px; font-weight: 700;
+  }
+  #wingie-manual p { margin: 8px 0; }
+  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  #wingie-manual li + li { margin-top: 4px; }
+  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  #wingie-manual blockquote {
+    margin: 12px 0; padding: 6px 16px;
+    border-left: 3px solid #999; background: #f5f5f5; color: #333;
+  }
+  #wingie-manual blockquote p { margin: 4px 0; }
+  #wingie-manual code {
+    font-family: "Courier New", Courier, monospace;
+    background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
+  }
+  #wingie-manual pre {
+    background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
+    overflow-x: auto; margin: 12px 0;
+  }
+  #wingie-manual pre code { background: none; padding: 0; }
+  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  #wingie-manual table { width: 100%; border-collapse: collapse; }
+  #wingie-manual th, #wingie-manual td {
+    padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
+    vertical-align: top;
+  }
+  #wingie-manual th {
+    background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
+    font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
+  }
+  #wingie-manual strong { font-weight: 700; }
+  @media (max-width: 600px) {
+    #wingie-manual { padding: 18px 16px; }
+    #wingie-manual h1 { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+  <div id="wingie-manual">
+<h1 id="小羽二代-wingie2-用户手册-·-v4">小羽二代 Wingie2 用户手册 · v4</h1>
+<blockquote>
+<p><strong>注意</strong></p>
+<ul>
+<li>设备启动时，请从低音量起步，逐渐调大音量；</li>
+<li>本设备易与音箱和耳机产生回授，注意避免刺耳高频；</li>
+<li>存放与使用请置于干燥处，远离潮湿；</li>
+<li>请勿直接输入模块合成器或其他高电平信号。</li>
+</ul>
+</blockquote>
+<p>感谢购买小羽二代！</p>
+<p>小羽二代是一个手持立体声共鸣器，它自带麦克风，可以即时与人声和周围的环境产生关系，也可以连接其他设备，或作为开发平台使用。其体量轻巧，易于携带。让你随时随地创作音乐、探索声音。</p>
+<hr>
+<h2 id="目录">目录</h2>
+<ol>
+<li><a href="#1-%E7%94%B5%E6%BA%90">电源</a></li>
+<li><a href="#2-%E9%9F%B3%E9%A2%91%E8%BE%93%E5%85%A5--%E8%BE%93%E5%87%BA">音频输入 / 输出</a></li>
+<li><a href="#3-%E9%9D%A2%E6%9D%BF%E6%8E%A7%E4%BB%B6">面板控件</a></li>
+<li><a href="#4-%E6%A8%A1%E5%BC%8F">模式</a></li>
+<li><a href="#5-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%B1%E6%B4%9E">自定义山洞</a></li>
+<li><a href="#6-%E9%9F%B3%E5%BA%8F%E5%99%A8%E9%98%88%E5%80%BC">音序器阈值</a></li>
+<li><a href="#7-%E5%89%8D%E7%BA%A7%E4%B8%8E%E5%90%8E%E7%BA%A7%E5%A2%9E%E7%9B%8A">前级与后级增益</a></li>
+<li><a href="#8-midi-%E9%80%9A%E9%81%93%E4%B8%8E%E6%8E%A7%E5%88%B6%E4%BF%A1%E6%81%AF">MIDI 通道与控制信息</a></li>
+<li><a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a></li>
+<li><a href="#10-mpe-%E6%A8%A1%E5%BC%8F">MPE 模式</a></li>
+<li><a href="#11-usb-%E7%BD%91%E9%A1%B5%E5%88%B7%E6%9C%BA">USB 网页刷机</a></li>
+<li><a href="#12-%E6%9B%BF%E4%BB%A3%E5%BE%8B%E5%88%B6">替代律制</a></li>
+<li><a href="#13-%E5%85%A8%E5%B1%80%E8%AE%BE%E7%BD%AEmidi-cc-%E8%A1%A8">全局设置（MIDI CC 表）</a></li>
+<li><a href="#14-%E5%AD%98%E5%82%A8%E8%AE%BE%E5%AE%9A">存储设定</a></li>
+<li><a href="#15-%E5%B1%B1%E6%B4%9E%E6%A8%A1%E5%BC%8F%E4%B8%8E%E6%9B%BF%E4%BB%A3%E5%BE%8B%E5%88%B6">山洞模式与替代律制</a></li>
+<li><a href="#16-%E4%BD%BF%E7%94%A8%E7%AA%8D%E9%97%A8">使用窍门</a></li>
+<li><a href="#17-%E7%89%88%E6%9C%AC%E8%AF%B4%E6%98%8E">版本说明</a></li>
+</ol>
+<hr>
+<h2 id="1-电源">1. 电源</h2>
+<p>小羽使用 USB Type-C 口进行供电。可以使用充电器或充电宝供电。第一批小羽二代（2022 年 5 月之前生产，背后没有螺丝）不可使用 C-C 线，只可使用 A-C 线。</p>
+<p>如果输出出现数字噪音，可以尝试更换电源或使用地线隔离器。</p>
+<p>接通电源之后，会有大概 3 秒钟的时间从静音到全音量淡入。</p>
+<h2 id="2-音频输入--输出">2. 音频输入 / 输出</h2>
+<h3 id="音频输入">音频输入</h3>
+<p>小羽灵敏的麦克风拾取空气中的声音，非常容易与扬声器产生回授。你可以演奏回授。v4 版本固件（带有第五种<strong>比例模式</strong>的）拥有抗啸叫功能，回授仍然可以建立，但是会大幅降低失真、得到柔和音质。不想要回授可以使用耳机，注意控制音量以避免与耳机回授。</p>
+<p>你可以使用小羽聆听身边的声音，把小羽当作一个打击乐器来使用，或者用它把任何物体变成一件乐器。开动脑筋，尽情实验。</p>
+<p>小羽的音频输入是立体声 3.5mm 接口（TRS）。</p>
+<blockquote>
+<p><strong>注意</strong>：避免过大的输入信号。过大的输入信号会使过载的原声出现在输出中。如果在音源选择切换到麦克风时，或在干湿比设定为 100% 时，仍然可以听到线路输入的声音，就说明线路输入信号过大了。这时请调低输入信号电平（不是小羽上的推子）。</p>
+</blockquote>
+<h3 id="音频输出">音频输出</h3>
+<p>小羽的音频输出是立体声 3.5mm 接口（TRS）。可直接驱动耳机。</p>
+<h2 id="3-面板控件">3. 面板控件</h2>
+<p>控制功能已经被标注在小羽上。</p>
+<p>混合与音量都控制共鸣器前的信号强度，这个设计允许共鸣器的衰减段可以被完整听到。</p>
+<p>当左右声道拥有相同的八度设定时，右声道比左声道高一个八度。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>推杆</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>混合</td>
+<td>干湿声音比例</td>
+</tr>
+<tr>
+<td>衰减</td>
+<td>共鸣器的衰减时长，从 0.15 秒到大约 10 秒</td>
+</tr>
+<tr>
+<td>音量</td>
+<td>输入音量</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="4-模式">4. 模式</h2>
+<p>小羽拥有 <strong>五种</strong> 模式，按下模式按键循环选择。当前模式通过 LED 显示。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>复音数</th>
+<th>音符键盘</th>
+<th>八度开关响应</th>
+<th>LED</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>复音</strong>（白色）</td>
+<td>三复音</td>
+<td>按键循环控制每个复音</td>
+<td>影响下一个按下的音符。可以在演奏音符之前切换八度，以混合不同八度的音符</td>
+<td>白</td>
+</tr>
+<tr>
+<td><strong>琴弦</strong>（黄色）</td>
+<td>单复音</td>
+<td>同时按下多个音符按键设定音序；每当输入音量超过阈值时音序步进</td>
+<td>即时</td>
+<td>黄</td>
+</tr>
+<tr>
+<td><strong>音块</strong>（红色）</td>
+<td>单复音</td>
+<td>同上</td>
+<td>即时</td>
+<td>红</td>
+</tr>
+<tr>
+<td><strong>山洞</strong>（紫色）</td>
+<td>九共鸣器（三个八度档切换）</td>
+<td>见<a href="#5-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%B1%E6%B4%9E">第 5 章</a></td>
+<td>切换山洞（一共三个）</td>
+<td>紫</td>
+</tr>
+<tr>
+<td><strong>比例</strong>（四色循环闪烁）</td>
+<td>三复音</td>
+<td>按键循环控制每个复音；共鸣器频率 = 基频 × 比例</td>
+<td>影响下一个按下的音符</td>
+<td>四色循环闪烁</td>
+</tr>
+</tbody>
+</table>
+</div><p>全局调音影响 复音、琴弦、音块、山洞 和 比例 五个模式。（出厂设定 A3 (69) = 440 Hz）。如需进行全局调音，请见<a href="#13-%E5%85%A8%E5%B1%80%E8%AE%BE%E7%BD%AEmidi-cc-%E8%A1%A8">第 13 章</a>。</p>
+<h3 id="比例模式ratio-mode">比例模式（Ratio Mode）</h3>
+<p>比例模式是 v4 新增的第五种模式。与按八度堆叠的复音/琴弦/音块不同，比例模式让每个共鸣器的频率等于 <strong>基频 × 比例</strong>，因此可以产生非八度音程的共鸣关系。</p>
+<ul>
+<li><strong>三声部复音</strong>：9 个共鸣器分为 3 个槽（声部 1 用共鸣器 1/2/3，声部 2 用 4/5/6，声部 3 用 7/8/9）。按一个音符占用一个声部，3 个声部全占时替换最老的一个。</li>
+<li><strong>左右共用同一份比例</strong>：左右声道使用同一组 9 个比例，只是基频（八度）不同。出厂比例为 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9。</li>
+<li><strong>比例范围</strong>：0.125 至 32.0，步进 0.001。频率被限制在 16.00–16000.00 Hz。比例通过 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 或 MIDI 调整。</li>
+<li><strong>LED</strong>：因为面板 LED 只有四种颜色，已被前四种模式占满，比例模式用四种颜色循环闪烁来区分。</li>
+</ul>
+<p>进入比例模式有三种方式：</p>
+<ol>
+<li><strong>面板按键</strong>：在复音 → 琴弦 → 音块 → 山洞之后继续按一下，即进入比例模式（第 5 下）。</li>
+<li><strong>MIDI</strong>：CC 0 值 103–127。</li>
+<li><strong>USB 网页配置</strong>：在配置页的左右模式下拉中选择&quot;比例&quot;。</li>
+</ol>
+<h2 id="5-自定义山洞">5. 自定义山洞</h2>
+<p>山洞模式下，每个声道有 9 个共鸣器，分为三个八度档（bank）。可以逐个调整每个共鸣器的频率和静音状态。</p>
+<ul>
+<li>切换静音 / 非静音状态</li>
+<li>增加对应共鸣器的频率</li>
+<li>降低对应共鸣器的频率</li>
+<li>所有共鸣器解除静音</li>
+<li>所有共鸣器静音</li>
+<li>左右通道可以分别调音</li>
+</ul>
+<p>频率范围 <code>16.00–16000.00 Hz</code>，分辨率 <code>0.01 Hz</code>。频率既可由面板在山洞模式下调节，也可由 MIDI CC（<a href="#13-%E5%85%A8%E5%B1%80%E8%AE%BE%E7%BD%AEmidi-cc-%E8%A1%A8">第 13 章</a>）或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 调节。</p>
+<h2 id="6-音序器阈值">6. 音序器阈值</h2>
+<p>琴弦和音块模式下，每当输入音量超过阈值时音序步进。阈值可左右分别设置。</p>
+<ul>
+<li>右通道音序器阈值</li>
+<li>左通道音序器阈值</li>
+</ul>
+<p><strong>在面板上设定</strong>：按住对应声道的模式按键，再按音符按键选择阈值。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。</p>
+<p>阈值也可由 MIDI CC 或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 设置（对应&quot;输入阈值&quot;字段）。</p>
+<h2 id="7-前级与后级增益">7. 前级与后级增益</h2>
+<p>过载效果器（clipper）的前级和后级增益可以分别调节：</p>
+<ul>
+<li><strong>后级增益</strong>：共鸣器音量</li>
+<li><strong>前级增益</strong>：调节饱和度</li>
+</ul>
+<p><strong>在面板上设定</strong>：按住对应声道的模式按键，再按音符按键选择增益。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。</p>
+<p>调节前级增益获得想要的音色，然后调节后级增益获得舒适的干湿比控制响应。</p>
+<p>增益也可由 MIDI CC 或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 设置。</p>
+<h2 id="8-midi-通道与控制信息">8. MIDI 通道与控制信息</h2>
+<p>小羽可以被 MIDI 控制。MIDI 接口按照 MMA 标准设计，请使用标准 MIDI 连线。</p>
+<h3 id="midi-通道">MIDI 通道</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>MIDI 通道</th>
+<th>音符</th>
+<th>控制信息（CC）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>用户可调（出厂设定 1、2、3）</td>
+<td>控制左声道<br>控制右声道<br>交替控制左右声道</td>
+<td>控制左声道<br>控制右声道<br>同时控制左右声道</td>
+</tr>
+</tbody>
+</table>
+</div><p>出厂默认：左声道 = 通道 1，右声道 = 通道 2，左右共用 = 通道 3。可在 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 或通过 MIDI CC（<a href="#13-%E5%85%A8%E5%B1%80%E8%AE%BE%E7%BD%AEmidi-cc-%E8%A1%A8">第 13 章</a>）修改。</p>
+<h3 id="midi-音符">MIDI 音符</h3>
+<ul>
+<li>小羽接受 Note On 信息（velocity 0 当作 Note Off）。</li>
+<li>内置音序器只可用于本体上的迷你键盘，在 MIDI 控制下无效。</li>
+<li>快速且较大音程的音符跳动可能导致大音量声音。</li>
+</ul>
+<h3 id="控制信息cc">控制信息（CC）</h3>
+<ul>
+<li>MIDI CC 输入会覆盖相对应推杆设定，再次挪动推杆使推杆设定有效。</li>
+<li>小羽可接受 14-bit MIDI 信息。</li>
+</ul>
+<p><strong>CC 0 — 模式选择</strong>（v4 五模式均分）：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CC 0 值</th>
+<th>模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–25</td>
+<td>复音</td>
+</tr>
+<tr>
+<td>26–51</td>
+<td>琴弦</td>
+</tr>
+<tr>
+<td>52–76</td>
+<td>音块</td>
+</tr>
+<tr>
+<td>77–102</td>
+<td>山洞</td>
+</tr>
+<tr>
+<td>103–127</td>
+<td>比例</td>
+</tr>
+</tbody>
+</table>
+</div><blockquote>
+<p>v4 起 CC 0 由原来的四档（0-31 / 32-63 / 64-95 / 96-127 + 127 单点）改为五模式均分。如果你之前用固定 CC 值切模式，请按上表重新核对。</p>
+</blockquote>
+<p><strong>推杆 CC</strong>：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CC</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC 11 (MSB) / CC 43 (LSB)</td>
+<td>混合（干湿比）</td>
+</tr>
+<tr>
+<td>CC 1 (MSB) / CC 33 (LSB)</td>
+<td>衰减时间</td>
+</tr>
+<tr>
+<td>CC 7 (MSB) / CC 39 (LSB)</td>
+<td>音量</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="9-usb-网页配置">9. USB 网页配置</h2>
+<p><a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> 打开后选择&quot;配置&quot;，即可用浏览器通过 USB 直接连接小羽，修改和保存所有设置。它不需要 Wi-Fi、SoftAP、CDN、Node 或 Python，只需要一个支持 Web Serial 的浏览器。</p>
+<h3 id="连接方式">连接方式</h3>
+<ol>
+<li>使用桌面版 <strong>Chrome</strong> 或 <strong>Edge</strong>（需支持 Web Serial），从 <strong>HTTPS</strong> 地址打开页面。Safari、Firefox、移动浏览器和非安全 HTTP 页面不支持。</li>
+<li>关闭 Arduino Serial Monitor 等占用小羽串口的软件。</li>
+<li>点击&quot;连接 Wingie2&quot;，选择对应的 USB 串口。</li>
+</ol>
+<h3 id="能改什么">能改什么</h3>
+<p>连接后，页面会读取一次完整设备快照。你可以修改以下设置，<strong>每次有效编辑都立即作用于正在运行的声音，不需要 Apply</strong>：</p>
+<ul>
+<li><strong>左右声道</strong>：模式（复音 / 琴弦 / 音块 / 山洞 / 比例）、输入阈值</li>
+<li><strong>共享设置</strong>：A3 频率（358.08–521.91 Hz）、调律（标准 + 8 种替代律制）、前级 / 后级增益、三个 MIDI 通道路由、MPE 开关</li>
+<li><strong>比例模式设定</strong>：9 个共鸣器比例（分 3 槽），可&quot;复制槽 1 到槽 2、3&quot;，可恢复出厂比例</li>
+<li><strong>山洞</strong>：左右各 3 个 bank，每个 bank 9 个共鸣器的频率和静音</li>
+</ul>
+<blockquote>
+<p>页面<strong>不显示</strong>混合、衰减、音量——它们是面板上的实体推杆，不写入闪存。</p>
+</blockquote>
+<h3 id="保存">保存</h3>
+<p>改好的声音只有在点击 <strong>&quot;Save to Flash&quot;</strong> 并确认后，才会写入闪存、在重启后保留。在此之前，所有改动只影响当前运行状态。</p>
+<h3 id="同步">同步</h3>
+<p>如果小羽的面板控件、MIDI 或其他软件改变了设备状态，页面会在空闲时自动把变化同步过来。你也可以随时点击 Refresh 立即重读。</p>
+<h3 id="嵌入网页">嵌入网页</h3>
+<p>若页面放在 iframe 中，iframe 需要 <code>allow=&quot;serial&quot;</code>，服务器也必须允许相应的 <code>Permissions-Policy: serial=(self)</code>。</p>
+<h2 id="10-mpe-模式">10. MPE 模式</h2>
+<p>MPE（MIDI Polyphonic Expression）让支持 MPE 的控制器对小羽的每个音做独立的弯音控制。v4 的 MPE 由 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 的开关控制，<strong>出厂默认关闭</strong>，状态保存在闪存。</p>
+<h3 id="开关关闭——常规路由">开关关闭——常规路由</h3>
+<p>没有 Zone。通道 1–16 全部走可配置的常规左 / 右 / 共用路由（出厂默认 1 / 2 / 3）。通道 13 调律、14 / 15 山洞频率、16 全局设置 CC 都可以正常使用。</p>
+<h3 id="开关开启——标准-lower-zone">开关开启——标准 Lower Zone</h3>
+<p>一个 Lower Zone 占用全部通道：<strong>Manager = 通道 1，Member = 通道 2–16</strong>。</p>
+<ul>
+<li><strong>音符分配</strong>：每个 Note On 按到达顺序在左右引擎间交替分配（与常规&quot;共用&quot;路由相同的轮转方式）。如果某一侧在山洞模式，则跳过该侧；两侧都山洞则该音不响。</li>
+<li><strong>逐音弯音</strong>：每个 Member 通道的 Pitch Bend 只影响该通道当前拥有的那些音；Manager（通道 1）的 Pitch Bend 和 CC 对两侧所有 MPE 音全局生效。</li>
+<li><strong>弯音范围</strong>：Member 默认 ±48 半音，Manager 默认 ±2 半音。可用 RPN 0（CC 6 设半音、CC 38 设音分）调整，在任一 Member 通道收到后应用到所有 Member。</li>
+<li><strong>外部替代调律</strong>：MPE 源可以在每个音的 Note On 之前发送 Pitch Bend，为该音建立初始的微音分偏移。此时建议把小羽内部调律设为&quot;标准&quot;，让 MPE 源成为唯一调律权威；若内部仍开着替代律制，内部音程与 MPE 偏移会叠加。</li>
+</ul>
+<p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
+<h3 id="不映射">不映射</h3>
+<p>当前 MPE 实现范围是 Zone、逐音归属和 Pitch Bend，<strong>不映射 Channel Pressure 和 CC 74</strong>。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
+<p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
+<h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
+<p><a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> 打开后选择&quot;固件安装&quot;，即可安装或升级小羽固件。刷机页直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。</p>
+<h3 id="操作步骤">操作步骤</h3>
+<ol>
+<li>用桌面版 <strong>Chrome / Edge</strong>，从 <strong>HTTPS</strong> 地址打开页面。用能传输数据的 USB 线连接小羽。</li>
+<li>关闭配置页、Arduino Serial Monitor、DAW / MIDI 工具等占用串口的软件。</li>
+<li>点击&quot;连接 Wingie2&quot;，选择小羽的 USB 串口。</li>
+<li>显示&quot;设备已连接&quot;后，点击&quot;安装固件&quot;。安装过程中不要拔 USB 或关闭页面。</li>
+<li>显示&quot;安装完成&quot;后即可使用。</li>
+</ol>
+<h3 id="安全边界">安全边界</h3>
+<p>标准刷机<strong>只写四个固定区域</strong>（bootloader、分区表、boot_app0、应用固件），<strong>不执行整片擦除，不读取 app0，也不写 <code>0x9000</code> 开始的 NVS</strong>。这意味着你的 MIDI 通道、调律、山洞、比例等设置在标准刷机后<strong>全部保留</strong>。</p>
+<p>恢复出厂设置或擦除配置不属于此页面的标准流程。</p>
+<h3 id="故障处理">故障处理</h3>
+<ul>
+<li><strong>端口占用</strong>：关闭其他配置页、Serial Monitor、DAW / MIDI 工具后重试。</li>
+<li><strong>找不到串口</strong>：更换可传输数据的 USB 线和 USB 端口，安装设备所需的 USB 串口驱动。</li>
+<li><strong>无法进入 bootloader</strong>：先让页面自动切换；仍失败时按住 BOOT，短按 RESET/EN，开始连接后再松开 BOOT。</li>
+<li><strong>错误芯片</strong>：不要继续；本发布包只支持原始 ESP32，不支持 ESP32-S2/S3/C3。</li>
+<li><strong>写入失败</strong>：不要拔线，先重试当前安装；重复失败时更换 USB 线或端口。</li>
+</ul>
+<h2 id="12-替代律制">12. 替代律制</h2>
+<p>默认情况下，小羽使用标准的西方律制（十二平均律）。</p>
+<p>从 v3.1 版本开始，额外提供了八种律制（其他律制可以通过更改源代码实现）：</p>
+<ul>
+<li>Centaur (Kraig Grady)</li>
+<li>Harp of New Albion (Terry Riley)</li>
+<li>Carlos Harmonic (Wendy Carlos)</li>
+<li>Well-Tuned Piano (La Monte Young)</li>
+<li>Meta Slendro (Grady/Wilson)</li>
+<li>Bihexany (Gene Ward Smith)</li>
+<li>Hexachordal Dodecaphonic (Paul Erlich)</li>
+<li>Augmented[12] (Mike Smith, Paul Erlich)</li>
+</ul>
+<p>有三种方式可以启用替代律制：</p>
+<ol>
+<li><strong>启动设备时按住左侧的模式按钮</strong>（推子位置决定律制，见下表）。</li>
+<li><strong>使用 MIDI</strong>（通道 13，CC 23，值 0–8，见下表）。优点是不需要重启，可在运行时更改。</li>
+<li><strong>使用 USB 网页配置</strong>：在共享设置的&quot;调律&quot;下拉中选择标准或八种替代律制之一。同样不需要重启。</li>
+</ol>
+<p>替代律制还会影响山洞模式（见<a href="#15-%E5%B1%B1%E6%B4%9E%E6%A8%A1%E5%BC%8F%E4%B8%8E%E6%9B%BF%E4%BB%A3%E5%BE%8B%E5%88%B6">第 15 章</a>），并受全局调音（A3 频率）的影响。</p>
+<h3 id="启动设备时切换律制">启动设备时切换律制</h3>
+<p>按住左侧的模式按钮并插入 USB 线。推子的位置将确定调音方式：</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>左模式按键</th>
+<th>右模式按键</th>
+<th>左推子</th>
+<th>中推子</th>
+<th>右推子</th>
+<th>律制</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>松开</td>
+<td>按住</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>十二平均律</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>底部</td>
+<td>底部</td>
+<td>底部</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>底部</td>
+<td>底部</td>
+<td>顶部</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>底部</td>
+<td>顶部</td>
+<td>底部</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>底部</td>
+<td>顶部</td>
+<td>顶部</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>顶部</td>
+<td>底部</td>
+<td>底部</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>顶部</td>
+<td>底部</td>
+<td>顶部</td>
+<td>Bihexany</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>顶部</td>
+<td>顶部</td>
+<td>底部</td>
+<td>Hexachordal Dodecaphonic</td>
+</tr>
+<tr>
+<td>按住</td>
+<td>松开</td>
+<td>顶部</td>
+<td>顶部</td>
+<td>顶部</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><p>有关调弦的更多信息，请参阅 <code>wingie_tuning_notes.pdf</code>。</p>
+<h3 id="通过-midi-切换律制">通过 MIDI 切换律制</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>通道</th>
+<th>CC</th>
+<th>数值</th>
+<th>律制</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13</td>
+<td>23</td>
+<td>0</td>
+<td>十二平均律</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>1</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>2</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>3</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>4</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>5</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>6</td>
+<td>Bihexany</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>7</td>
+<td>Hexachordal Dodecaphonic</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>8</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><p>由 Dave Seidel 提供的 TouchOSC 模板：<code>wingie_tuning.tosc</code>。</p>
+<h2 id="13-全局设置midi-cc-表">13. 全局设置（MIDI CC 表）</h2>
+<p>MIDI 通道、全局调音、替代律制和山洞模式共鸣器频率可以通过 MIDI 全局设置通道（通道 16）设定，也可以通过 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 设定。</p>
+<blockquote>
+<p>大范围频率跳动会引发大音量声音，调节之前请降低音量和衰减时间。</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>MIDI 通道</th>
+<th>MIDI 控制器</th>
+<th>功能</th>
+<th>出厂设定</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td>20</td>
+<td>左声道对应 MIDI 通道</td>
+<td>1</td>
+</tr>
+<tr>
+<td></td>
+<td>21</td>
+<td>右声道对应 MIDI 通道</td>
+<td>2</td>
+</tr>
+<tr>
+<td></td>
+<td>22</td>
+<td>左右声道共用 MIDI 通道</td>
+<td>3</td>
+</tr>
+<tr>
+<td></td>
+<td>23 (MSB) / 55 (LSB)</td>
+<td>全局调音（以 440 Hz 为中心，可调范围 ±81.92 Hz，分辨率 0.01 Hz）</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>15</td>
+<td>23–31 (MSB) / 55–63 (LSB)</td>
+<td>右声道当前所选山洞调音</td>
+<td>—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>23–31 (MSB) / 55–63 (LSB)</td>
+<td>左声道当前所选山洞调音</td>
+<td>—</td>
+</tr>
+<tr>
+<td>13</td>
+<td>23</td>
+<td>替代律制（0–8，见<a href="#12-%E6%9B%BF%E4%BB%A3%E5%BE%8B%E5%88%B6">第 12 章</a>）</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="14-存储设定">14. 存储设定</h2>
+<p>有两种方式把当前设置写入闪存，重启后保留：</p>
+<ol>
+<li><strong>面板双键存储</strong>：同时按住两个模式按钮三秒。计时中 LED 会在四个颜色中循环，并在计时结束后闪动，以示存储完成。这个操作有可能引发短促的杂音，不推荐在录音或现场演出中进行。</li>
+<li><strong>网页 Save to Flash</strong>：在 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 页面点击&quot;Save to Flash&quot;并确认。</li>
+</ol>
+<p>存储的内容包括：A3 频率、调律、前级 / 后级增益、三个 MIDI 通道路由、左右模式与输入阈值、共享比例设定、左右各 3 个山洞 bank 的频率和静音状态，以及 MPE 开关。</p>
+<h2 id="15-山洞模式与替代律制">15. 山洞模式与替代律制</h2>
+<p>用替代调弦时，山洞也会被调整以匹配您选择的调弦。</p>
+<p>为了适应所有 12 个音高，在山洞模式中，左声道对应偶数音，覆盖一个又三分之一的八度音程：</p>
+<p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
+<p>右声道对应奇数音，同样覆盖一个又三分之一的八度音程：</p>
+<p><code>C#, D#, F, G, A, B, A#, C#', D#', F'</code></p>
+<p>三个位置切换开关切换三个八度音程，类似于复音、琴弦和音块模式。然而，左右山洞始终处于同一个八度音程，因此所有音阶音高都覆盖在两侧。</p>
+<p>Dave Seidel 为小羽写了替代律制功能。</p>
+<h2 id="16-使用窍门">16. 使用窍门</h2>
+<ol>
+<li>把小羽当作打击乐器演奏；</li>
+<li>携带小羽出门，随环境音演奏；</li>
+<li>与各种原声乐器合奏；</li>
+<li>与喇叭建立回授；</li>
+<li>与效果器建立回授；</li>
+<li>与鼓机合用，用鼓声触发音序器，获得旋律；</li>
+<li>在现场演出时，使用外部心形拾音话筒和线路输入以避免回授；</li>
+<li>用比例模式探索非八度音程的共鸣关系；</li>
+<li>用 MPE 控制器对每个音做独立的弯音和微调律；</li>
+<li>用网页配置页实时调整山洞频率和比例，无需重启。</li>
+</ol>
+<p>……（更多玩法由你探索）</p>
+<p>感谢 Roy Parvin 撰写英文介绍及校对说明书，安琪撰写小羽背面赠言，Dave Seidel 为小羽写了替代律制功能。</p>
+<h3 id="在哪里找到我">在哪里找到我</h3>
+<ul>
+<li>网站：<a href="http://mengqimusic.com" target="_blank" rel="noopener">mengqimusic.com</a></li>
+<li>B 站：<a href="http://space.bilibili.com/4485929" target="_blank" rel="noopener">space.bilibili.com/4485929</a></li>
+<li>微博：<a href="http://weibo.com/mengqimusic" target="_blank" rel="noopener">weibo.com/mengqimusic</a></li>
+<li>Instagram：<a href="http://instagram.com/mengqimusic" target="_blank" rel="noopener">instagram.com/mengqimusic</a></li>
+<li>微信扫码，关注个人公众号「合成少数派」</li>
+</ul>
+<h2 id="17-版本说明">17. 版本说明</h2>
+<p><strong>v4</strong> 相对 v3.1 的主要变化：</p>
+<ul>
+<li><strong>新增比例模式（Ratio Mode）</strong>：第五种共鸣模式，基于频率比例而非八度，三声部复音，9 个共鸣器分 3 槽。</li>
+<li><strong>新增 USB 网页配置</strong>：用 Chrome / Edge 通过 USB 实时修改和保存所有设置。</li>
+<li><strong>新增 MPE 模式</strong>：可选的 MIDI 复音表情，支持逐音弯音和外部替代调律。</li>
+<li><strong>新增 USB 网页刷机</strong>：浏览器内一键安装 / 升级固件，标准流程保留所有设置。</li>
+<li><strong>新增抗啸叫功能</strong>：回授仍可建立，但大幅降低失真、得到柔和音质。</li>
+<li><strong>山洞频率精度提升</strong>：从整数提升到 0.01 Hz 分辨率。</li>
+<li><strong>替代律制第三种启用方式</strong>：除启动按键和 MIDI 外，可用网页配置切换。</li>
+<li><strong>CC 0 模式分段改为五模式均分</strong>：0-25 / 26-51 / 52-76 / 77-102 / 103-127（原为四档 + 127 单点，见<a href="#8-midi-%E9%80%9A%E9%81%93%E4%B8%8E%E6%8E%A7%E5%88%B6%E4%BF%A1%E6%81%AF">第 8 章</a>）。</li>
+<li><strong>出厂 MIDI 通道默认改为 1 / 2 / 3</strong>。</li>
+</ul>
+<p>固件已开源：<a href="https://github.com/mengqimusic/Wingie2" target="_blank" rel="noopener">https://github.com/mengqimusic/Wingie2</a></p>
+
+  </div>
+</body>
+</html>
