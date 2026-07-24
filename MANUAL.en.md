@@ -183,7 +183,7 @@ Factory defaults: left = channel 1, right = channel 2, both = channel 3. These c
 
 ## 9. USB Web Configuration
 
-[https://mengqimusic.github.io/Wingie2/config/](https://mengqimusic.github.io/Wingie2/config/) is a self-contained configuration page that lets you modify and save all settings by connecting Wingie2 via USB in a browser. It needs no Wi-Fi, SoftAP, CDN, Node, or Python—only a Web Serial-capable browser.
+Open [https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) and choose "Configuration" to modify and save all settings by connecting Wingie2 via USB in a browser. It needs no Wi-Fi, SoftAP, CDN, Node, or Python—only a Web Serial-capable browser.
 
 ### Connecting
 
@@ -241,7 +241,7 @@ See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 
 ## 11. USB Web Flasher
 
-[https://mengqimusic.github.io/Wingie2/v4/](https://mengqimusic.github.io/Wingie2/v4/) is a standalone release flasher for installing or upgrading Wingie2 firmware. It connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.
+Open [https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) and choose "Firmware Installer" to install or upgrade Wingie2 firmware. The flasher connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.
 
 ### Steps
 
