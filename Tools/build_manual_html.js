@@ -186,6 +186,7 @@ function wrap(body, title) {
   <style>${CSS}</style>
 </head>
 <body>
+  <script src="../nav.js"></script>
   <div id="wingie-manual">
 ${body}
   </div>
