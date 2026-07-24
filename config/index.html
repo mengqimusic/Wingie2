@@ -757,7 +757,7 @@
         pollError: null,
         lightPolling: true,
         connectionEpoch: 0,
-        language: "zh",
+        language: localStorage.getItem("wg-lang") || "zh",
         alertMessage: null,
         connectionLabel: {zh: "未连接", en: "Disconnected"},
         pollStatusLabel: {zh: "连接后每秒同步设备状态", en: "Connect to sync device state every second"}
@@ -1827,6 +1827,7 @@
       }
       elements.language.addEventListener("click", () => {
         state.language = state.language === "zh" ? "en" : "zh";
+        localStorage.setItem("wg-lang", state.language);
         applyLanguage();
       });
       elements.save.addEventListener("click", saveConfiguration);

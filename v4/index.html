@@ -777,7 +777,7 @@ class A extends Error{}
         busy: false,
         resumeIndex: 0,
         completed: false,
-        language: "zh",
+        language: localStorage.getItem("wg-lang") || "zh",
         versionLabel: {zh: "固件版本…", en: "Firmware version…"},
         packageDetailLabel: {zh: "", en: ""},
         installDetailLabel: {zh: "正在检查固件…", en: "Checking firmware…"},
@@ -1349,6 +1349,7 @@ class A extends Error{}
       });
       elements.language.addEventListener("click", () => {
         state.language = state.language === "zh" ? "en" : "zh";
+        localStorage.setItem("wg-lang", state.language);
         applyLanguage();
       });
       elements.reload.addEventListener("click", prepareFirmware);

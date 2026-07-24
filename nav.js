@@ -4,9 +4,18 @@
 (function () {
   "use strict";
 
+  // 根据语言偏好决定手册链接指向中文还是英文页
+  var manualHref = (function () {
+    try {
+      return localStorage.getItem("wg-lang") === "en" ? "../manual/en.html" : "../manual/";
+    } catch (e) {
+      return "../manual/";
+    }
+  })();
+
   var items = [
     { label: "Wingie2", href: "../", match: "$root" },
-    { label: "手册 / Manual", href: "../manual/", match: "/manual/" },
+    { label: "手册 / Manual", href: manualHref, match: "/manual/" },
     { label: "配置 / Configuration", href: "../config/", match: "/config/" },
     { label: "固件 / Firmware", href: "../v4/", match: "/firmware" }
   ];
