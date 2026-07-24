@@ -121,7 +121,9 @@
 - 右通道音序器阈值
 - 左通道音序器阈值
 
-阈值由 MIDI CC 或 [USB 网页配置](#9-usb-网页配置) 设置（对应"输入阈值"字段）。
+**在面板上设定**：按住对应声道的模式按键，再按音符按键选择阈值。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。
+
+阈值也可由 MIDI CC 或 [USB 网页配置](#9-usb-网页配置) 设置（对应"输入阈值"字段）。
 
 ## 7. 前级与后级增益
 
@@ -130,9 +132,11 @@
 - **后级增益**：共鸣器音量
 - **前级增益**：调节饱和度
 
+**在面板上设定**：按住对应声道的模式按键，再按音符按键选择增益。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。
+
 调节前级增益获得想要的音色，然后调节后级增益获得舒适的干湿比控制响应。
 
-增益由 MIDI CC 或 [USB 网页配置](#9-usb-网页配置) 设置。
+增益也可由 MIDI CC 或 [USB 网页配置](#9-usb-网页配置) 设置。
 
 ## 8. MIDI 通道与控制信息
 
@@ -237,7 +241,7 @@ MPE（MIDI Polyphonic Expression）让支持 MPE 的控制器对小羽的每个�
 
 ## 11. USB 网页刷机
 
-[`Tools/wingie_flasher.html`](Tools/wingie_flasher.html) 是独立的发布刷机页，用于给小羽安装或升级固件。它直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
+[https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) 是独立的发布刷机页，用于给小羽安装或升级固件。它直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
 
 ### 操作步骤
 

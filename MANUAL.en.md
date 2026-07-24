@@ -121,7 +121,9 @@ In String and Bar modes, the sequence advances each time the input volume exceed
 - Right channel sequencer threshold
 - Left channel sequencer threshold
 
-Thresholds are set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration) (the "Input Threshold" fields).
+**Setting on the panel**: Hold the Mode button for the corresponding channel, then press a note button to select the threshold. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.
+
+Thresholds can also be set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration) (the "Input Threshold" fields).
 
 ## 7. Pre and Post Clip Gain
 
@@ -130,9 +132,11 @@ The clipper's pre-gain and post-gain can be adjusted independently:
 - **Post gain**: resonator volume
 - **Pre gain**: adjusts saturation
 
+**Setting on the panel**: Hold the Mode button for the corresponding channel, then press a note button to select the gain. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.
+
 Adjust the pre gain for the desired tone, then adjust the post gain for a comfortable dry/wet control response.
 
-Gain is set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration).
+Gain can also be set via MIDI CC or [USB Web Configuration](#9-usb-web-configuration).
 
 ## 8. MIDI Channels and Control Messages
 
@@ -237,7 +241,7 @@ See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 
 ## 11. USB Web Flasher
 
-[`Tools/wingie_flasher.html`](Tools/wingie_flasher.html) is a standalone release flasher for installing or upgrading Wingie2 firmware. It connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.
+[https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) is a standalone release flasher for installing or upgrading Wingie2 firmware. It connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.
 
 ### Steps
 
