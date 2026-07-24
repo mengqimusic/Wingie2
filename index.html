@@ -6,53 +6,104 @@
   <link rel="icon" href="data:,">
   <title>Wingie2</title>
   <style>
-    html, body { margin: 0; padding: 0; min-height: 100%; }
+    /* Web 1.0 instrument-manual aesthetic — aligns with wingie_config / wingie_flasher. */
+    :root { color-scheme: light; }
+
+    html { box-sizing: border-box; }
+    *, *::before, *::after { box-sizing: inherit; }
+
     body {
+      margin: 0;
+      padding: 16px;
+      color: #000;
+      background: #c0c0c0;
+      font: 16px/1.55 "Times New Roman", Times, "Noto Serif", serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    a { color: #0000EE; text-decoration: underline; }
+    a:visited { color: #551A8B; }
+    a:active { color: #FF0000; }
+
+    #wingie-entry {
+      width: min(760px, 100%);
+      min-height: calc(100vh - 32px);
+      margin: 0 auto;
+      padding: 18px;
+      border: 2px outset #fff;
       background: #fff;
-      color: #111;
-      font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 32px 20px;
-      box-sizing: border-box;
     }
-    main { width: min(560px, 100%); text-align: center; }
-    h1 { font-size: 1.75rem; margin: 0 0 8px; line-height: 1.2; }
-    p.sub { color: #555; margin: 0 0 32px; }
-    .links { display: flex; flex-direction: column; gap: 16px; }
-    a.card {
-      display: block;
-      padding: 20px 24px;
-      border: 1px solid #d0d0d0;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #111;
-      background: #fafafa;
-      transition: border-color .15s, background .15s;
+
+    #wingie-entry h1 {
+      margin: 0 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 34px;
+      line-height: 1.2;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .01em;
     }
-    a.card:hover, a.card:focus { border-color: #888; background: #f0f0f0; }
-    a.card .title { font-size: 1.15rem; font-weight: 600; display: block; }
-    a.card .desc { color: #666; font-size: 0.9rem; display: block; margin-top: 4px; }
-    .lang { color: #999; font-size: 0.85rem; margin-top: 4px; display: block; }
+
+    #wingie-entry .wg-sub {
+      margin: 0 0 28px;
+      text-align: center;
+      color: #555;
+    }
+
+    #wingie-entry h2 {
+      margin: 24px 0 4px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    #wingie-entry .wg-links {
+      margin: 16px 0 0;
+      padding-left: 1.5rem;
+    }
+
+    #wingie-entry .wg-links li {
+      margin: 10px 0;
+    }
+
+    #wingie-entry .wg-desc {
+      color: #444;
+      font-size: 0.92rem;
+    }
+
+    #wingie-entry .wg-lang {
+      color: #555;
+      font-size: 0.88rem;
+    }
+
+    #wingie-entry hr {
+      border: none;
+      border-top: 1px solid #ccc;
+      margin: 24px 0;
+    }
   </style>
 </head>
 <body>
-  <main>
+  <div id="wingie-entry">
     <h1>Wingie2</h1>
-    <p class="sub">小羽二代 · 选择你要打开的工具 / Choose a tool to open</p>
-    <div class="links">
-      <a class="card" href="./config/">
-        <span class="title">配置 · Configuration</span>
-        <span class="desc">通过 USB 修改和保存小羽的设置 / Modify and save Wingie2 settings over USB</span>
-      </a>
-      <a class="card" href="./v4/">
-        <span class="title">固件安装 · Firmware Installer</span>
-        <span class="desc">安装或升级小羽固件 / Install or upgrade Wingie2 firmware</span>
-      </a>
-    </div>
-  </main>
+    <p class="wg-sub">小羽二代 · 选择要打开的工具</p>
+
+    <h2>配置 · Configuration</h2>
+    <p class="wg-desc">通过 USB 修改和保存小羽的设置。</p>
+    <p class="wg-lang">Modify and save Wingie2 settings over USB.</p>
+    <ul class="wg-links">
+      <li><a href="./config/">打开配置页 / Open configuration</a></li>
+    </ul>
+
+    <hr>
+
+    <h2>固件安装 · Firmware Installer</h2>
+    <p class="wg-desc">安装或升级小羽固件。</p>
+    <p class="wg-lang">Install or upgrade Wingie2 firmware.</p>
+    <ul class="wg-links">
+      <li><a href="./v4/">v4（最新 / latest）</a></li>
+      <li><a href="./v3.2/">v3.2</a></li>
+    </ul>
+  </div>
 </body>
 </html>
