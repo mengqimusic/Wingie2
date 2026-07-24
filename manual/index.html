@@ -72,6 +72,10 @@
     font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
   }
   #wingie-manual strong { font-weight: 700; }
+  #wingie-manual img {
+    max-width: 100%; height: auto; display: block;
+    margin: 16px auto; border: 1px solid #ccc;
+  }
   @media (max-width: 600px) {
     #wingie-manual { padding: 18px 16px; }
     #wingie-manual h1 { font-size: 24px; }
@@ -229,6 +233,7 @@
 <li>所有共鸣器静音</li>
 <li>左右通道可以分别调音</li>
 </ul>
+<p><img src="img/cave_controls.jpg" alt="自定义山洞面板操作"></p>
 <p>频率范围 <code>16.00–16000.00 Hz</code>，分辨率 <code>0.01 Hz</code>。频率既可由面板在山洞模式下调节，也可由 MIDI CC（<a href="#13-%E5%85%A8%E5%B1%80%E8%AE%BE%E7%BD%AEmidi-cc-%E8%A1%A8">第 13 章</a>）或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 调节。</p>
 <h2 id="6-音序器阈值">6. 音序器阈值</h2>
 <p>琴弦和音块模式下，每当输入音量超过阈值时音序步进。阈值可左右分别设置。</p>
@@ -237,6 +242,7 @@
 <li>左通道音序器阈值</li>
 </ul>
 <p><strong>在面板上设定</strong>：按住对应声道的模式按键，再按音符按键选择阈值。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。</p>
+<p><img src="img/seq_threshold.jpg" alt="音序器阈值面板操作"></p>
 <p>阈值也可由 MIDI CC 或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 设置（对应&quot;输入阈值&quot;字段）。</p>
 <h2 id="7-前级与后级增益">7. 前级与后级增益</h2>
 <p>过载效果器（clipper）的前级和后级增益可以分别调节：</p>
@@ -245,10 +251,12 @@
 <li><strong>前级增益</strong>：调节饱和度</li>
 </ul>
 <p><strong>在面板上设定</strong>：按住对应声道的模式按键，再按音符按键选择增益。按键从 C 到 B 按半音阶排列，对应 12 档——C 为最低，B 为最高。</p>
+<p><img src="img/clip_gain.jpg" alt="前级与后级增益面板操作"></p>
 <p>调节前级增益获得想要的音色，然后调节后级增益获得舒适的干湿比控制响应。</p>
 <p>增益也可由 MIDI CC 或 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 设置。</p>
 <h2 id="8-midi-通道与控制信息">8. MIDI 通道与控制信息</h2>
 <p>小羽可以被 MIDI 控制。MIDI 接口按照 MMA 标准设计，请使用标准 MIDI 连线。</p>
+<p><img src="img/midi_wiring.jpg" alt="标准 MIDI 连线"></p>
 <h3 id="midi-通道">MIDI 通道</h3>
 <div class="table-wrap"><table>
 <thead>
