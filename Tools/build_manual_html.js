@@ -175,9 +175,12 @@ md.renderer.rules.table_close = function () {
 };
 
 // ---- HTML 外壳 ----
-function wrap(body, title) {
+function wrap(body, title, lang) {
+  // 主手册页（中/英）记录语言偏好，供导航栏和其他页面读取
+  var langScript = lang ? `<script>try{localStorage.setItem("wg-lang","${lang}")}catch(e){}</script>` : "";
+  var htmlLang = lang === "en" ? "en" : "zh-CN";
   return `<!doctype html>
-<html lang="${title.includes("English") || title.includes("User Manual") ? "en" : "zh-CN"}">
+<html lang="${htmlLang}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -186,7 +189,7 @@ function wrap(body, title) {
   <style>${CSS}</style>
 </head>
 <body>
-  <script src="../nav.js"></script>
+  ${langScript}<script src="../nav.js"></script>
   <div id="wingie-manual">
 ${body}
   </div>
@@ -197,8 +200,8 @@ ${body}
 
 // ---- 转换配置 ----
 const jobs = [
-  { src: "MANUAL.zh.md", out: "index.html", title: "小羽二代 Wingie2 用户手册 · v4" },
-  { src: "MANUAL.en.md", out: "en.html", title: "Wingie2 User Manual · v4" },
+  { src: "MANUAL.zh.md", out: "index.html", title: "小羽二代 Wingie2 用户手册 · v4", lang: "zh" },
+  { src: "MANUAL.en.md", out: "en.html", title: "Wingie2 User Manual · v4", lang: "en" },
   { src: "MPE.md", out: "MPE.html", title: "Wingie2 MPE" },
   { src: "ALT_TUNING.md", out: "ALT_TUNING.html", title: "Wingie2 Alternate Tunings" }
 ];
@@ -214,7 +217,7 @@ for (const job of jobs) {
   }
   const raw = fs.readFileSync(srcPath, "utf-8");
   const body = md.render(raw);
-  const html = wrap(body, job.title);
+  const html = wrap(body, job.title, job.lang);
   const dest = path.join(OUT, job.out);
   fs.writeFileSync(dest, html, "utf-8");
   console.log(`✓ ${job.src} → ${dest} (${html.length} bytes)`);
