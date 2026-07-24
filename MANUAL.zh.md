@@ -183,7 +183,7 @@
 
 ## 9. USB 网页配置
 
-[`Tools/wingie_config.html`](Tools/wingie_config.html) 是一个单文件配置页，可以用浏览器通过 USB 直接连接小羽，修改和保存所有设置。它不需要 Wi-Fi、SoftAP、CDN、Node 或 Python，只需要一个支持 Web Serial 的浏览器。
+[https://mengqimusic.github.io/Wingie2/config/](https://mengqimusic.github.io/Wingie2/config/) 是一个单文件配置页，可以用浏览器通过 USB 直接连接小羽，修改和保存所有设置。它不需要 Wi-Fi、SoftAP、CDN、Node 或 Python，只需要一个支持 Web Serial 的浏览器。
 
 ### 连接方式
 
@@ -241,7 +241,7 @@ MPE（MIDI Polyphonic Expression）让支持 MPE 的控制器对小羽的每个�
 
 ## 11. USB 网页刷机
 
-[https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) 是独立的发布刷机页，用于给小羽安装或升级固件。它直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
+[https://mengqimusic.github.io/Wingie2/v4/](https://mengqimusic.github.io/Wingie2/v4/) 是独立的发布刷机页，用于给小羽安装或升级固件。它直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
 
 ### 操作步骤
 
