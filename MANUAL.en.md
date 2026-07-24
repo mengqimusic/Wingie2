@@ -46,7 +46,7 @@ After connecting power, there is about a 3-second fade-in from silence to full v
 
 ### Audio Input
 
-Wingie2's sensitive microphone picks up airborne sound and easily produces feedback with speakers. You can play the feedback. To avoid feedback, use headphones and control the volume to prevent headphone feedback.
+Wingie2's sensitive microphone picks up airborne sound and easily produces feedback with speakers. You can play the feedback. The v4 firmware (which includes the fifth **Ratio Mode**) has a built-in anti-feedback function: feedback can still build up, but distortion is greatly reduced, yielding a softer tone. To avoid feedback, use headphones and control the volume to prevent headphone feedback.
 
 You can use Wingie2 to listen to nearby sounds, treat it as a percussion instrument, or use it to turn any object into an instrument. Experiment freely.
 
@@ -391,6 +391,7 @@ Key changes in **v4** compared to v3.1:
 - **New USB Web Configuration**: Modify and save all settings in real time via Chrome/Edge over USB.
 - **New MPE Mode**: Optional MIDI Polyphonic Expression with per-note pitch bend and external alternate tuning.
 - **New USB Web Flasher**: One-click firmware install/upgrade in the browser; the standard flow preserves all settings.
+- **New anti-feedback function**: Feedback can still build up, but distortion is greatly reduced, yielding a softer tone.
 - **Improved Cave frequency precision**: Upgraded from integers to 0.01 Hz resolution.
 - **Third way to enable alternate tuning**: In addition to the startup button and MIDI, alternate tuning can now be switched via web configuration.
 - **CC 0 mode segmentation changed to a five-way even split**: 0-25 / 26-51 / 52-76 / 77-102 / 103-127 (previously four bands + 127 as a single point; see [Chapter 8](#8-midi-channels-and-control-messages)).
