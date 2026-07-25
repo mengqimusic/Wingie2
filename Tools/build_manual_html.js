@@ -92,7 +92,7 @@ const CSS = `
   a { color: #0000EE; text-decoration: underline; }
   a:visited { color: #551A8B; }
   a:active { color: #FF0000; }
-  #wingie-manual {
+  .wingie-manual {
     width: min(760px, 100%);
     min-height: calc(100vh - 32px);
     margin: 0 auto;
@@ -100,59 +100,59 @@ const CSS = `
     border: 2px outset #fff;
     background: #fff;
   }
-  #wingie-manual h1 {
+  .wingie-manual h1 {
     margin: 0 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 30px; line-height: 1.25; font-weight: 700;
     text-align: center; letter-spacing: .01em;
   }
-  #wingie-manual h2 {
+  .wingie-manual h2 {
     margin: 28px 0 8px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 21px; font-weight: 700;
     border-bottom: 2px solid #000; padding-bottom: 3px;
   }
-  #wingie-manual h3 {
+  .wingie-manual h3 {
     margin: 20px 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px; font-weight: 700;
   }
-  #wingie-manual p { margin: 8px 0; }
-  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
-  #wingie-manual li + li { margin-top: 4px; }
-  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
-  #wingie-manual blockquote {
+  .wingie-manual p { margin: 8px 0; }
+  .wingie-manual ul, .wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  .wingie-manual li + li { margin-top: 4px; }
+  .wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  .wingie-manual blockquote {
     margin: 12px 0; padding: 6px 16px;
     border-left: 3px solid #999; background: #f5f5f5; color: #333;
   }
-  #wingie-manual blockquote p { margin: 4px 0; }
-  #wingie-manual code {
+  .wingie-manual blockquote p { margin: 4px 0; }
+  .wingie-manual code {
     font-family: "Courier New", Courier, monospace;
     background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
   }
-  #wingie-manual pre {
+  .wingie-manual pre {
     background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
     overflow-x: auto; margin: 12px 0;
   }
-  #wingie-manual pre code { background: none; padding: 0; }
-  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
-  #wingie-manual table { width: 100%; border-collapse: collapse; }
-  #wingie-manual th, #wingie-manual td {
+  .wingie-manual pre code { background: none; padding: 0; }
+  .wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  .wingie-manual table { width: 100%; border-collapse: collapse; }
+  .wingie-manual th, .wingie-manual td {
     padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
     vertical-align: top;
   }
-  #wingie-manual th {
+  .wingie-manual th {
     background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
     font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
   }
-  #wingie-manual strong { font-weight: 700; }
-  #wingie-manual img {
+  .wingie-manual strong { font-weight: 700; }
+  .wingie-manual img {
     max-width: 100%; height: auto; display: block;
     margin: 16px auto; border: 1px solid #ccc;
   }
   @media (max-width: 600px) {
-    #wingie-manual { padding: 18px 16px; }
-    #wingie-manual h1 { font-size: 24px; }
+    .wingie-manual { padding: 18px 16px; }
+    .wingie-manual h1 { font-size: 24px; }
   }
 `;
 
@@ -175,12 +175,10 @@ md.renderer.rules.table_close = function () {
 };
 
 // ---- HTML 外壳 ----
-function wrap(body, title, lang) {
-  // 主手册页（中/英）记录语言偏好，供导航栏和其他页面读取
-  var langScript = lang ? `<script>try{localStorage.setItem("wg-lang","${lang}")}catch(e){}</script>` : "";
-  var htmlLang = lang === "en" ? "en" : "zh-CN";
+// ---- 单语页外壳（MPE / ALT_TUNING）----
+function wrapSingle(body, title) {
   return `<!doctype html>
-<html lang="${htmlLang}">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -189,8 +187,8 @@ function wrap(body, title, lang) {
   <style>${CSS}</style>
 </head>
 <body>
-  ${langScript}<script src="../nav.js"></script>
-  <div id="wingie-manual">
+  <script src="../nav.js"></script>
+  <div class="wingie-manual">
 ${body}
   </div>
 </body>
@@ -198,29 +196,86 @@ ${body}
 `;
 }
 
-// ---- 转换配置 ----
-const jobs = [
-  { src: "MANUAL.zh.md", out: "index.html", title: "小羽二代 Wingie2 用户手册 · v4", lang: "zh" },
-  { src: "MANUAL.en.md", out: "en.html", title: "Wingie2 User Manual · v4", lang: "en" },
-  { src: "MPE.md", out: "MPE.html", title: "Wingie2 MPE" },
-  { src: "ALT_TUNING.md", out: "ALT_TUNING.html", title: "Wingie2 Alternate Tunings" }
-];
+// ---- 双语手册外壳（单文件 + 按键切换）----
+function wrapManual(bodyZh, bodyEn) {
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Wingie2 用户手册 · Manual · v4</title>
+  <style>${CSS}
+    #wg-manual-lang { position: fixed; top: 40px; right: 16px; z-index: 10000;
+      font: 14px/1.4 Georgia, serif; padding: 4px 12px;
+      border: 2px outset #ccc; background: #ccc; cursor: pointer; font-weight: 700; }
+    #wg-manual-lang:active { border-style: inset; }
+    #content-zh, #content-en { display: none; }
+    #content-zh.wg-active { display: block; }
+    #content-en.wg-active { display: block; }
+  </style>
+</head>
+<body>
+  <script src="../nav.js"></script>
+  <button id="wg-manual-lang" type="button">中文 / EN</button>
+  <div id="content-zh"><div class="wingie-manual">
+${bodyZh}
+  </div></div>
+  <div id="content-en"><div class="wingie-manual">
+${bodyEn}
+  </div></div>
+  <script>
+    (function(){
+      var zh = document.getElementById("content-zh");
+      var en = document.getElementById("content-en");
+      var btn = document.getElementById("wg-manual-lang");
+      var saved;
+      try { saved = localStorage.getItem("wg-lang"); } catch(e) {}
+      if (!saved) { saved = (navigator.language && navigator.language.indexOf("zh") === 0) ? "zh" : "en"; }
+      var lang = saved;
+      function apply() {
+        zh.className = lang === "zh" ? "wg-active" : "";
+        en.className = lang === "en" ? "wg-active" : "";
+        btn.textContent = lang === "zh" ? "中文 / EN" : "EN / 中文";
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      }
+      btn.addEventListener("click", function(){
+        lang = lang === "zh" ? "en" : "zh";
+        try { localStorage.setItem("wg-lang", lang); } catch(e) {}
+        apply();
+      });
+      apply();
+    })();
+  </script>
+</body>
+</html>
+`;
+}
 
 // ---- 执行 ----
 fs.mkdirSync(OUT, { recursive: true });
 
-for (const job of jobs) {
-  const srcPath = path.join(REPO, job.src);
-  if (!fs.existsSync(srcPath)) {
-    console.error(`跳过（源文件不存在）：${job.src}`);
-    continue;
-  }
-  const raw = fs.readFileSync(srcPath, "utf-8");
-  const body = md.render(raw);
-  const html = wrap(body, job.title, job.lang);
-  const dest = path.join(OUT, job.out);
-  fs.writeFileSync(dest, html, "utf-8");
-  console.log(`✓ ${job.src} → ${dest} (${html.length} bytes)`);
+// 手册：单文件，中英内嵌
+const zhSrc = path.join(REPO, "MANUAL.zh.md");
+const enSrc = path.join(REPO, "MANUAL.en.md");
+if (fs.existsSync(zhSrc) && fs.existsSync(enSrc)) {
+  const manualHtml = wrapManual(md.render(fs.readFileSync(zhSrc, "utf-8")),
+                                md.render(fs.readFileSync(enSrc, "utf-8")));
+  fs.writeFileSync(path.join(OUT, "index.html"), manualHtml, "utf-8");
+  console.log(`✓ MANUAL → ${OUT}/index.html (${manualHtml.length} bytes, 中英单文件)`);
+}
+
+// 单语参考文档
+const refs = [
+  { src: "MPE.md", out: "MPE.html", title: "Wingie2 MPE" },
+  { src: "ALT_TUNING.md", out: "ALT_TUNING.html", title: "Wingie2 Alternate Tunings" }
+];
+for (const ref of refs) {
+  const srcPath = path.join(REPO, ref.src);
+  if (!fs.existsSync(srcPath)) { console.error(`跳过：${ref.src}`); continue; }
+  const html = wrapSingle(md.render(fs.readFileSync(srcPath, "utf-8")), ref.title);
+  fs.writeFileSync(path.join(OUT, ref.out), html, "utf-8");
+  console.log(`✓ ${ref.src} → ${OUT}/${ref.out} (${html.length} bytes)`);
 }
 
 console.log(`\n完成，输出目录：${OUT}`);
