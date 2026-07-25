@@ -399,7 +399,7 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 Key changes in **v4** compared to v3.1:
 
-- **New Ratio Mode**: A fifth resonator mode based on frequency ratios rather than octaves, 3-voice polyphony, 9 resonators in 3 slots.
+- **New Ratio Mode**: A fifth resonator mode with custom adjustable ratios, 3-voice polyphony, with independently adjustable frequency ratios per voice.
 - **New USB Web Configuration**: Modify and save all settings in real time via Chrome/Edge over USB.
 - **New MPE Mode**: Optional MIDI Polyphonic Expression with per-note pitch bend and external alternate tuning.
 - **New USB Web Flasher**: One-click firmware install/upgrade in the browser; the standard flow preserves all settings.
@@ -407,6 +407,5 @@ Key changes in **v4** compared to v3.1:
 - **Improved Cave frequency precision**: Upgraded from integers to 0.01 Hz resolution.
 - **Third way to enable alternate tuning**: In addition to the startup button and MIDI, alternate tuning can now be switched via web configuration.
 - **CC 0 mode segmentation changed to a five-way even split**: 0-25 / 26-51 / 52-76 / 77-102 / 103-127 (previously four bands + 127 as a single point; see [Chapter 8](#8-midi-channels-and-control-messages)).
-- **Factory default MIDI channels changed to 1 / 2 / 3**.
 
 Firmware is open source: https://github.com/mengqimusic/Wingie2
