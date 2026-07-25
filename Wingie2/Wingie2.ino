@@ -240,7 +240,7 @@ bool save_routine_flag = false, stuff_saved = false, dirty[11], tuning_preferenc
 volatile bool preferences_save_requested = false;
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
-#define RATIO_LED_INTERVAL 20
+#define RATIO_LED_INTERVAL 500
 #define SAVE_DELAY 3000
 unsigned long save_routine_timer, led_flash_timer, ratio_led_timer[2] = {0, 0};
 uint8_t ratio_led_phase[2] = {0, 0};
@@ -353,8 +353,10 @@ void unmute_channel_resonators(byte ch) {
 
 void set_mode_led(byte ch) {
   if (Mode[ch] == RATIO_MODE) {
+    // Ratio 模式：白（Poly）黄（String）500ms 交替
+    byte color = ledColor[(ratio_led_phase[ch] & 1) ? STRING_MODE : POLY_MODE];
     for (int index = 0; index < 2; index++) {
-      digitalWrite(ledPin[ch][index], !bitRead(ledColor[ratio_led_phase[ch]], index));
+      digitalWrite(ledPin[ch][index], !bitRead(color, index));
     }
     return;
   }
