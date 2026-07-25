@@ -5,9 +5,14 @@
   "use strict";
 
   // 根据语言偏好决定手册链接指向中文还是英文页
+  // 首次访问（无 localStorage）按系统语言判断
   var manualHref = (function () {
     try {
-      return localStorage.getItem("wg-lang") === "en" ? "../manual/en.html" : "../manual/";
+      var saved = localStorage.getItem("wg-lang");
+      if (!saved) {
+        saved = (navigator.language && navigator.language.indexOf("zh") === 0) ? "zh" : "en";
+      }
+      return saved === "en" ? "../manual/en.html" : "../manual/";
     } catch (e) {
       return "../manual/";
     }
