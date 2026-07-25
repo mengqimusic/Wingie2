@@ -206,9 +206,13 @@ function wrapManual(bodyZh, bodyEn) {
   <link rel="icon" href="data:,">
   <title>Wingie2 用户手册 · Manual · v4</title>
   <style>${CSS}
-    #wg-manual-lang { position: fixed; top: 40px; right: 16px; z-index: 10000;
-      font: 14px/1.4 Georgia, serif; padding: 4px 12px;
-      border: 2px outset #ccc; background: #ccc; cursor: pointer; font-weight: 700; }
+    #wg-manual-bar { width: min(760px, 100%); margin: 0 auto 8px; display: flex; justify-content: flex-end; }
+    #wg-manual-lang {
+      min-height: 30px; padding: 4px 13px; border-radius: 0;
+      border: 3px outset #cccccc; background: #cccccc;
+      font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
+      font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
+    #wg-manual-lang:hover { background: #d8d8d8; }
     #wg-manual-lang:active { border-style: inset; }
     #content-zh, #content-en { display: none; }
     #content-zh.wg-active { display: block; }
@@ -217,7 +221,7 @@ function wrapManual(bodyZh, bodyEn) {
 </head>
 <body>
   <script src="../nav.js"></script>
-  <button id="wg-manual-lang" type="button">中文 / EN</button>
+  <div id="wg-manual-bar"><button id="wg-manual-lang" type="button">中文 / EN</button></div>
   <div id="content-zh"><div class="wingie-manual">
 ${bodyZh}
   </div></div>
