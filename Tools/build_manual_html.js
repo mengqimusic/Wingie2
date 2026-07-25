@@ -206,14 +206,14 @@ function wrapManual(bodyZh, bodyEn) {
   <link rel="icon" href="data:,">
   <title>Wingie2 用户手册 · Manual · v4</title>
   <style>${CSS}
-    #wg-manual-bar { width: min(760px, 100%); margin: 0 auto 8px; display: flex; justify-content: flex-end; }
-    #wg-manual-lang {
+    .wg-manual-bar { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+    .wg-manual-lang {
       min-height: 30px; padding: 4px 13px; border-radius: 0;
       border: 3px outset #cccccc; background: #cccccc;
       font-family: "MS Sans Serif", "Tahoma", Geneva, sans-serif;
       font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
-    #wg-manual-lang:hover { background: #d8d8d8; }
-    #wg-manual-lang:active { border-style: inset; }
+    .wg-manual-lang:hover { background: #d8d8d8; }
+    .wg-manual-lang:active { border-style: inset; }
     #content-zh, #content-en { display: none; }
     #content-zh.wg-active { display: block; }
     #content-en.wg-active { display: block; }
@@ -221,18 +221,19 @@ function wrapManual(bodyZh, bodyEn) {
 </head>
 <body>
   <script src="../nav.js"></script>
-  <div id="wg-manual-bar"><button id="wg-manual-lang" type="button">中文 / EN</button></div>
   <div id="content-zh"><div class="wingie-manual">
+    <div class="wg-manual-bar"><button class="wg-manual-lang" type="button">中文 / EN</button></div>
 ${bodyZh}
   </div></div>
   <div id="content-en"><div class="wingie-manual">
+    <div class="wg-manual-bar"><button class="wg-manual-lang" type="button">中文 / EN</button></div>
 ${bodyEn}
   </div></div>
   <script>
     (function(){
       var zh = document.getElementById("content-zh");
       var en = document.getElementById("content-en");
-      var btn = document.getElementById("wg-manual-lang");
+      var btns = document.querySelectorAll(".wg-manual-lang");
       var saved;
       try { saved = localStorage.getItem("wg-lang"); } catch(e) {}
       if (!saved) { saved = (navigator.language && navigator.language.indexOf("zh") === 0) ? "zh" : "en"; }
@@ -240,13 +241,15 @@ ${bodyEn}
       function apply() {
         zh.className = lang === "zh" ? "wg-active" : "";
         en.className = lang === "en" ? "wg-active" : "";
-        btn.textContent = lang === "zh" ? "中文 / EN" : "EN / 中文";
+        btns.forEach(function(b){ b.textContent = lang === "zh" ? "中文 / EN" : "EN / 中文"; });
         document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
       }
-      btn.addEventListener("click", function(){
-        lang = lang === "zh" ? "en" : "zh";
-        try { localStorage.setItem("wg-lang", lang); } catch(e) {}
-        apply();
+      btns.forEach(function(b){
+        b.addEventListener("click", function(){
+          lang = lang === "zh" ? "en" : "zh";
+          try { localStorage.setItem("wg-lang", lang); } catch(e) {}
+          apply();
+        });
       });
       apply();
     })();
