@@ -170,8 +170,9 @@
   <main id="wingie-flasher">
     <h1>Wingie2 Firmware Installer</h1>
     <p id="wg-version" class="wg-version">Firmware version…</p>
+    <button id="wg-language" class="wg-button" type="button">中文 / EN</button>
 
-    <section lang="zh-CN">
+    <section id="wg-lang-zh" lang="zh-CN">
       <h2>更新内容</h2>
       <ul>
         <li data-change="filter">新的稳定滤波器内核。</li>
@@ -191,7 +192,7 @@
 
     <hr>
 
-    <section lang="en">
+    <section id="wg-lang-en" lang="en">
       <h2>Changelog</h2>
       <ul>
         <li data-change="filter">A new stable resonator filter core.</li>
@@ -691,7 +692,8 @@ class A extends Error{}
         deviceStatus: root.querySelector("#wg-device-status"),
         deviceStatusText: root.querySelector("#wg-device-status-text"),
         installStatus: root.querySelector("#wg-install-status"),
-        installStatusText: root.querySelector("#wg-install-status-text")
+        installStatusText: root.querySelector("#wg-install-status-text"),
+        language: root.querySelector("#wg-language")
       };
 
       const state = {
@@ -705,7 +707,8 @@ class A extends Error{}
         connected: false,
         busy: false,
         resumeIndex: 0,
-        completed: false
+        completed: false,
+        language: localStorage.getItem("wg-lang") || (navigator.language && navigator.language.indexOf("zh") === 0 ? "zh" : "en")
       };
 
       function setStatus(node, textNode, status, text) {
@@ -935,6 +938,16 @@ class A extends Error{}
         if (!response.ok) throw new Error(`下载 ${part.path} 失败（HTTP ${response.status}）`);
         const data = new Uint8Array(await response.arrayBuffer());
         return verifyImage(part, data);
+      }
+
+
+      function applyLanguage() {
+        var zh = document.getElementById("wg-lang-zh");
+        var en = document.getElementById("wg-lang-en");
+        if (zh) zh.style.display = state.language === "zh" ? "" : "none";
+        if (en) en.style.display = state.language === "en" ? "" : "none";
+        if (elements.language) elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
+        document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
       }
 
       async function prepareFirmware() {
@@ -1219,6 +1232,11 @@ class A extends Error{}
         }
       }
 
+      elements.language.addEventListener("click", () => {
+        state.language = state.language === "zh" ? "en" : "zh";
+        localStorage.setItem("wg-lang", state.language);
+        applyLanguage();
+      });
       elements.connect.addEventListener("click", connectDevice);
       elements.disconnect.addEventListener("click", async () => {
         await disconnectDevice();
@@ -1256,6 +1274,7 @@ class A extends Error{}
 
       renderParts();
       renderControls();
+      applyLanguage();
       prepareFirmware();
     })();
   </script>
