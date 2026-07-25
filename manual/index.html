@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
-  <title>小羽二代 Wingie2 用户手册 · v4</title>
+  <title>Wingie2 用户手册 · Manual · v4</title>
   <style>
   :root { color-scheme: light; }
   html { box-sizing: border-box; }
@@ -18,7 +18,7 @@
   a { color: #0000EE; text-decoration: underline; }
   a:visited { color: #551A8B; }
   a:active { color: #FF0000; }
-  #wingie-manual {
+  .wingie-manual {
     width: min(760px, 100%);
     min-height: calc(100vh - 32px);
     margin: 0 auto;
@@ -26,65 +26,74 @@
     border: 2px outset #fff;
     background: #fff;
   }
-  #wingie-manual h1 {
+  .wingie-manual h1 {
     margin: 0 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 30px; line-height: 1.25; font-weight: 700;
     text-align: center; letter-spacing: .01em;
   }
-  #wingie-manual h2 {
+  .wingie-manual h2 {
     margin: 28px 0 8px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 21px; font-weight: 700;
     border-bottom: 2px solid #000; padding-bottom: 3px;
   }
-  #wingie-manual h3 {
+  .wingie-manual h3 {
     margin: 20px 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px; font-weight: 700;
   }
-  #wingie-manual p { margin: 8px 0; }
-  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
-  #wingie-manual li + li { margin-top: 4px; }
-  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
-  #wingie-manual blockquote {
+  .wingie-manual p { margin: 8px 0; }
+  .wingie-manual ul, .wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  .wingie-manual li + li { margin-top: 4px; }
+  .wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  .wingie-manual blockquote {
     margin: 12px 0; padding: 6px 16px;
     border-left: 3px solid #999; background: #f5f5f5; color: #333;
   }
-  #wingie-manual blockquote p { margin: 4px 0; }
-  #wingie-manual code {
+  .wingie-manual blockquote p { margin: 4px 0; }
+  .wingie-manual code {
     font-family: "Courier New", Courier, monospace;
     background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
   }
-  #wingie-manual pre {
+  .wingie-manual pre {
     background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
     overflow-x: auto; margin: 12px 0;
   }
-  #wingie-manual pre code { background: none; padding: 0; }
-  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
-  #wingie-manual table { width: 100%; border-collapse: collapse; }
-  #wingie-manual th, #wingie-manual td {
+  .wingie-manual pre code { background: none; padding: 0; }
+  .wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  .wingie-manual table { width: 100%; border-collapse: collapse; }
+  .wingie-manual th, .wingie-manual td {
     padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
     vertical-align: top;
   }
-  #wingie-manual th {
+  .wingie-manual th {
     background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
     font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
   }
-  #wingie-manual strong { font-weight: 700; }
-  #wingie-manual img {
+  .wingie-manual strong { font-weight: 700; }
+  .wingie-manual img {
     max-width: 100%; height: auto; display: block;
     margin: 16px auto; border: 1px solid #ccc;
   }
   @media (max-width: 600px) {
-    #wingie-manual { padding: 18px 16px; }
-    #wingie-manual h1 { font-size: 24px; }
+    .wingie-manual { padding: 18px 16px; }
+    .wingie-manual h1 { font-size: 24px; }
   }
-</style>
+
+    #wg-manual-lang { position: fixed; top: 40px; right: 16px; z-index: 10000;
+      font: 14px/1.4 Georgia, serif; padding: 4px 12px;
+      border: 2px outset #ccc; background: #ccc; cursor: pointer; font-weight: 700; }
+    #wg-manual-lang:active { border-style: inset; }
+    #content-zh, #content-en { display: none; }
+    #content-zh.wg-active { display: block; }
+    #content-en.wg-active { display: block; }
+  </style>
 </head>
 <body>
-  <script>try{localStorage.setItem("wg-lang","zh")}catch(e){}</script><script src="../nav.js"></script>
-  <div id="wingie-manual">
+  <script src="../nav.js"></script>
+  <button id="wg-manual-lang" type="button">中文 / EN</button>
+  <div id="content-zh"><div class="wingie-manual">
 <h1 id="小羽二代-wingie2-用户手册-·-v4">小羽二代 Wingie2 用户手册 · v4</h1>
 <blockquote>
 <p><strong>注意</strong></p>
@@ -683,7 +692,7 @@
 <h2 id="17-版本说明">17. 版本说明</h2>
 <p><strong>v4</strong> 相对 v3.1 的主要变化：</p>
 <ul>
-<li><strong>新增比例模式（Ratio Mode）</strong>：第五种共鸣模式，基于频率比例而非八度，三声部复音，9 个共鸣器分 3 槽。</li>
+<li><strong>新增比例模式（Ratio Mode）</strong>：第五种共鸣模式，自定义可调比例，三声部复音，频率比例三复音分别可调。</li>
 <li><strong>新增 USB 网页配置</strong>：用 Chrome / Edge 通过 USB 实时修改和保存所有设置。</li>
 <li><strong>新增 MPE 模式</strong>：可选的 MIDI 复音表情，支持逐音弯音和外部替代调律。</li>
 <li><strong>新增 USB 网页刷机</strong>：浏览器内一键安装 / 升级固件，标准流程保留所有设置。</li>
@@ -691,10 +700,642 @@
 <li><strong>山洞频率精度提升</strong>：从整数提升到 0.01 Hz 分辨率。</li>
 <li><strong>替代律制第三种启用方式</strong>：除启动按键和 MIDI 外，可用网页配置切换。</li>
 <li><strong>CC 0 模式分段改为五模式均分</strong>：0-25 / 26-51 / 52-76 / 77-102 / 103-127（原为四档 + 127 单点，见<a href="#8-midi-%E9%80%9A%E9%81%93%E4%B8%8E%E6%8E%A7%E5%88%B6%E4%BF%A1%E6%81%AF">第 8 章</a>）。</li>
-<li><strong>出厂 MIDI 通道默认改为 1 / 2 / 3</strong>。</li>
 </ul>
 <p>固件已开源：<a href="https://github.com/mengqimusic/Wingie2" target="_blank" rel="noopener">https://github.com/mengqimusic/Wingie2</a></p>
 
-  </div>
+  </div></div>
+  <div id="content-en"><div class="wingie-manual">
+<h1 id="wingie2-user-manual-·-v4">Wingie2 User Manual · v4</h1>
+<blockquote>
+<p><strong>Caution</strong></p>
+<ul>
+<li>Start at a low volume when powering on, then gradually increase.</li>
+<li>This device easily produces feedback with speakers and headphones; avoid harsh high frequencies.</li>
+<li>Store and use in a dry place, away from moisture.</li>
+<li>Do not directly feed modular synthesizer or other high-level signals.</li>
+</ul>
+</blockquote>
+<p>Thank you for purchasing Wingie2!</p>
+<p>Wingie2 is a handheld stereo resonator with a built-in microphone. It can instantly interact with your voice and the surrounding environment, connect to other devices, or serve as a development platform. Lightweight and portable, it lets you create music and explore sound anywhere.</p>
+<hr>
+<h2 id="contents">Contents</h2>
+<ol>
+<li><a href="#1-power">Power</a></li>
+<li><a href="#2-audio-input--output">Audio Input / Output</a></li>
+<li><a href="#3-panel-controls">Panel Controls</a></li>
+<li><a href="#4-modes">Modes</a></li>
+<li><a href="#5-custom-caves">Custom Caves</a></li>
+<li><a href="#6-sequencer-threshold">Sequencer Threshold</a></li>
+<li><a href="#7-pre-and-post-clip-gain">Pre and Post Clip Gain</a></li>
+<li><a href="#8-midi-channels-and-control-messages">MIDI Channels and Control Messages</a></li>
+<li><a href="#9-usb-web-configuration">USB Web Configuration</a></li>
+<li><a href="#10-mpe-mode">MPE Mode</a></li>
+<li><a href="#11-usb-web-flasher">USB Web Flasher</a></li>
+<li><a href="#12-alternate-tunings">Alternate Tunings</a></li>
+<li><a href="#13-global-settings-midi-cc-table">Global Settings (MIDI CC Table)</a></li>
+<li><a href="#14-saving-settings">Saving Settings</a></li>
+<li><a href="#15-caves-mode-and-alternate-tunings">Caves Mode and Alternate Tunings</a></li>
+<li><a href="#16-tips">Tips</a></li>
+<li><a href="#17-version-notes">Version Notes</a></li>
+</ol>
+<hr>
+<h2 id="1-power">1. Power</h2>
+<p>Wingie2 is powered via a USB Type-C port. You can use a charger or a power bank. The first batch of Wingie2 (produced before May 2022, with no screws on the back) cannot use C-C cables; use A-C cables only.</p>
+<p>If you hear digital noise in the output, try a different power supply or a ground-loop isolator.</p>
+<p>After connecting power, there is about a 3-second fade-in from silence to full volume.</p>
+<h2 id="2-audio-input--output">2. Audio Input / Output</h2>
+<h3 id="audio-input">Audio Input</h3>
+<p>Wingie2's sensitive microphone picks up airborne sound and easily produces feedback with speakers. You can play the feedback. The v4 firmware (which includes the fifth <strong>Ratio Mode</strong>) has a built-in anti-feedback function: feedback can still build up, but distortion is greatly reduced, yielding a softer tone. To avoid feedback, use headphones and control the volume to prevent headphone feedback.</p>
+<p>You can use Wingie2 to listen to nearby sounds, treat it as a percussion instrument, or use it to turn any object into an instrument. Experiment freely.</p>
+<p>Wingie2's audio input is a stereo 3.5mm jack (TRS).</p>
+<blockquote>
+<p><strong>Note</strong>: Avoid excessive input signals. An overly large input signal causes the overloaded acoustic sound to appear in the output. If you can still hear the line-input signal when the source switch is set to microphone, or when the dry/wet ratio is set to 100%, the line-input signal is too high. Turn down the input signal level (not the faders on Wingie2).</p>
+</blockquote>
+<h3 id="audio-output">Audio Output</h3>
+<p>Wingie2's audio output is a stereo 3.5mm jack (TRS). It can directly drive headphones.</p>
+<h2 id="3-panel-controls">3. Panel Controls</h2>
+<p>The control functions are labeled on Wingie2.</p>
+<p>Both Mix and Volume control the signal strength before the resonator. This design allows the resonator's decay tail to be heard in full.</p>
+<p>When both channels share the same octave setting, the right channel sounds one octave higher than the left.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Fader</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mix</td>
+<td>Dry/wet ratio</td>
+</tr>
+<tr>
+<td>Decay</td>
+<td>Resonator decay time, from 0.15 seconds to about 10 seconds</td>
+</tr>
+<tr>
+<td>Volume</td>
+<td>Input volume</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="4-modes">4. Modes</h2>
+<p>Wingie2 has <strong>five</strong> modes, cycled by pressing the Mode button. The current mode is shown by the LED.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Polyphony</th>
+<th>Note keyboard</th>
+<th>Octave switch response</th>
+<th>LED</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Poly</strong> (white)</td>
+<td>3-voice</td>
+<td>Buttons cycle through each voice</td>
+<td>Affects the next note played. You can switch octaves before playing a note to mix notes of different octaves.</td>
+<td>White</td>
+</tr>
+<tr>
+<td><strong>String</strong> (yellow)</td>
+<td>monophonic</td>
+<td>Press multiple note buttons simultaneously to set a sequence; the sequence advances each time the input volume exceeds the threshold</td>
+<td>Immediate</td>
+<td>Yellow</td>
+</tr>
+<tr>
+<td><strong>Bar</strong> (red)</td>
+<td>monophonic</td>
+<td>Same as above</td>
+<td>Immediate</td>
+<td>Red</td>
+</tr>
+<tr>
+<td><strong>Cave</strong> (purple)</td>
+<td>9 resonators (three octave banks)</td>
+<td>See <a href="#5-custom-caves">Chapter 5</a></td>
+<td>Switches between three caves</td>
+<td>Purple</td>
+</tr>
+<tr>
+<td><strong>Ratio</strong> (4-color cycling)</td>
+<td>3-voice</td>
+<td>Buttons cycle through each voice; resonator frequency = fundamental × ratio</td>
+<td>Affects the next note played</td>
+<td>4-color cycling</td>
+</tr>
+</tbody>
+</table>
+</div><p>Global tuning affects all five modes: Poly, String, Bar, Cave, and Ratio. (Factory default A3 (69) = 440 Hz.) For global tuning, see <a href="#13-global-settings-midi-cc-table">Chapter 13</a>.</p>
+<h3 id="ratio-mode">Ratio Mode</h3>
+<p>Ratio Mode is the fifth mode, new in v4. Unlike Poly/String/Bar, which stack by octaves, Ratio Mode sets each resonator's frequency to <strong>fundamental × ratio</strong>, enabling non-octave resonant relationships.</p>
+<ul>
+<li><strong>3-voice polyphony</strong>: The 9 resonators are divided into 3 slots (voice 1 uses resonators 1/2/3, voice 2 uses 4/5/6, voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.</li>
+<li><strong>Shared ratio profile</strong>: Both channels share the same 9 ratios; only the fundamental (octave) differs. Factory ratios are 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9.</li>
+<li><strong>Ratio range</strong>: 0.125 to 32.0, step 0.001. Frequencies are clamped to 16.00–16000.00 Hz. Ratios are adjusted via <a href="#9-usb-web-configuration">USB Web Configuration</a> or MIDI.</li>
+<li><strong>LED</strong>: Because the panel LEDs only have four colors, already used by the first four modes, Ratio Mode is indicated by cycling through all four colors.</li>
+</ul>
+<p>There are three ways to enter Ratio Mode:</p>
+<ol>
+<li><strong>Panel button</strong>: After Poly → String → Bar → Cave, press once more to enter Ratio Mode (the 5th press).</li>
+<li><strong>MIDI</strong>: CC 0 value 103–127.</li>
+<li><strong>USB Web Configuration</strong>: Select &quot;Ratio&quot; in the left/right Mode dropdown.</li>
+</ol>
+<h2 id="5-custom-caves">5. Custom Caves</h2>
+<p>In Cave Mode, each channel has 9 resonators divided into three octave banks. You can adjust each resonator's frequency and mute state individually.</p>
+<ul>
+<li>Toggle mute / unmute</li>
+<li>Increase the resonator's frequency</li>
+<li>Decrease the resonator's frequency</li>
+<li>Unmute all resonators</li>
+<li>Mute all resonators</li>
+<li>Left and right channels can be tuned separately</li>
+</ul>
+<p><img src="img/cave_controls.jpg" alt="Custom Caves panel operations"></p>
+<p>Frequency range <code>16.00–16000.00 Hz</code>, resolution <code>0.01 Hz</code>. Frequencies can be adjusted from the panel in Cave Mode, via MIDI CC (<a href="#13-global-settings-midi-cc-table">Chapter 13</a>), or via <a href="#9-usb-web-configuration">USB Web Configuration</a>.</p>
+<h2 id="6-sequencer-threshold">6. Sequencer Threshold</h2>
+<p>In String and Bar modes, the sequence advances each time the input volume exceeds the threshold. The threshold can be set independently for left and right.</p>
+<ul>
+<li>Right channel sequencer threshold</li>
+<li>Left channel sequencer threshold</li>
+</ul>
+<p><strong>Setting on the panel</strong>: Hold the Mode button for the corresponding channel, then press a note button to select the threshold. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.</p>
+<p><img src="img/seq_threshold.jpg" alt="Sequencer threshold panel operations"></p>
+<p>Thresholds can also be set via MIDI CC or <a href="#9-usb-web-configuration">USB Web Configuration</a> (the &quot;Input Threshold&quot; fields).</p>
+<h2 id="7-pre-and-post-clip-gain">7. Pre and Post Clip Gain</h2>
+<p>The clipper's pre-gain and post-gain can be adjusted independently:</p>
+<ul>
+<li><strong>Post gain</strong>: resonator volume</li>
+<li><strong>Pre gain</strong>: adjusts saturation</li>
+</ul>
+<p><strong>Setting on the panel</strong>: Hold the Mode button for the corresponding channel, then press a note button to select the gain. The buttons are arranged chromatically from C to B, covering 12 steps—C is the lowest, B is the highest.</p>
+<p><img src="img/clip_gain.jpg" alt="Pre and post clip gain panel operations"></p>
+<p>Adjust the pre gain for the desired tone, then adjust the post gain for a comfortable dry/wet control response.</p>
+<p>Gain can also be set via MIDI CC or <a href="#9-usb-web-configuration">USB Web Configuration</a>.</p>
+<h2 id="8-midi-channels-and-control-messages">8. MIDI Channels and Control Messages</h2>
+<p>Wingie2 can be controlled via MIDI. The MIDI interface follows the MMA standard; use standard MIDI cables.</p>
+<p><img src="img/midi_wiring.jpg" alt="Standard MIDI wiring"></p>
+<h3 id="midi-channels">MIDI Channels</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>MIDI channel</th>
+<th>Notes</th>
+<th>Control messages (CC)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>User-adjustable (factory default 1, 2, 3)</td>
+<td>Controls left channel<br>Controls right channel<br>Alternates left/right</td>
+<td>Controls left channel<br>Controls right channel<br>Controls both channels</td>
+</tr>
+</tbody>
+</table>
+</div><p>Factory defaults: left = channel 1, right = channel 2, both = channel 3. These can be changed in <a href="#9-usb-web-configuration">USB Web Configuration</a> or via MIDI CC (<a href="#13-global-settings-midi-cc-table">Chapter 13</a>).</p>
+<h3 id="midi-notes">MIDI Notes</h3>
+<ul>
+<li>Wingie2 accepts Note On messages (velocity 0 is treated as Note Off).</li>
+<li>The built-in sequencer only works with the onboard mini-keyboard; it has no effect under MIDI control.</li>
+<li>Fast, wide-interval note jumps may produce loud sounds.</li>
+</ul>
+<h3 id="control-messages-cc">Control Messages (CC)</h3>
+<ul>
+<li>MIDI CC input overrides the corresponding fader setting; move the fader again to make the fader setting take effect.</li>
+<li>Wingie2 accepts 14-bit MIDI messages.</li>
+</ul>
+<p><strong>CC 0 — Mode select</strong> (v4 five-way even split):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CC 0 value</th>
+<th>Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0–25</td>
+<td>Poly</td>
+</tr>
+<tr>
+<td>26–51</td>
+<td>String</td>
+</tr>
+<tr>
+<td>52–76</td>
+<td>Bar</td>
+</tr>
+<tr>
+<td>77–102</td>
+<td>Cave</td>
+</tr>
+<tr>
+<td>103–127</td>
+<td>Ratio</td>
+</tr>
+</tbody>
+</table>
+</div><blockquote>
+<p>As of v4, CC 0 changed from the original four bands (0-31 / 32-63 / 64-95 / 96-127 + 127 as a single point) to a five-way even split. If you previously used fixed CC values to switch modes, re-check them against this table.</p>
+</blockquote>
+<p><strong>Fader CC</strong>:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>CC</th>
+<th>Function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CC 11 (MSB) / CC 43 (LSB)</td>
+<td>Mix (dry/wet)</td>
+</tr>
+<tr>
+<td>CC 1 (MSB) / CC 33 (LSB)</td>
+<td>Decay time</td>
+</tr>
+<tr>
+<td>CC 7 (MSB) / CC 39 (LSB)</td>
+<td>Volume</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="9-usb-web-configuration">9. USB Web Configuration</h2>
+<p>Open <a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> and choose &quot;Configuration&quot; to modify and save all settings by connecting Wingie2 via USB in a browser. It needs no Wi-Fi, SoftAP, CDN, Node, or Python—only a Web Serial-capable browser.</p>
+<h3 id="connecting">Connecting</h3>
+<ol>
+<li>Use desktop <strong>Chrome</strong> or <strong>Edge</strong> (with Web Serial support), and open the page from an <strong>HTTPS</strong> origin. Safari, Firefox, mobile browsers, and insecure HTTP pages are not supported.</li>
+<li>Close any software using Wingie2's serial port, such as Arduino Serial Monitor.</li>
+<li>Click &quot;Connect Wingie2&quot; and select the corresponding USB serial port.</li>
+</ol>
+<h3 id="what-you-can-edit">What You Can Edit</h3>
+<p>On connection, the page reads one complete device snapshot. You can modify the following; <strong>every valid edit takes effect on the running sound immediately, with no Apply step</strong>:</p>
+<ul>
+<li><strong>Left/right channels</strong>: Mode (Poly / String / Bar / Cave / Ratio), Input Threshold</li>
+<li><strong>Shared settings</strong>: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch</li>
+<li><strong>Ratio Mode profile</strong>: 9 resonator ratios (grouped into 3 slots), with &quot;Copy Slot 1 to Slots 2 &amp; 3&quot; and factory-reset buttons</li>
+<li><strong>Caves</strong>: 3 banks per channel, each with 9 resonator frequencies and mute states</li>
+</ul>
+<blockquote>
+<p>The page does <strong>not</strong> show Mix, Decay, or Volume—these are physical faders on the panel and are not written to flash.</p>
+</blockquote>
+<h3 id="saving">Saving</h3>
+<p>Your settings are only written to flash (and thus retained after restart) when you click <strong>&quot;Save to Flash&quot;</strong> and confirm. Before that, all edits affect only the current running state.</p>
+<h3 id="synchronization">Synchronization</h3>
+<p>If Wingie2's panel controls, MIDI, or other software change the device state, the page automatically syncs the changes during idle time. You can also click Refresh at any time to re-read immediately.</p>
+<h3 id="embedding">Embedding</h3>
+<p>If the page is placed in an iframe, the iframe needs <code>allow=&quot;serial&quot;</code>, and the server must allow the corresponding <code>Permissions-Policy: serial=(self)</code>.</p>
+<h2 id="10-mpe-mode">10. MPE Mode</h2>
+<p>MPE (MIDI Polyphonic Expression) lets an MPE-capable controller apply independent pitch bend to each note on Wingie2. In v4, MPE is controlled by a switch in <a href="#9-usb-web-configuration">USB Web Configuration</a>, <strong>factory default off</strong>, with the state saved to flash.</p>
+<h3 id="switch-off-—-conventional-routing">Switch off — conventional routing</h3>
+<p>No zone exists. Channels 1–16 all follow the configurable conventional Left/Right/Both routing (factory defaults 1/2/3). Channel 13 tuning CC, Channel 14/15 Cave-frequency CC, and Channel 16 global-settings CC all remain usable.</p>
+<h3 id="switch-on-—-standard-lower-zone">Switch on — standard Lower Zone</h3>
+<p>One Lower Zone claims every channel: <strong>Manager = Channel 1, Member = Channels 2–16</strong>.</p>
+<ul>
+<li><strong>Note assignment</strong>: Each Note On is assigned to one engine side, alternating left/right in arrival order (the same free-running alternation as the conventional Both route). A side in Cave Mode is skipped; if both sides are in Cave Mode, the note is ignored.</li>
+<li><strong>Per-note pitch bend</strong>: Each Member channel's Pitch Bend affects only the notes currently owned by that channel; the Manager's (Channel 1) Pitch Bend and CC apply globally to all active MPE voices on both sides.</li>
+<li><strong>Bend range</strong>: Member defaults to ±48 semitones, Manager to ±2 semitones. Adjustable via RPN 0 (CC 6 sets semitones, CC 38 sets cents); a range received on any Member channel applies to all Members.</li>
+<li><strong>External alternate tuning</strong>: An MPE source can send Pitch Bend before each note's Note On to establish an initial microtonal offset. In this case, set Wingie2's internal tuning to &quot;Standard&quot; so the MPE source is the sole tuning authority; if an internal alternate tuning remains enabled, the internal intervals and the MPE offset are both applied.</li>
+</ul>
+<p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
+<h3 id="not-mapped">Not Mapped</h3>
+<p>The current MPE scope is the zone, per-note ownership, and Pitch Bend. <strong>Channel Pressure and CC 74 are not mapped.</strong> Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
+<p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
+<h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
+<p>Open <a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> and choose &quot;Firmware Installer&quot; to install or upgrade Wingie2 firmware. The flasher connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.</p>
+<h3 id="steps">Steps</h3>
+<ol>
+<li>Open the page from an <strong>HTTPS</strong> address in desktop <strong>Chrome/Edge</strong>. Connect Wingie2 with a data-capable USB cable.</li>
+<li>Close the configuration page, Arduino Serial Monitor, DAW/MIDI tools, and any other software using the serial port.</li>
+<li>Click &quot;Connect Wingie2&quot; and select Wingie2's USB serial port.</li>
+<li>Once &quot;Device connected&quot; appears, click &quot;Install firmware&quot;. Do not unplug USB or close the page during installation.</li>
+<li>When &quot;Installation complete&quot; appears, Wingie2 is ready to use.</li>
+</ol>
+<h3 id="safety-boundaries">Safety Boundaries</h3>
+<p>The standard flash writes <strong>only four fixed regions</strong> (bootloader, partition table, boot_app0, and the app firmware). It <strong>does not perform a full-chip erase, does not read app0, and does not write the NVS region starting at <code>0x9000</code></strong>. This means your MIDI channels, tuning, Caves, and Ratio settings are <strong>all preserved</strong> after a standard flash.</p>
+<p>Factory reset or erasing configuration is not part of this page's standard flow.</p>
+<h3 id="troubleshooting">Troubleshooting</h3>
+<ul>
+<li><strong>Port in use</strong>: Close other configuration pages, Serial Monitor, DAW/MIDI tools and retry.</li>
+<li><strong>No serial port found</strong>: Try a different data-capable USB cable and port; install the USB serial driver required by your device.</li>
+<li><strong>Cannot enter bootloader</strong>: Let the page switch automatically first; if it still fails, hold BOOT, briefly press RESET/EN, and release BOOT after connecting begins.</li>
+<li><strong>Wrong chip</strong>: Do not continue; this release only supports the original ESP32, not ESP32-S2/S3/C3.</li>
+<li><strong>Write failure</strong>: Do not unplug; retry the current install first; if it repeatedly fails, change the USB cable or port.</li>
+</ul>
+<h2 id="12-alternate-tunings">12. Alternate Tunings</h2>
+<p>By default, Wingie2 uses standard western tuning (equal temperament).</p>
+<p>As of version 3.1, eight additional tunings are provided (other tunings can be implemented by modifying the source code):</p>
+<ul>
+<li>Centaur (Kraig Grady)</li>
+<li>Harp of New Albion (Terry Riley)</li>
+<li>Carlos Harmonic (Wendy Carlos)</li>
+<li>Well-Tuned Piano (La Monte Young)</li>
+<li>Meta Slendro (Grady/Wilson)</li>
+<li>Bihexany (Gene Ward Smith)</li>
+<li>Hexachordal Dodecaphonic (Paul Erlich)</li>
+<li>Augmented[12] (Mike Smith, Paul Erlich)</li>
+</ul>
+<p>There are three ways to enable an alternate tuning:</p>
+<ol>
+<li><strong>Hold the left Mode button when starting the device</strong> (fader positions determine the tuning; see the table below).</li>
+<li><strong>Use MIDI</strong> (Channel 13, CC 23, values 0–8; see the table below). The advantage is that no restart is needed; the tuning can be changed on the fly.</li>
+<li><strong>Use USB Web Configuration</strong>: Select Standard or one of the eight alternate tunings in the &quot;Tuning&quot; dropdown under shared settings. This also requires no restart.</li>
+</ol>
+<p>Alternate tuning also affects Cave Mode (see <a href="#15-caves-mode-and-alternate-tunings">Chapter 15</a>) and honors the Global Tuning (A3) setting.</p>
+<h3 id="switching-tuning-at-startup">Switching tuning at startup</h3>
+<p>Hold down the <strong>left Mode button</strong> before plugging in the USB cable. The fader positions determine the tuning:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Left Mode button</th>
+<th>Right Mode button</th>
+<th>Left fader</th>
+<th>Middle fader</th>
+<th>Right fader</th>
+<th>Tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Released</td>
+<td>Held</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Equal temperament</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Bottom</td>
+<td>Bottom</td>
+<td>Bottom</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Bottom</td>
+<td>Bottom</td>
+<td>Top</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Bottom</td>
+<td>Top</td>
+<td>Bottom</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Bottom</td>
+<td>Top</td>
+<td>Top</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Top</td>
+<td>Bottom</td>
+<td>Bottom</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Top</td>
+<td>Bottom</td>
+<td>Top</td>
+<td>Bihexany</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Top</td>
+<td>Top</td>
+<td>Bottom</td>
+<td>Hexachordal Dodecaphonic</td>
+</tr>
+<tr>
+<td>Held</td>
+<td>Released</td>
+<td>Top</td>
+<td>Top</td>
+<td>Top</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><p>For more information on tuning, see <code>wingie_tuning_notes.pdf</code>.</p>
+<h3 id="switching-tuning-via-midi">Switching tuning via MIDI</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>CC</th>
+<th>Value</th>
+<th>Tuning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13</td>
+<td>23</td>
+<td>0</td>
+<td>Equal temperament</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>1</td>
+<td>Centaur</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>2</td>
+<td>Harp of New Albion</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>3</td>
+<td>Carlos Harmonic</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>4</td>
+<td>Well Tuned Piano</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>5</td>
+<td>Meta Slendro</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>6</td>
+<td>Bihexany</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>7</td>
+<td>Hexachordal Dodecaphonic</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td>8</td>
+<td>Augmented[12]</td>
+</tr>
+</tbody>
+</table>
+</div><p>A TouchOSC template by Dave Seidel: <code>wingie_tuning.tosc</code>.</p>
+<h2 id="13-global-settings-midi-cc-table">13. Global Settings (MIDI CC Table)</h2>
+<p>MIDI channels, global tuning, alternate tuning, and Cave Mode resonator frequencies can be set via the MIDI global-settings channel (Channel 16), or via <a href="#9-usb-web-configuration">USB Web Configuration</a>.</p>
+<blockquote>
+<p>Large frequency jumps can cause loud sounds; lower the volume and decay time before adjusting.</p>
+</blockquote>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>MIDI channel</th>
+<th>MIDI controller</th>
+<th>Function</th>
+<th>Factory default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16</td>
+<td>20</td>
+<td>Left channel MIDI route</td>
+<td>1</td>
+</tr>
+<tr>
+<td></td>
+<td>21</td>
+<td>Right channel MIDI route</td>
+<td>2</td>
+</tr>
+<tr>
+<td></td>
+<td>22</td>
+<td>Both-channel MIDI route</td>
+<td>3</td>
+</tr>
+<tr>
+<td></td>
+<td>23 (MSB) / 55 (LSB)</td>
+<td>Global tuning (centered on 440 Hz, range ±81.92 Hz, resolution 0.01 Hz)</td>
+<td>0.00</td>
+</tr>
+<tr>
+<td>15</td>
+<td>23–31 (MSB) / 55–63 (LSB)</td>
+<td>Right channel selected Cave tuning</td>
+<td>—</td>
+</tr>
+<tr>
+<td>14</td>
+<td>23–31 (MSB) / 55–63 (LSB)</td>
+<td>Left channel selected Cave tuning</td>
+<td>—</td>
+</tr>
+<tr>
+<td>13</td>
+<td>23</td>
+<td>Alternate tuning (0–8; see <a href="#12-alternate-tunings">Chapter 12</a>)</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+</div><h2 id="14-saving-settings">14. Saving Settings</h2>
+<p>There are two ways to write current settings to flash so they persist after restart:</p>
+<ol>
+<li><strong>Panel dual-button save</strong>: Hold both Mode buttons simultaneously for three seconds. During the countdown, the LED cycles through the four colors and flashes when the countdown ends to indicate completion. This operation may cause a brief noise and is not recommended during recording or live performance.</li>
+<li><strong>Web Save to Flash</strong>: Click &quot;Save to Flash&quot; and confirm in <a href="#9-usb-web-configuration">USB Web Configuration</a>.</li>
+</ol>
+<p>Saved settings include: A3 frequency, tuning, Pre/Post Clip Gain, three MIDI channel routes, left/right Mode and Input Threshold, the shared Ratio profile, all three Cave banks per channel (frequencies and mute), and the MPE switch.</p>
+<h2 id="15-caves-mode-and-alternate-tunings">15. Caves Mode and Alternate Tunings</h2>
+<p>When you enable an alternate tuning, the caves are also tuned to match the selected tuning.</p>
+<p>To accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:</p>
+<p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
+<p>The right channel uses the odd-numbered scale tones, also covering one and one-third octaves:</p>
+<p><code>C#, D#, F, G, A, B, A#, C#', D#', F'</code></p>
+<p>The three-position toggle switches between three octaves, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave, so all scale pitches are covered across both sides.</p>
+<p>Dave Seidel wrote Wingie2's alternate tuning feature.</p>
+<h2 id="16-tips">16. Tips</h2>
+<ol>
+<li>Play Wingie2 as a percussion instrument;</li>
+<li>Take Wingie2 outdoors and play with environmental sounds;</li>
+<li>Play together with acoustic instruments;</li>
+<li>Build feedback with a speaker;</li>
+<li>Build feedback with effects;</li>
+<li>Use a drum machine to trigger the sequencer with drum hits and obtain melodies;</li>
+<li>In live performance, use an external cardioid mic and line input to avoid feedback;</li>
+<li>Use Ratio Mode to explore non-octave resonant relationships;</li>
+<li>Use an MPE controller for independent per-note pitch bend and microtuning;</li>
+<li>Use the web configuration page to adjust Cave frequencies and ratios in real time without restarting.</li>
+</ol>
+<p>… (more for you to discover)</p>
+<p>Thanks to Roy Parvin for writing the English introduction and proofreading the manual, to Anqi for the inscription on the back of Wingie2, and to Dave Seidel for writing the alternate tuning feature.</p>
+<h3 id="where-to-find-me">Where to find me</h3>
+<ul>
+<li>Website: <a href="http://mengqimusic.com" target="_blank" rel="noopener">mengqimusic.com</a></li>
+<li>Bilibili: <a href="http://space.bilibili.com/4485929" target="_blank" rel="noopener">space.bilibili.com/4485929</a></li>
+<li>Weibo: <a href="http://weibo.com/mengqimusic" target="_blank" rel="noopener">weibo.com/mengqimusic</a></li>
+<li>Instagram: <a href="http://instagram.com/mengqimusic" target="_blank" rel="noopener">instagram.com/mengqimusic</a></li>
+</ul>
+<h2 id="17-version-notes">17. Version Notes</h2>
+<p>Key changes in <strong>v4</strong> compared to v3.1:</p>
+<ul>
+<li><strong>New Ratio Mode</strong>: A fifth resonator mode with custom adjustable ratios, 3-voice polyphony, with independently adjustable frequency ratios per voice.</li>
+<li><strong>New USB Web Configuration</strong>: Modify and save all settings in real time via Chrome/Edge over USB.</li>
+<li><strong>New MPE Mode</strong>: Optional MIDI Polyphonic Expression with per-note pitch bend and external alternate tuning.</li>
+<li><strong>New USB Web Flasher</strong>: One-click firmware install/upgrade in the browser; the standard flow preserves all settings.</li>
+<li><strong>New anti-feedback function</strong>: Feedback can still build up, but distortion is greatly reduced, yielding a softer tone.</li>
+<li><strong>Improved Cave frequency precision</strong>: Upgraded from integers to 0.01 Hz resolution.</li>
+<li><strong>Third way to enable alternate tuning</strong>: In addition to the startup button and MIDI, alternate tuning can now be switched via web configuration.</li>
+<li><strong>CC 0 mode segmentation changed to a five-way even split</strong>: 0-25 / 26-51 / 52-76 / 77-102 / 103-127 (previously four bands + 127 as a single point; see <a href="#8-midi-channels-and-control-messages">Chapter 8</a>).</li>
+</ul>
+<p>Firmware is open source: <a href="https://github.com/mengqimusic/Wingie2" target="_blank" rel="noopener">https://github.com/mengqimusic/Wingie2</a></p>
+
+  </div></div>
+  <script>
+    (function(){
+      var zh = document.getElementById("content-zh");
+      var en = document.getElementById("content-en");
+      var btn = document.getElementById("wg-manual-lang");
+      var saved;
+      try { saved = localStorage.getItem("wg-lang"); } catch(e) {}
+      if (!saved) { saved = (navigator.language && navigator.language.indexOf("zh") === 0) ? "zh" : "en"; }
+      var lang = saved;
+      function apply() {
+        zh.className = lang === "zh" ? "wg-active" : "";
+        en.className = lang === "en" ? "wg-active" : "";
+        btn.textContent = lang === "zh" ? "中文 / EN" : "EN / 中文";
+        document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+      }
+      btn.addEventListener("click", function(){
+        lang = lang === "zh" ? "en" : "zh";
+        try { localStorage.setItem("wg-lang", lang); } catch(e) {}
+        apply();
+      });
+      apply();
+    })();
+  </script>
 </body>
 </html>
