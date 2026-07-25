@@ -168,11 +168,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const chinese = [
                         "更新内容",
                         "操作说明",
-                        "新增比例模式（Ratio Mode）",
-                        "新增 USB 网页配置",
-                        "新增 MPE 模式",
-                        "山洞频率精度从整数分辨率提升为",
-                        "MIDI 模式控制（CC 0）的分段改为五模式均分",
+                        "比例模式的 LED 指示改为白色、黄色交替闪烁",
                         "银色 Wingie2 需要使用 USB A–C 线",
                         "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
                         "连接 Wingie2"
@@ -181,7 +177,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                         if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
                       // English must not be visible until toggled.
-                      const english = ["Changelog", "Instructions", "New Ratio Mode"];
+                      const english = ["Changelog", "Instructions", "Ratio Mode LED"];
                       english.forEach(text => {
                         if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
                       });
@@ -225,11 +221,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const english = [
                         "Changelog",
                         "Instructions",
-                        "New Ratio Mode",
-                        "New USB Web Configuration",
-                        "New MPE Mode",
-                        "Cave frequency precision upgraded",
-                        "MIDI mode control (CC 0) segmentation changed",
+                        "Ratio Mode LED indication changed to alternating white and yellow",
                         "Silver Wingie2 units require a USB-A-to-USB-C cable",
                         "Connect Wingie2, and close serial monitors",
                         "Connect Wingie2"
@@ -245,6 +237,8 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                     })()
                     """
                 )
+                # 语言选择持久化在 localStorage，清除以免污染后续子测试
+                self.evaluate("localStorage.removeItem('wg-lang'); 'CLEARED'")
 
     def test_visible_buttons_drive_the_complete_install_flow(self):
         self.browser("set", "viewport", "1280", "900")
@@ -259,7 +253,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         self.browser(
             "wait",
             "--fn",
-            "window.__WINGIE_FLASH_PAGE__.snapshot().completed",
+            "window.__WINGIE_FLASH_MOCK__.snapshot().log.some(entry => entry.type === \"disconnect\")",
         )
         self.evaluate(
             """

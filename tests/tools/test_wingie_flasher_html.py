@@ -110,11 +110,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "更新内容",
             "操作说明",
-            "新增比例模式（Ratio Mode）",
-            "新增 USB 网页配置",
-            "新增 MPE 模式",
-            "山洞频率精度从整数分辨率提升为",
-            "MIDI 模式控制（CC 0）的分段改为五模式均分",
+            "比例模式的 LED 指示改为白色、黄色交替闪烁",
             "银色 Wingie2 需要使用 USB A–C 线",
             "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
         ):
@@ -123,11 +119,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "Changelog",
             "Instructions",
-            "New Ratio Mode",
-            "New USB Web Configuration",
-            "New MPE Mode",
-            "Cave frequency precision upgraded",
-            "MIDI mode control (CC 0) segmentation changed",
+            "Ratio Mode LED indication changed to alternating white and yellow",
             "Silver Wingie2 units require a USB-A-to-USB-C cable",
             "Connect Wingie2, and close serial monitors",
             "choose the Wingie2 USB serial port from the list",

@@ -173,7 +173,7 @@ class RatioModeReferenceTest(unittest.TestCase):
             control,
         )
 
-    def test_ratio_mode_cycles_all_led_colors(self):
+    def test_ratio_mode_alternates_white_yellow_led(self):
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
         control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
         led_block = extract_braced_block(firmware, "void set_mode_led")
@@ -191,10 +191,13 @@ class RatioModeReferenceTest(unittest.TestCase):
             "if (!save_routine_flag && !led_blink)",
         )
 
-        self.assertIn("#define RATIO_LED_INTERVAL 20", firmware)
+        self.assertIn("#define RATIO_LED_INTERVAL 500", firmware)
         self.assertIn("ledColor[4]", firmware)
         self.assertIn("uint8_t ratio_led_phase[2] = {0, 0};", firmware)
-        self.assertIn("ledColor[ratio_led_phase[ch]]", led_block)
+        self.assertIn(
+            "ledColor[(ratio_led_phase[ch] & 1) ? STRING_MODE : POLY_MODE]",
+            led_block,
+        )
         self.assertIn("apply_channel_mode_change(ch);", mode_change_block)
         for reset_block in (channel_mode_block, save_blink_end_block):
             phase_reset = reset_block.index("ratio_led_phase[ch] = 0;")
