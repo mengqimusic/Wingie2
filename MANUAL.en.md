@@ -396,6 +396,10 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
+Changes in **v4.01** compared to v4:
+
+- **Ratio Mode LED indication adjusted**: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.
+
 Key changes in **v4** compared to v3.1:
 
 - **New Ratio Mode**: A fifth resonator mode with custom adjustable ratios, 3-voice polyphony, with independently adjustable frequency ratios per voice.
