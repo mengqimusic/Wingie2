@@ -82,7 +82,7 @@ Wingie2 has **five** modes, cycled by pressing the Mode button. The current mode
 | **String** (yellow) | monophonic | Press multiple note buttons simultaneously to set a sequence; the sequence advances each time the input volume exceeds the threshold | Immediate | Yellow |
 | **Bar** (red) | monophonic | Same as above | Immediate | Red |
 | **Cave** (purple) | 9 resonators (three octave banks) | See [Chapter 5](#5-custom-caves) | Switches between three caves | Purple |
-| **Ratio** (4-color cycling) | 3-voice | Buttons cycle through each voice; resonator frequency = fundamental × ratio | Affects the next note played | 4-color cycling |
+| **Ratio** (white/yellow alternating) | 3-voice | Buttons cycle through each voice; resonator frequency = fundamental × ratio | Affects the next note played | white/yellow alternating |
 
 Global tuning affects all five modes: Poly, String, Bar, Cave, and Ratio. (Factory default A3 (69) = 440 Hz.) For global tuning, see [Chapter 13](#13-global-settings-midi-cc-table).
 
@@ -93,7 +93,6 @@ Ratio Mode is the fifth mode, new in v4. Unlike Poly/String/Bar, which stack by 
 - **3-voice polyphony**: The 9 resonators are divided into 3 slots (voice 1 uses resonators 1/2/3, voice 2 uses 4/5/6, voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.
 - **Shared ratio profile**: Both channels share the same 9 ratios; only the fundamental (octave) differs. Factory ratios are 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9.
 - **Ratio range**: 0.125 to 32.0, step 0.001. Frequencies are clamped to 16.00–16000.00 Hz. Ratios are adjusted via [USB Web Configuration](#9-usb-web-configuration) or MIDI.
-- **LED**: Because the panel LEDs only have four colors, already used by the first four modes, Ratio Mode is indicated by cycling through all four colors.
 
 There are three ways to enter Ratio Mode:
 
