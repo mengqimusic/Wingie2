@@ -198,6 +198,9 @@ ${body}
 
 // ---- 双语手册外壳（单文件 + 按键切换）----
 function wrapManual(bodyZh, bodyEn) {
+  var barHtml = '\n    <div class="wg-manual-bar"><button class="wg-manual-lang" type="button">中文 / EN</button></div>\n';
+  var bodyZhBar = bodyZh.replace("</h1>", "</h1>" + barHtml, 1);
+  var bodyEnBar = bodyEn.replace("</h1>", "</h1>" + barHtml, 1);
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -206,7 +209,7 @@ function wrapManual(bodyZh, bodyEn) {
   <link rel="icon" href="data:,">
   <title>Wingie2 用户手册 · Manual · v4</title>
   <style>${CSS}
-    .wg-manual-bar { display: flex; justify-content: flex-end; margin: 0 0 8px; }
+    .wg-manual-bar { display: flex; justify-content: flex-end; margin: 0 0 20px; }
     .wg-manual-lang {
       min-height: 30px; padding: 4px 13px; border-radius: 0;
       border: 3px outset #cccccc; background: #cccccc;
@@ -222,12 +225,10 @@ function wrapManual(bodyZh, bodyEn) {
 <body>
   <script src="../nav.js"></script>
   <div id="content-zh"><div class="wingie-manual">
-    <div class="wg-manual-bar"><button class="wg-manual-lang" type="button">中文 / EN</button></div>
-${bodyZh}
+${bodyZhBar}
   </div></div>
   <div id="content-en"><div class="wingie-manual">
-    <div class="wg-manual-bar"><button class="wg-manual-lang" type="button">中文 / EN</button></div>
-${bodyEn}
+${bodyEnBar}
   </div></div>
   <script>
     (function(){
