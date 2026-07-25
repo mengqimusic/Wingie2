@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +18,7 @@
   a { color: #0000EE; text-decoration: underline; }
   a:visited { color: #551A8B; }
   a:active { color: #FF0000; }
-  #wingie-manual {
+  .wingie-manual {
     width: min(760px, 100%);
     min-height: calc(100vh - 32px);
     margin: 0 auto;
@@ -26,60 +26,65 @@
     border: 2px outset #fff;
     background: #fff;
   }
-  #wingie-manual h1 {
+  .wingie-manual h1 {
     margin: 0 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 30px; line-height: 1.25; font-weight: 700;
     text-align: center; letter-spacing: .01em;
   }
-  #wingie-manual h2 {
+  .wingie-manual h2 {
     margin: 28px 0 8px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 21px; font-weight: 700;
     border-bottom: 2px solid #000; padding-bottom: 3px;
   }
-  #wingie-manual h3 {
+  .wingie-manual h3 {
     margin: 20px 0 6px;
     font-family: Georgia, "Times New Roman", serif;
     font-size: 17px; font-weight: 700;
   }
-  #wingie-manual p { margin: 8px 0; }
-  #wingie-manual ul, #wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
-  #wingie-manual li + li { margin-top: 4px; }
-  #wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
-  #wingie-manual blockquote {
+  .wingie-manual p { margin: 8px 0; }
+  .wingie-manual ul, .wingie-manual ol { margin: 8px 0; padding-left: 1.6rem; }
+  .wingie-manual li + li { margin-top: 4px; }
+  .wingie-manual hr { border: none; border-top: 1px solid #ccc; margin: 24px 0; }
+  .wingie-manual blockquote {
     margin: 12px 0; padding: 6px 16px;
     border-left: 3px solid #999; background: #f5f5f5; color: #333;
   }
-  #wingie-manual blockquote p { margin: 4px 0; }
-  #wingie-manual code {
+  .wingie-manual blockquote p { margin: 4px 0; }
+  .wingie-manual code {
     font-family: "Courier New", Courier, monospace;
     background: #eee; padding: 1px 4px; border-radius: 2px; font-size: 0.92em;
   }
-  #wingie-manual pre {
+  .wingie-manual pre {
     background: #f5f5f5; border: 1px solid #ddd; padding: 12px;
     overflow-x: auto; margin: 12px 0;
   }
-  #wingie-manual pre code { background: none; padding: 0; }
-  #wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
-  #wingie-manual table { width: 100%; border-collapse: collapse; }
-  #wingie-manual th, #wingie-manual td {
+  .wingie-manual pre code { background: none; padding: 0; }
+  .wingie-manual .table-wrap { border: 2px outset #ddd; overflow-x: auto; margin: 12px 0; }
+  .wingie-manual table { width: 100%; border-collapse: collapse; }
+  .wingie-manual th, .wingie-manual td {
     padding: 5px 8px; border: 1px inset #ccc; text-align: left; background: #fff;
     vertical-align: top;
   }
-  #wingie-manual th {
+  .wingie-manual th {
     background: #c0c0c0; font-family: "MS Sans Serif", Geneva, sans-serif;
     font-size: 12px; text-transform: uppercase; letter-spacing: .03em;
   }
-  #wingie-manual strong { font-weight: 700; }
+  .wingie-manual strong { font-weight: 700; }
+  .wingie-manual img {
+    max-width: 100%; height: auto; display: block;
+    margin: 16px auto; border: 1px solid #ccc;
+  }
   @media (max-width: 600px) {
-    #wingie-manual { padding: 18px 16px; }
-    #wingie-manual h1 { font-size: 24px; }
+    .wingie-manual { padding: 18px 16px; }
+    .wingie-manual h1 { font-size: 24px; }
   }
 </style>
 </head>
 <body>
-  <div id="wingie-manual">
+  <script src="../nav.js"></script>
+  <div class="wingie-manual">
 <h1 id="alternate-tuning-support">Alternate Tuning Support</h1>
 <p>By default, Wingie2 uses standard western tuning (equal temperament). As of version 3.1, eight additional tunings are available. These are the currently available tunings (other tunings are possible, but require a source code change and a new firmware build):</p>
 <ul>
