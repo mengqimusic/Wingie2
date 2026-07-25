@@ -1035,7 +1035,7 @@ class A extends Error{}
         var en = document.getElementById("wg-lang-en");
         if (zh) zh.style.display = state.language === "zh" ? "" : "none";
         if (en) en.style.display = state.language === "en" ? "" : "none";
-        if (elements.language) elements.language.textContent = state.language === "zh" ? languageText("中文", "EN") : "EN / 中文";
+        if (elements.language) elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
         // 遍历 data-i18n 属性切换文本
         root.querySelectorAll("[data-i18n-zh]").forEach(function (el) {
           el.textContent = state.language === "zh" ? el.dataset.i18nZh : el.dataset.i18nEn;
