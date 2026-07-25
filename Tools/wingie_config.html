@@ -757,7 +757,7 @@
         pollError: null,
         lightPolling: true,
         connectionEpoch: 0,
-        language: localStorage.getItem("wg-lang") || "zh",
+        language: localStorage.getItem("wg-lang") || (navigator.language && navigator.language.indexOf("zh") === 0 ? "zh" : "en"),
         alertMessage: null,
         connectionLabel: {zh: "未连接", en: "Disconnected"},
         pollStatusLabel: {zh: "连接后每秒同步设备状态", en: "Connect to sync device state every second"}

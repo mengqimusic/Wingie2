@@ -371,7 +371,7 @@
         busy: false,
         resumeIndex: 0,
         completed: false,
-        language: localStorage.getItem("wg-lang") || "zh",
+        language: localStorage.getItem("wg-lang") || (navigator.language && navigator.language.indexOf("zh") === 0 ? "zh" : "en"),
         versionLabel: {zh: "固件版本…", en: "Firmware version…"},
         packageDetailLabel: {zh: "", en: ""},
         installDetailLabel: {zh: "正在检查固件…", en: "Checking firmware…"},
