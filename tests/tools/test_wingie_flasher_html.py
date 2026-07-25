@@ -91,9 +91,12 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         cls.parser.feed(cls.source)
 
     def test_is_one_embeddable_document(self):
-        self.assertEqual(self.parser.script_count, 1)
+        # nav.js（共享导航栏）是唯一允许的外部 script 引用
+        external_scripts = [a for a in self.parser.external_assets if a.endswith(".js")]
+        self.assertEqual(external_scripts, ["../nav.js"])
+        self.assertEqual(self.parser.script_count, 2)
         self.assertEqual(self.parser.style_count, 1)
-        self.assertEqual(self.parser.external_assets, [])
+        self.assertEqual(self.parser.external_assets, ["../nav.js"])
         self.assertEqual(len(self.parser.ids), len(set(self.parser.ids)))
         self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_BUNDLE -->"), 1)
         self.assertEqual(self.source.count("<!-- WINGIE_STANDALONE_LICENSES -->"), 1)
@@ -107,10 +110,11 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "更新内容",
             "操作说明",
-            "新的稳定滤波器内核",
-            "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
-            "啸叫抑制功能",
-            "以减少过载风险",
+            "新增比例模式（Ratio Mode）",
+            "新增 USB 网页配置",
+            "新增 MPE 模式",
+            "山洞频率精度从整数分辨率提升为",
+            "MIDI 模式控制（CC 0）的分段改为五模式均分",
             "银色 Wingie2 需要使用 USB A–C 线",
             "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
         ):
@@ -119,10 +123,11 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "Changelog",
             "Instructions",
-            "stable resonator filter core",
-            "64 steps per side",
-            "feedback suppression",
-            "reducing overload risk",
+            "New Ratio Mode",
+            "New USB Web Configuration",
+            "New MPE Mode",
+            "Cave frequency precision upgraded",
+            "MIDI mode control (CC 0) segmentation changed",
             "Silver Wingie2 units require a USB-A-to-USB-C cable",
             "Connect Wingie2, and close serial monitors",
             "choose the Wingie2 USB serial port from the list",

@@ -31,6 +31,13 @@ class QuietHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         with self.request_lock:
             self.requests.append(self.path)
+        # nav.js（共享导航栏）在测试环境不存在，返回空 JS 避免 404 阻断页面
+        if self.path == "/nav.js" or self.path == "../nav.js":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/javascript")
+            self.end_headers()
+            self.wfile.write(b"// test stub")
+            return
         super().do_GET()
 
     def log_message(self, format, *args):
@@ -161,9 +168,11 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const chinese = [
                         "更新内容",
                         "操作说明",
-                        "新的稳定滤波器内核",
-                        "内置音序器扩展为左右每侧 64 步，超过 64 步时从最早步替换",
-                        "啸叫抑制功能",
+                        "新增比例模式（Ratio Mode）",
+                        "新增 USB 网页配置",
+                        "新增 MPE 模式",
+                        "山洞频率精度从整数分辨率提升为",
+                        "MIDI 模式控制（CC 0）的分段改为五模式均分",
                         "银色 Wingie2 需要使用 USB A–C 线",
                         "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
                         "连接 Wingie2"
@@ -172,7 +181,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                         if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
                       // English must not be visible until toggled.
-                      const english = ["Changelog", "Instructions", "stable resonator filter core"];
+                      const english = ["Changelog", "Instructions", "New Ratio Mode"];
                       english.forEach(text => {
                         if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
                       });
@@ -216,9 +225,11 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const english = [
                         "Changelog",
                         "Instructions",
-                        "stable resonator filter core",
-                        "64 steps per side",
-                        "feedback suppression",
+                        "New Ratio Mode",
+                        "New USB Web Configuration",
+                        "New MPE Mode",
+                        "Cave frequency precision upgraded",
+                        "MIDI mode control (CC 0) segmentation changed",
                         "Silver Wingie2 units require a USB-A-to-USB-C cable",
                         "Connect Wingie2, and close serial monitors",
                         "Connect Wingie2"
@@ -407,7 +418,8 @@ class WingieFlasherBrowserTest(unittest.TestCase):
         )
         with QuietHandler.request_lock:
             requested_paths = [urlsplit(path).path for path in QuietHandler.requests]
-        self.assertEqual(requested_paths, ["/wingie_standalone.html"])
+        # nav.js（共享导航栏）是唯一允许的额外请求
+        self.assertEqual(requested_paths, ["/wingie_standalone.html", "/nav.js"])
 
 
 if __name__ == "__main__":

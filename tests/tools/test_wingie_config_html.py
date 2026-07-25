@@ -48,9 +48,12 @@ class WingieConfigHtmlTest(unittest.TestCase):
         cls.parser.feed(cls.source)
 
     def test_is_one_self_contained_document(self):
-        self.assertEqual(self.parser.script_count, 1)
+        # nav.js（共享导航栏）是唯一允许的外部 script 引用
+        external_scripts = [a for a in self.parser.external_assets if a.endswith(".js")]
+        self.assertEqual(external_scripts, ["../nav.js"])
+        self.assertEqual(self.parser.script_count, 2)
         self.assertEqual(self.parser.style_count, 1)
-        self.assertEqual(self.parser.external_assets, [])
+        self.assertEqual(self.parser.external_assets, ["../nav.js"])
         self.assertEqual(len(self.parser.ids), len(set(self.parser.ids)))
         self.assertNotRegex(self.source, r"https?://")
         self.assertNotIn("fetch(", self.source)
