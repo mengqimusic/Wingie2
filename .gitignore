@@ -1,8 +1,10 @@
 Wingie2-svg/
 .vscode/
+.zcode/
 compile
 .worktrees/
 __pycache__/
+node_modules/
 *.py[cod]
 /dist/
 .DS_Store
