@@ -398,6 +398,52 @@ class WingieProdTestBrowserTest(unittest.TestCase):
                     """
                 )
 
+    def test_audio_arp_plays_looping_notes_on_selected_sound_card(self):
+        self.open_scenario()
+        self.evaluate(
+            WAIT_JS + """
+            (async () => {
+              mock.audio.events.length = 0;
+              element("#wpt-audio-refresh").click();
+              await waitFor(() => snapshot().audioDeviceCount === 2, "audio device list");
+              assert(element("#wpt-audio-device").options.length === 2, "sound card dropdown should list two devices");
+              assert(element("#wpt-audio-device").options[0].textContent === "USB Audio CODEC", "first sound card name is wrong");
+              assert(element("#wpt-audio-start").disabled === false, "start should be enabled after loading devices");
+              element("#wpt-audio-device").value = "audio-out-1";
+              element("#wpt-audio-pan").value = "left";
+              element("#wpt-audio-volume").value = "80";
+              element("#wpt-audio-speed").value = "200";
+              element("#wpt-audio-start").click();
+              await waitFor(() => snapshot().audioPlaying, "arp start");
+              await waitFor(() => mock.audio.events.filter((entry) => entry.type === "osc-start").length >= 4, "four looping notes", 5000);
+              const oscStarts = mock.audio.events.filter((entry) => entry.type === "osc-start").length;
+              const sinks = mock.audio.events.filter((entry) => entry.type === "sink");
+              assert(sinks.length === 1 && sinks[0].deviceId === "audio-out-1", "setSinkId did not target the selected sound card");
+              assert(element("#wpt-audio-status").textContent.includes("循环琶音"), "playing status missing");
+              assert(element("#wpt-audio-stop").hidden === false, "stop button should be visible while playing");
+              assert(element("#wpt-audio-start").disabled, "start should be disabled while playing");
+              element("#wpt-audio-stop").click();
+              await waitFor(() => !snapshot().audioPlaying, "arp stop");
+              assert(mock.audio.events.some((entry) => entry.type === "close"), "audio context was not closed on stop");
+              const countAfterStop = mock.audio.events.filter((entry) => entry.type === "osc-start").length;
+              assert(countAfterStop >= 4 && countAfterStop <= oscStarts + 3, "notes kept playing after stop");
+              return "PASS";
+            })()
+            """
+        )
+
+    def test_audio_arp_requires_loaded_sound_card(self):
+        self.open_scenario()
+        self.evaluate(
+            WAIT_JS + """
+            (async () => {
+              assert(element("#wpt-audio-start").disabled, "start must be disabled before devices load");
+              assert(element("#wpt-audio-refresh").disabled === false, "refresh must be enabled without devices");
+              return "PASS";
+            })()
+            """
+        )
+
     def test_english_toggle(self):
         self.open_scenario()
         self.evaluate(

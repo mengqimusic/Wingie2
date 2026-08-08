@@ -149,6 +149,22 @@ class WingieProdTestHtmlTest(unittest.TestCase):
         self.assertIn("midiSend.addEventListener(\"click\", sendMidiTestSequence)", self.source)
         self.assertIn('localStorage.getItem("wpt-midi-device")', self.source)
 
+    def test_audio_arp_source_uses_web_audio(self):
+        self.assertIn('root.querySelector("#wpt-audio-device")', self.source)
+        self.assertIn('root.querySelector("#wpt-audio-start")', self.source)
+        self.assertIn("navigator.mediaDevices.enumerateDevices", self.source)
+        self.assertIn('device.kind === "audiooutput"', self.source)
+        self.assertIn("context.setSinkId", self.source)
+        self.assertIn("window.AudioContext || window.webkitAudioContext", self.source)
+        self.assertIn("ARP_NOTES = [60, 64, 67, 72]", self.source)
+        self.assertIn('oscillator.type = "triangle"', self.source)
+        self.assertIn("noteToFrequency(pitch)", self.source)
+        self.assertIn("context.createStereoPanner", self.source)
+        self.assertIn('panner.pan.value = panValue === "left" ? -1 : 1', self.source)
+        self.assertIn("state.audioTimer = window.setInterval(scheduleArpNote", self.source)
+        self.assertIn("audioStart.addEventListener(\"click\", startArp)", self.source)
+        self.assertIn("audioStop.addEventListener(\"click\", stopArp)", self.source)
+
     def test_version_comparison_handles_unknown_and_numeric(self):
         self.assertIn("function versionNumbers(", self.source)
         self.assertIn("function compareVersions(", self.source)

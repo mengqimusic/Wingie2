@@ -420,6 +420,43 @@
       </div>
     </section>
 
+    <section class="wpt-section">
+      <h2 data-i18n-zh="5 · 音频 arp 音源（声卡）" data-i18n-en="5 · Audio arp source (sound card)"></h2>
+      <p data-i18n-zh="选择声卡，循环播放琶音作为音频音源，经 LINE 输入送入 Wingie2，人工听测共鸣器响应。开始前请把 Wingie2 音源切到 LINE。" data-i18n-en="Pick a sound card; a looping arpeggio plays as an audio source into the Wingie2 LINE input to check resonator response by ear. Switch the Wingie2 source to LINE first."></p>
+      <div class="wpt-row">
+        <label class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="声卡（音频输出）" data-i18n-en="Sound card (audio output)"></span>
+          <select id="wpt-audio-device">
+            <option value="" data-i18n-zh="未加载" data-i18n-en="Not loaded"></option>
+          </select>
+        </label>
+        <button id="wpt-audio-refresh" type="button" data-i18n-zh="加载 / 刷新声卡" data-i18n-en="Load / refresh sound cards"></button>
+        <button id="wpt-audio-start" type="button" data-i18n-zh="开始播放" data-i18n-en="Start arp" disabled></button>
+        <button id="wpt-audio-stop" type="button" data-i18n-zh="停止播放" data-i18n-en="Stop arp" hidden></button>
+        <span id="wpt-audio-status" class="wpt-status" data-state="idle"></span>
+      </div>
+      <div class="wpt-row">
+        <label class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="音量" data-i18n-en="Volume"></span>
+          <input id="wpt-audio-volume" type="range" min="0" max="100" value="60">
+        </label>
+        <label class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="速度（音符间隔 ms）" data-i18n-en="Speed (note gap ms)"></span>
+          <input id="wpt-audio-speed" type="range" min="120" max="800" step="10" value="250">
+          <span id="wpt-audio-speed-value" class="wpt-value">250</span>
+        </label>
+        <label class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="声道" data-i18n-en="Channel"></span>
+          <select id="wpt-audio-pan">
+            <option value="stereo" data-i18n-zh="立体声" data-i18n-en="Stereo"></option>
+            <option value="left" data-i18n-zh="左" data-i18n-en="Left"></option>
+            <option value="right" data-i18n-zh="右" data-i18n-en="Right"></option>
+          </select>
+        </label>
+      </div>
+      <div id="wpt-audio-result" class="wpt-field"></div>
+    </section>
+
     <footer class="wpt-footer" data-i18n-zh="桌面 Chrome / Edge · Web Serial · HTTPS · 最新固件包读取自本页 latest/ 目录" data-i18n-en="Desktop Chrome / Edge · Web Serial · HTTPS · Latest firmware is read from this page's latest/ directory"></footer>
   </main>
 
@@ -445,6 +482,7 @@
       const MIDI_SEND_NOTES = [60, 64, 67, 72, 76];
       const MIDI_SEND_GAP_MS = 80;
       const MIDI_SEND_ACCEPT_LOSS = 2;
+      const ARP_NOTES = [60, 64, 67, 72];
       const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
       const EXPECTED_PARTS = [
         {name: "bootloader", offset: 0x1000, label: "Bootloader"},
@@ -484,6 +522,16 @@
         midiNoteLeft: root.querySelector("#wpt-midi-note-left"),
         midiNoteRight: root.querySelector("#wpt-midi-note-right"),
         midiResult: root.querySelector("#wpt-midi-result"),
+        audioDevice: root.querySelector("#wpt-audio-device"),
+        audioRefresh: root.querySelector("#wpt-audio-refresh"),
+        audioStart: root.querySelector("#wpt-audio-start"),
+        audioStop: root.querySelector("#wpt-audio-stop"),
+        audioStatus: root.querySelector("#wpt-audio-status"),
+        audioResult: root.querySelector("#wpt-audio-result"),
+        audioVolume: root.querySelector("#wpt-audio-volume"),
+        audioSpeed: root.querySelector("#wpt-audio-speed"),
+        audioSpeedValue: root.querySelector("#wpt-audio-speed-value"),
+        audioPan: root.querySelector("#wpt-audio-pan"),
         monitorToggle: root.querySelector("#wpt-monitor-toggle"),
         countsReset: root.querySelector("#wpt-counts-reset"),
         countsFinish: root.querySelector("#wpt-counts-finish"),
@@ -517,6 +565,11 @@
         midiTestActive: false,
         midiTestBaseline: 0,
         midiTestPassed: false,
+        audioDevices: [],
+        audioContext: null,
+        audioTimer: null,
+        audioPlaying: false,
+        audioNoteIndex: 0,
         protocolSupported: true,
         monitorActive: false,
         checkFinished: false,
@@ -1158,6 +1211,140 @@
         }
       }
 
+      // ---- audio arp source (Web Audio) ----
+
+      function noteToFrequency(midiNote) {
+        return 440 * Math.pow(2, (midiNote - 69) / 12);
+      }
+
+      async function loadAudioDevices() {
+        try {
+          if (navigator.mediaDevices && typeof navigator.mediaDevices.enumerateDevices === "function") {
+            if (typeof navigator.mediaDevices.getUserMedia === "function") {
+              try {
+                await navigator.mediaDevices.getUserMedia({audio: true});
+              } catch (_) {
+              }
+            }
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            state.audioDevices = devices.filter((device) => device.kind === "audiooutput");
+          } else {
+            showAlert(copy("当前浏览器不支持音频设备枚举。请使用最新版桌面 Chrome 或 Edge。", "This browser does not support audio device enumeration. Use the latest desktop Chrome or Edge."), "warning");
+          }
+          populateAudioDevices();
+        } catch (error) {
+          showAlert(copy(`声卡列表读取失败：${error.message}`, `Failed to read sound card list: ${error.message}`), "error");
+        }
+      }
+
+      function populateAudioDevices() {
+        const select = elements.audioDevice;
+        const previous = localStorage.getItem("wpt-audio-device");
+        select.replaceChildren();
+        if (state.audioDevices.length === 0) {
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = languageText("未找到声卡", "No sound card found");
+          select.append(placeholder);
+        } else {
+          state.audioDevices.forEach((device) => {
+            const option = document.createElement("option");
+            option.value = device.deviceId;
+            option.textContent = device.label || device.deviceId;
+            select.append(option);
+          });
+          if (previous && state.audioDevices.some((device) => device.deviceId === previous)) {
+            select.value = previous;
+          }
+        }
+        renderControls();
+      }
+
+      function selectedAudioDevice() {
+        return state.audioDevices.find((device) => device.deviceId === elements.audioDevice.value) || state.audioDevices[0] || null;
+      }
+
+      async function startArp() {
+        if (state.audioPlaying) return;
+        const device = selectedAudioDevice();
+        if (!device) {
+          showAlert(copy("请先加载并选择声卡。", "Load and pick a sound card first."), "warning");
+          return;
+        }
+        try {
+          localStorage.setItem("wpt-audio-device", device.deviceId);
+          const ContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!ContextClass) {
+            showAlert(copy("当前浏览器不支持 Web Audio。请使用最新版桌面 Chrome 或 Edge。", "This browser does not support Web Audio. Use the latest desktop Chrome or Edge."), "error");
+            return;
+          }
+          const context = new ContextClass();
+          if (typeof context.setSinkId === "function") {
+            await context.setSinkId(device.deviceId);
+          }
+          state.audioContext = context;
+          await context.resume();
+          state.audioNoteIndex = 0;
+          state.audioPlaying = true;
+          setStatus(elements.audioStatus, "working", languageText("正在播放循环琶音…", "Playing looping arpeggio…"));
+          elements.audioResult.textContent = "";
+          scheduleArpNote();
+          state.audioTimer = window.setInterval(scheduleArpNote, Number(elements.audioSpeed.value) || 250);
+          renderControls();
+        } catch (error) {
+          if (state.audioContext) {
+            try { state.audioContext.close(); } catch (_) {}
+            state.audioContext = null;
+          }
+          state.audioPlaying = false;
+          setStatus(elements.audioStatus, "error", languageText("启动失败", "Start failed"));
+          elements.audioResult.textContent = languageText(`播放失败：${error.message}`, `Playback failed: ${error.message}`);
+          renderControls();
+        }
+      }
+
+      function scheduleArpNote() {
+        const context = state.audioContext;
+        if (!context || !state.audioPlaying) return;
+        const pitch = ARP_NOTES[state.audioNoteIndex % ARP_NOTES.length];
+        state.audioNoteIndex += 1;
+        const now = context.currentTime;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = "triangle";
+        oscillator.frequency.value = noteToFrequency(pitch);
+        const volume = Math.min(1, Math.max(0, Number(elements.audioVolume.value) / 100));
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(volume, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume * 0.01), now + 0.35);
+        const panValue = elements.audioPan.value;
+        if (panValue === "left" || panValue === "right") {
+          const panner = context.createStereoPanner();
+          panner.pan.value = panValue === "left" ? -1 : 1;
+          gain.connect(panner);
+          panner.connect(context.destination);
+        } else {
+          gain.connect(context.destination);
+        }
+        oscillator.connect(gain);
+        oscillator.start(now);
+        oscillator.stop(now + 0.4);
+      }
+
+      async function stopArp() {
+        if (state.audioTimer !== null) {
+          window.clearInterval(state.audioTimer);
+          state.audioTimer = null;
+        }
+        state.audioPlaying = false;
+        if (state.audioContext) {
+          try { await state.audioContext.close(); } catch (_) {}
+          state.audioContext = null;
+        }
+        setStatus(elements.audioStatus, "idle", languageText("已停止", "Stopped"));
+        renderControls();
+      }
+
       // ---- control monitor ----
 
       function countValue(controlKey, counts) {
@@ -1424,6 +1611,13 @@
         elements.midiStart.disabled = !state.connected || state.busy || state.midiTestActive || state.midiSendActive || !state.protocolSupported;
         elements.midiStop.hidden = !state.midiTestActive;
         elements.midiStop.disabled = state.busy;
+        elements.audioRefresh.disabled = state.busy || state.audioPlaying;
+        elements.audioStart.disabled = state.busy || state.audioPlaying || state.audioDevices.length === 0;
+        elements.audioStop.hidden = !state.audioPlaying;
+        elements.audioStop.disabled = state.busy;
+        elements.audioVolume.disabled = state.busy;
+        elements.audioSpeed.disabled = state.busy;
+        elements.audioPan.disabled = state.busy;
         elements.monitorToggle.disabled = !state.connected || state.busy || !state.protocolSupported;
         elements.countsReset.disabled = !state.connected || state.busy || !state.monitorActive;
         elements.countsFinish.disabled = !state.connected || state.busy || !state.monitorActive;
@@ -1447,6 +1641,12 @@
       elements.midiSend.addEventListener("click", sendMidiTestSequence);
       elements.midiStart.addEventListener("click", startMidiTest);
       elements.midiStop.addEventListener("click", stopMidiTest);
+      elements.audioRefresh.addEventListener("click", loadAudioDevices);
+      elements.audioStart.addEventListener("click", startArp);
+      elements.audioStop.addEventListener("click", stopArp);
+      elements.audioSpeed.addEventListener("input", () => {
+        elements.audioSpeedValue.textContent = elements.audioSpeed.value;
+      });
       elements.monitorToggle.addEventListener("change", () => {
         state.monitorActive = elements.monitorToggle.checked;
         state.checkFinished = false;
@@ -1483,6 +1683,12 @@
           sendMidi: sendMidiTestSequence,
           startMidiTest,
           stopMidiTest,
+          loadAudio: loadAudioDevices,
+          startArp,
+          stopArp,
+          arpNoteCount() {
+            return state.audioNoteIndex;
+          },
           setMonitor(active) {
             elements.monitorToggle.checked = Boolean(active);
             elements.monitorToggle.dispatchEvent(new Event("change", {bubbles: true}));
@@ -1503,6 +1709,8 @@
               midiTestPassed: state.midiTestPassed,
               midiSendActive: state.midiSendActive,
               midiOutputCount: state.midiOutputs.length,
+              audioPlaying: state.audioPlaying,
+              audioDeviceCount: state.audioDevices.length,
               monitorActive: state.monitorActive,
               checkFinished: state.checkFinished,
               counts: state.counts ? JSON.parse(JSON.stringify(state.counts)) : null

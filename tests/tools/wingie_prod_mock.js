@@ -341,4 +341,87 @@
   };
 
   window.__WINGIE_PROD_MOCK__.midi.installDevice("midi-out-1", "USB MIDI DevicePort 1");
+
+  // ---- Web Audio mock ----
+
+  const audioEvents = [];
+  const audioDevices = [
+    {deviceId: "audio-out-1", kind: "audiooutput", label: "USB Audio CODEC"},
+    {deviceId: "audio-out-default", kind: "audiooutput", label: "Default"}
+  ];
+
+  class MockAudioContext {
+    constructor() {
+      audioEvents.push({type: "create"});
+      this.currentTime = 0;
+      this.destination = {mock: "destination"};
+      this.sinkId = null;
+    }
+
+    async setSinkId(deviceId) {
+      this.sinkId = deviceId;
+      audioEvents.push({type: "sink", deviceId});
+    }
+
+    async resume() {
+      audioEvents.push({type: "resume"});
+    }
+
+    async close() {
+      audioEvents.push({type: "close"});
+    }
+
+    createOscillator() {
+      return {
+        type: "",
+        frequency: {value: 0},
+        connect() {},
+        start(time) { audioEvents.push({type: "osc-start", time}); },
+        stop(time) { audioEvents.push({type: "osc-stop", time}); }
+      };
+    }
+
+    createGain() {
+      return {
+        gain: {
+          value: 0,
+          setValueAtTime(value, time) { audioEvents.push({type: "gain-set", value, time}); },
+          linearRampToValueAtTime(value, time) { audioEvents.push({type: "gain-ramp", value, time}); },
+          exponentialRampToValueAtTime(value, time) { audioEvents.push({type: "gain-exp", value, time}); }
+        },
+        connect() {}
+      };
+    }
+
+    createStereoPanner() {
+      return {
+        pan: {value: 0},
+        connect() {}
+      };
+    }
+  }
+
+  const mediaDevicesMock = {
+    async getUserMedia() {
+      audioEvents.push({type: "getusermedia"});
+      return {mock: "stream"};
+    },
+    async enumerateDevices() {
+      return audioDevices.map((device) => ({...device}));
+    }
+  };
+
+  Object.defineProperty(navigator, "mediaDevices", {
+    configurable: true,
+    value: mediaDevicesMock
+  });
+
+  window.__WINGIE_PROD_MOCK__.audio = {
+    events: audioEvents,
+    setAudioContext(value) {
+      window.AudioContext = value || MockAudioContext;
+      window.webkitAudioContext = value || MockAudioContext;
+    }
+  };
+  window.__WINGIE_PROD_MOCK__.audio.setAudioContext(null);
 })();
