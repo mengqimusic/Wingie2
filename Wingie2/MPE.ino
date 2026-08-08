@@ -291,15 +291,16 @@ void refresh_mpe_member_pitch(byte channel) {
 }
 
 // 0xD0 per-note 表情：按 owner channel 刷新声部 decay boost。
-// boost 由 apply_voice_pitch / apply_pitched_mode_channel 按表情源通道重写。
+// 直控语义：不要求 voice active——释放后的尾音继续跟随 pressure 回落（抬键过程），
+// 归零后自然回到基础 decay；voice 被重新分配后归属随 channel 更新自动切换。
 void refresh_mpe_member_expression(byte channel) {
   for (byte ch = 0; ch < 2; ch++) {
     if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
       for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
         const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
-        if (state.active && state.channel == channel) apply_voice_pitch(ch, voice);
+        if (state.channel == channel) apply_voice_pitch(ch, voice);
       }
-    } else if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel) {
+    } else if (mpeMonoState[ch].channel == channel) {
       refresh_mono_pitch(ch);
     }
   }

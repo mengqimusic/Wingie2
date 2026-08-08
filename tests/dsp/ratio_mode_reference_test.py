@@ -118,6 +118,7 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("mpe_pressure_decay_delta(voice_expression_channel(ch, voice))", mpe)
         self.assertIn("mpe_pressure_decay_delta(mono_expression_source(ch))", firmware)
         self.assertIn("reset_voice_expressions(ch)", mpe)
+        self.assertIn("if (state.channel == channel) apply_voice_pitch(ch, voice);", mpe)
         self.assertIn("handleChannelPressure", firmware)
         self.assertIn("MIDI.setHandleAfterTouchChannel(handleChannelPressure)", firmware)
         self.assertNotIn("mpe_cc74", mpe)

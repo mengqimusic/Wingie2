@@ -63,8 +63,11 @@ expression already established.
 - **Channel Pressure (0xD0) adds decay**: effective decay per voice = base decay + depth ×
   pressure / 127 seconds (additive, linear, depth 3 s hardcoded in `MPE.ino`). In Poly and Ratio
   Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it
-  applies to all resonators of the side (one owner). The boost latches: it stays on the ringing
-  tail after Note Off, and drops when a later pressure value (including 0) overwrites it.
+  applies to all resonators of the side (one owner). The mapping is directly pressure-driven: the
+  boost follows the channel pressure in real time, including after Note Off — a released tail
+  keeps following the pressure release (the "key-up" gesture shortens the tail as pressure falls),
+  and drops to the base decay when pressure reaches 0. It is latched only in the sense that the
+  onset burst value is established before the note sounds.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters. The
   DSP keeps the poly-stretch structure (`poly_stretch_*`, default 0) that was added for the
   rejected CC 74 stretch mapping: removing it changes the Faust 2.59.6-generated signal layout and
