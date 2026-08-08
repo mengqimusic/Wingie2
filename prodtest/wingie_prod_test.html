@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <title>Wingie2 产测</title>
+  <style>
+    /* ============================================================
+       Web 1.0 instrument-manual aesthetic (matches wingie_config).
+       Serif body, 90s bevel buttons, desaturated semantic alerts.
+       ============================================================ */
+
+    html {
+      box-sizing: border-box;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: inherit;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #c0c0c0;
+    }
+
+    #wingie-prod-test {
+      width: min(860px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+      border: 2px outset #fff;
+      background: #fff;
+      color: #000;
+      font: 16px/1.55 "Times New Roman", Times, "Noto Serif", serif;
+      font-variant-numeric: tabular-nums;
+    }
+
+    #wingie-prod-test h1 {
+      margin: 0 0 6px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 28px;
+      line-height: 1.2;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: .01em;
+    }
+
+    #wingie-prod-test .wpt-version {
+      margin: 0;
+      color: #444;
+      text-align: center;
+      font-family: "Courier New", monospace;
+      font-style: italic;
+    }
+
+    #wingie-prod-test .wpt-header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 24px;
+    }
+
+    #wingie-prod-test .wpt-header-bar #wpt-language {
+      flex: 0 0 auto;
+    }
+
+    #wingie-prod-test .wpt-header-bar #wpt-page-status {
+      flex: 1 1 auto;
+      text-align: right;
+    }
+
+    #wingie-prod-test h2 {
+      margin: 22px 0 8px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 21px;
+    }
+
+    #wingie-prod-test p {
+      margin: 6px 0;
+    }
+
+    #wingie-prod-test button {
+      font: inherit;
+      padding: 4px 14px;
+      border: 2px outset #fff;
+      background: #d4d0c8;
+      cursor: pointer;
+    }
+
+    #wingie-prod-test button:disabled {
+      color: #808080;
+      border-style: inset;
+      cursor: not-allowed;
+    }
+
+    #wingie-prod-test .wpt-row {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px 14px;
+      margin: 8px 0;
+    }
+
+    #wingie-prod-test .wpt-field {
+      margin: 4px 0;
+    }
+
+    #wingie-prod-test .wpt-field .wpt-label {
+      display: block;
+      color: #333;
+      font-size: 14px;
+    }
+
+    #wingie-prod-test .wpt-value {
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
+
+    #wingie-prod-test .wpt-alert {
+      margin: 10px 0;
+      padding: 8px 10px;
+      border: 1px solid #000;
+      white-space: pre-wrap;
+      background: #dcdcdc;
+    }
+
+    #wingie-prod-test .wpt-alert[data-kind="success"] {
+      background: #d8e8d0;
+    }
+
+    #wingie-prod-test .wpt-alert[data-kind="error"] {
+      background: #f0d8d0;
+    }
+
+    #wingie-prod-test .wpt-alert[data-kind="warning"] {
+      background: #f0e8c8;
+    }
+
+    #wingie-prod-test .wpt-section {
+      margin: 0 0 10px;
+      padding: 12px;
+      border: 1px solid #a0a0a0;
+      background: #f5f5f0;
+    }
+
+    #wingie-prod-test .wpt-status {
+      padding: 2px 8px;
+      border: 1px solid #808080;
+      background: #dcdcdc;
+      font-size: 14px;
+    }
+
+    #wingie-prod-test .wpt-status[data-state="ready"] {
+      background: #d8e8d0;
+    }
+
+    #wingie-prod-test .wpt-status[data-state="working"] {
+      background: #e8e0c0;
+    }
+
+    #wingie-prod-test .wpt-status[data-state="error"] {
+      background: #f0d8d0;
+    }
+
+    #wingie-prod-test .wpt-status[data-state="pass"] {
+      background: #c8e8c0;
+    }
+
+    #wingie-prod-test .wpt-status[data-state="fail"] {
+      background: #f0c8c0;
+    }
+
+    #wingie-prod-test .wpt-progress {
+      height: 18px;
+      margin: 8px 0;
+      border: 2px inset #fff;
+      background: #d4d0c8;
+    }
+
+    #wingie-prod-test .wpt-progress .wpt-progress-fill {
+      height: 100%;
+      width: 0;
+      background: repeating-linear-gradient(45deg, #0040ff 0 8px, #4080ff 8px 16px);
+    }
+
+    #wingie-prod-test .wpt-log {
+      height: 140px;
+      margin: 8px 0 0;
+      padding: 6px;
+      overflow: auto;
+      border: 2px inset #fff;
+      background: #fff;
+      font: 12px/1.5 "Courier New", monospace;
+      white-space: pre-wrap;
+    }
+
+    #wingie-prod-test .wpt-midi-live {
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #a0a0a0;
+      background: #fff;
+    }
+
+    #wingie-prod-test .wpt-note {
+      display: inline-block;
+      min-width: 64px;
+      padding: 2px 8px;
+      margin: 2px 10px 2px 0;
+      border: 1px solid #808080;
+      background: #e8e8e8;
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    #wingie-prod-test .wpt-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+      gap: 4px;
+      margin: 8px 0;
+    }
+
+    #wingie-prod-test .wpt-cell {
+      padding: 2px 4px;
+      border: 1px solid #a0a0a0;
+      background: #fff;
+      text-align: center;
+      font-size: 13px;
+    }
+
+    #wingie-prod-test .wpt-cell .wpt-cell-name {
+      color: #333;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    #wingie-prod-test .wpt-cell .wpt-cell-count {
+      font-family: "Courier New", monospace;
+      font-weight: 700;
+    }
+
+    #wingie-prod-test .wpt-cell[data-state="pass"] {
+      background: #c8e8c0;
+    }
+
+    #wingie-prod-test .wpt-cell[data-state="fail"] {
+      background: #f0c8c0;
+    }
+
+    #wingie-prod-test .wpt-footer {
+      margin: 20px 0 0;
+      color: #444;
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <script src="../nav.js"></script>
+  <main id="wingie-prod-test">
+    <h1>Wingie2 产测</h1>
+    <p class="wpt-version" data-i18n-zh="读取版本 · 一键刷机 · MIDI 检测 · 控件计数" data-i18n-en="Version · Flash · MIDI · Control check"></p>
+
+    <div class="wpt-header-bar">
+      <button id="wpt-language" type="button">中文 / EN</button>
+      <div id="wpt-page-status" class="wpt-status" data-state="idle"></div>
+    </div>
+
+    <div id="wpt-alert" class="wpt-alert" data-kind="info" data-visible="false" hidden></div>
+
+    <section class="wpt-section">
+      <h2 data-i18n-zh="1 · 串口与固件版本" data-i18n-en="1 · Serial &amp; firmware version"></h2>
+      <div class="wpt-row">
+        <button id="wpt-connect" type="button" data-i18n-zh="连接 Wingie2" data-i18n-en="Connect Wingie2"></button>
+        <button id="wpt-disconnect" type="button" data-i18n-zh="断开" data-i18n-en="Disconnect" hidden></button>
+        <span id="wpt-serial-status" class="wpt-status" data-state="idle">未连接</span>
+      </div>
+      <div class="wpt-field">
+        <span class="wpt-label" data-i18n-zh="设备固件版本" data-i18n-en="Device firmware"></span>
+        <span id="wpt-device-version" class="wpt-value">—</span>
+      </div>
+      <div class="wpt-field">
+        <span class="wpt-label" data-i18n-zh="最新固件版本（latest/ 目录）" data-i18n-en="Latest firmware (latest/ directory)"></span>
+        <span id="wpt-latest-version" class="wpt-value">—</span>
+        <button id="wpt-reload-latest" type="button" data-i18n-zh="重新读取" data-i18n-en="Reload"></button>
+      </div>
+      <div class="wpt-field">
+        <span class="wpt-label" data-i18n-zh="版本状态" data-i18n-en="Version status"></span>
+        <span id="wpt-version-status" class="wpt-status" data-state="idle"></span>
+      </div>
+    </section>
+
+    <section class="wpt-section">
+      <h2 data-i18n-zh="2 · 一键刷入最新固件" data-i18n-en="2 · Install latest firmware"></h2>
+      <p data-i18n-zh="以最新固件包（本页 latest/ 目录的 manifest.json 与四段镜像）覆盖设备应用区；用户设置保留，不擦除 NVS。" data-i18n-en="Writes the latest package (manifest.json and four images from this page's latest/ directory) over the device app area; user settings are preserved, NVS is not erased."></p>
+      <div class="wpt-row">
+        <button id="wpt-flash" type="button" data-i18n-zh="一键刷入最新固件" data-i18n-en="Install latest firmware" disabled></button>
+        <span id="wpt-flash-status" class="wpt-status" data-state="idle">待机</span>
+      </div>
+      <div class="wpt-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="wpt-progress-fill" class="wpt-progress-fill"></div>
+      </div>
+      <div id="wpt-progress-label" data-i18n-zh="待机" data-i18n-en="Idle"></div>
+      <div id="wpt-log" class="wpt-log"></div>
+    </section>
+
+    <section class="wpt-section">
+      <h2 data-i18n-zh="3 · MIDI 输入检测" data-i18n-en="3 · MIDI input test"></h2>
+      <p data-i18n-zh="点击开始后，从外部 MIDI 源（TRS 输入）发送至少一个音符：按下并松开。收到完整消息即判通过。" data-i18n-en="Start the test, then send at least one note (press and release) from an external MIDI source on the TRS input. Receiving complete messages passes the test."></p>
+      <div class="wpt-row">
+        <button id="wpt-midi-start" type="button" data-i18n-zh="开始测试" data-i18n-en="Start test" disabled></button>
+        <button id="wpt-midi-stop" type="button" data-i18n-zh="停止测试" data-i18n-en="Stop test" hidden></button>
+        <span id="wpt-midi-status" class="wpt-status" data-state="idle"></span>
+      </div>
+      <div class="wpt-midi-live">
+        <span class="wpt-label" data-i18n-zh="已接收 MIDI 消息总数" data-i18n-en="MIDI messages received"></span>
+        <span id="wpt-midi-rx" class="wpt-value">0</span>
+        <br>
+        <span class="wpt-label" data-i18n-zh="实时音符" data-i18n-en="Live notes"></span>
+        <span id="wpt-midi-note-left" class="wpt-note" data-i18n-zh="左 —" data-i18n-en="Left —"></span>
+        <span id="wpt-midi-note-right" class="wpt-note" data-i18n-zh="右 —" data-i18n-en="Right —"></span>
+      </div>
+      <div id="wpt-midi-result" class="wpt-field"></div>
+    </section>
+
+    <section class="wpt-section">
+      <h2 data-i18n-zh="4 · 控件监视" data-i18n-en="4 · Control monitor"></h2>
+      <p data-i18n-zh="打开开关后，逐一操作下列 34 个控件，计数实时累加。全部操作完后点“完成检查”。" data-i18n-en="Turn the monitor on, then operate each of the 34 controls below; counts accumulate live. Press “Finish check” when all are operated."></p>
+      <div class="wpt-row">
+        <label class="wpt-field">
+          <input id="wpt-monitor-toggle" type="checkbox">
+          <span data-i18n-zh="打开控件监视" data-i18n-en="Enable control monitor"></span>
+        </label>
+        <button id="wpt-counts-reset" type="button" data-i18n-zh="清零计数" data-i18n-en="Reset counts" disabled></button>
+        <button id="wpt-counts-finish" type="button" data-i18n-zh="完成检查" data-i18n-en="Finish check" disabled></button>
+        <span id="wpt-counts-status" class="wpt-status" data-state="idle"></span>
+      </div>
+      <div id="wpt-counts-result" class="wpt-field"></div>
+      <div id="wpt-controls">
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="左键（12）" data-i18n-en="Left keys (12)"></span>
+          <div class="wpt-grid" data-control-group="key:0">
+            <div class="wpt-cell" data-control="key:0:0"><div class="wpt-cell-name">C</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:1"><div class="wpt-cell-name">C#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:2"><div class="wpt-cell-name">D</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:3"><div class="wpt-cell-name">D#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:4"><div class="wpt-cell-name">E</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:5"><div class="wpt-cell-name">F</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:6"><div class="wpt-cell-name">F#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:7"><div class="wpt-cell-name">G</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:8"><div class="wpt-cell-name">G#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:9"><div class="wpt-cell-name">A</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:10"><div class="wpt-cell-name">A#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:0:11"><div class="wpt-cell-name">B</div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="右键（12）" data-i18n-en="Right keys (12)"></span>
+          <div class="wpt-grid" data-control-group="key:1">
+            <div class="wpt-cell" data-control="key:1:0"><div class="wpt-cell-name">C</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:1"><div class="wpt-cell-name">C#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:2"><div class="wpt-cell-name">D</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:3"><div class="wpt-cell-name">D#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:4"><div class="wpt-cell-name">E</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:5"><div class="wpt-cell-name">F</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:6"><div class="wpt-cell-name">F#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:7"><div class="wpt-cell-name">G</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:8"><div class="wpt-cell-name">G#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:9"><div class="wpt-cell-name">A</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:10"><div class="wpt-cell-name">A#</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="key:1:11"><div class="wpt-cell-name">B</div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="模式键（2）" data-i18n-en="Mode buttons (2)"></span>
+          <div class="wpt-grid" data-control-group="mode">
+            <div class="wpt-cell" data-control="mode:0"><div class="wpt-cell-name" data-i18n-zh="左" data-i18n-en="Left"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="mode:1"><div class="wpt-cell-name" data-i18n-zh="右" data-i18n-en="Right"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="八度键（4）" data-i18n-en="Octave buttons (4)"></span>
+          <div class="wpt-grid" data-control-group="oct">
+            <div class="wpt-cell" data-control="oct:0:0"><div class="wpt-cell-name" data-i18n-zh="左 −" data-i18n-en="L −"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="oct:0:1"><div class="wpt-cell-name" data-i18n-zh="左 +" data-i18n-en="L +"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="oct:1:0"><div class="wpt-cell-name" data-i18n-zh="右 −" data-i18n-en="R −"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="oct:1:1"><div class="wpt-cell-name" data-i18n-zh="右 +" data-i18n-en="R +"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="音源开关" data-i18n-en="Source switch"></span>
+          <div class="wpt-grid" data-control-group="source">
+            <div class="wpt-cell" data-control="source"><div class="wpt-cell-name" data-i18n-zh="MIC / LINE" data-i18n-en="MIC / LINE"></div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+        <div class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="电位器（3）" data-i18n-en="Pots (3)"></span>
+          <div class="wpt-grid" data-control-group="pot">
+            <div class="wpt-cell" data-control="pot:0"><div class="wpt-cell-name">Mix</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="pot:1"><div class="wpt-cell-name">Decay</div><div class="wpt-cell-count" data-count="0">0</div></div>
+            <div class="wpt-cell" data-control="pot:2"><div class="wpt-cell-name">Vol</div><div class="wpt-cell-count" data-count="0">0</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="wpt-footer" data-i18n-zh="桌面 Chrome / Edge · Web Serial · HTTPS · 最新固件包读取自本页 latest/ 目录" data-i18n-en="Desktop Chrome / Edge · Web Serial · HTTPS · Latest firmware is read from this page's latest/ directory"></footer>
+  </main>
+
+  <!-- WINGIE_PROD_TEST_MOCK -->
+  <script>
+    (() => {
+      "use strict";
+
+      const LATEST_MANIFEST_URL = "./latest/manifest.json";
+      const ESPTOOL_VENDOR_URL = "./latest/vendor/esptool-js.bundle.js";
+      const MD5_VENDOR_URL = "./latest/vendor/md5.min.js";
+      const ESPTOOL_JS_VERSION = "0.6.0";
+      const EXPECTED_CHIP = "ESP32";
+      const FLASH_SECTOR_SIZE = 0x1000;
+      const NVS_OFFSET = 0x9000;
+      const NVS_SIZE = 0x5000;
+      const MAX_APP_SIZE = 0x140000;
+      const BAUDRATE = 460800;
+      const ROM_HANDSHAKE_TIMEOUT_MS = 20000;
+      const FLASH_WRITE_TIMEOUT_MS = 180000;
+      const POLL_INTERVAL_MS = 500;
+      const MIDI_PASS_THRESHOLD = 2;
+      const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+      const EXPECTED_PARTS = [
+        {name: "bootloader", offset: 0x1000, label: "Bootloader"},
+        {name: "partitions", offset: 0x8000, label: "Partition Table"},
+        {name: "boot_app0", offset: 0xe000, label: "Boot App0"},
+        {name: "app", offset: 0x10000, label: "Wingie2 App"}
+      ];
+      const mock = window.__WINGIE_PROD_MOCK__ || null;
+
+      const root = document.querySelector("#wingie-prod-test");
+      const elements = {
+        language: root.querySelector("#wpt-language"),
+        pageStatus: root.querySelector("#wpt-page-status"),
+        alert: root.querySelector("#wpt-alert"),
+        connect: root.querySelector("#wpt-connect"),
+        disconnect: root.querySelector("#wpt-disconnect"),
+        serialStatus: root.querySelector("#wpt-serial-status"),
+        deviceVersion: root.querySelector("#wpt-device-version"),
+        latestVersion: root.querySelector("#wpt-latest-version"),
+        reloadLatest: root.querySelector("#wpt-reload-latest"),
+        versionStatus: root.querySelector("#wpt-version-status"),
+        flash: root.querySelector("#wpt-flash"),
+        flashStatus: root.querySelector("#wpt-flash-status"),
+        progress: root.querySelector(".wpt-progress"),
+        progressFill: root.querySelector("#wpt-progress-fill"),
+        progressLabel: root.querySelector("#wpt-progress-label"),
+        log: root.querySelector("#wpt-log"),
+        midiStart: root.querySelector("#wpt-midi-start"),
+        midiStop: root.querySelector("#wpt-midi-stop"),
+        midiStatus: root.querySelector("#wpt-midi-status"),
+        midiRx: root.querySelector("#wpt-midi-rx"),
+        midiNoteLeft: root.querySelector("#wpt-midi-note-left"),
+        midiNoteRight: root.querySelector("#wpt-midi-note-right"),
+        midiResult: root.querySelector("#wpt-midi-result"),
+        monitorToggle: root.querySelector("#wpt-monitor-toggle"),
+        countsReset: root.querySelector("#wpt-counts-reset"),
+        countsFinish: root.querySelector("#wpt-counts-finish"),
+        countsStatus: root.querySelector("#wpt-counts-status"),
+        countsResult: root.querySelector("#wpt-counts-result")
+      };
+
+      const state = {
+        port: null,
+        writer: null,
+        reader: null,
+        readLoop: null,
+        pendingRequests: new Map(),
+        nextId: 1,
+        inputBuffer: "",
+        disconnecting: false,
+        connected: false,
+        pollTimer: null,
+        deviceVersion: null,
+        latestVersion: null,
+        packageReady: false,
+        runtime: null,
+        images: [],
+        midiRx: 0,
+        notes: {left: null, right: null},
+        counts: null,
+        midiTestActive: false,
+        midiTestBaseline: 0,
+        midiTestPassed: false,
+        protocolSupported: true,
+        monitorActive: false,
+        checkFinished: false,
+        busy: false,
+        language: localStorage.getItem("wpt-lang") || (navigator.language && navigator.language.indexOf("zh") === 0 ? "zh" : "en"),
+        versionStatusLabel: null,
+        pageStatusLabel: null,
+        alertMessage: null
+      };
+
+      function copy(chinese, english) {
+        return {zh: chinese, en: english};
+      }
+
+      function languageText(chinese, english) {
+        return state.language === "zh" ? chinese : english;
+      }
+
+      function localized(message) {
+        if (!message) return "";
+        return typeof message === "string" ? message : message[state.language];
+      }
+
+      function noteName(note) {
+        if (!Number.isInteger(note) || note < 0 || note > 127) return "—";
+        return `${NOTE_NAMES[note % 12]}${Math.floor(note / 12) - 1}`;
+      }
+
+      function applyLanguage() {
+        root.querySelectorAll("[data-i18n-zh]").forEach((element) => {
+          element.textContent = state.language === "zh" ? element.dataset.i18nZh : element.dataset.i18nEn;
+        });
+        document.documentElement.lang = state.language === "zh" ? "zh-CN" : "en";
+        elements.language.textContent = state.language === "zh" ? "中文 / EN" : "EN / 中文";
+        elements.versionStatus.textContent = localized(state.versionStatusLabel);
+        elements.pageStatus.textContent = localized(state.pageStatusLabel);
+        elements.alert.textContent = localized(state.alertMessage);
+        elements.progressLabel.textContent = localized(state.progressLabelMessage);
+        renderMidiLive();
+        renderCounts();
+        renderControls();
+      }
+
+      function setStatus(node, status, text) {
+        node.dataset.state = status;
+        node.textContent = text;
+      }
+
+      function showAlert(message, kind = "info") {
+        state.alertMessage = message || null;
+        elements.alert.textContent = localized(state.alertMessage);
+        elements.alert.dataset.kind = kind;
+        elements.alert.dataset.visible = state.alertMessage ? "true" : "false";
+        elements.alert.hidden = !state.alertMessage;
+      }
+
+      function appendLog(message) {
+        const timestamp = new Date().toLocaleTimeString("zh-CN", {hour12: false});
+        elements.log.textContent += `[${timestamp}] ${String(message).trim()}\n`;
+        elements.log.scrollTop = elements.log.scrollHeight;
+      }
+
+      function setProgress(percent, label) {
+        const clipped = Math.max(0, Math.min(100, Number(percent) || 0));
+        elements.progressFill.style.width = `${clipped}%`;
+        elements.progress.setAttribute("aria-valuenow", String(Math.round(clipped)));
+        state.progressLabelMessage = label || copy(`${Math.round(clipped)}%`, `${Math.round(clipped)}%`);
+        elements.progressLabel.textContent = localized(state.progressLabelMessage);
+      }
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+        return `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
+      }
+
+      function hexadecimal(value) {
+        return `0x${value.toString(16)}`;
+      }
+
+      async function withTimeout(promise, milliseconds, message) {
+        let timer = null;
+        try {
+          return await Promise.race([
+            promise,
+            new Promise((resolve, reject) => {
+              timer = window.setTimeout(() => reject(new Error(message)), milliseconds);
+            })
+          ]);
+        } finally {
+          if (timer) window.clearTimeout(timer);
+        }
+      }
+
+      function flashSpanSize(size) {
+        return Math.ceil(size / FLASH_SECTOR_SIZE) * FLASH_SECTOR_SIZE;
+      }
+
+      function requireObject(value, label) {
+        if (!value || typeof value !== "object" || Array.isArray(value)) {
+          throw new Error(`${label} 格式不正确`);
+        }
+        return value;
+      }
+
+      function requireRelativePath(value, label) {
+        if (typeof value !== "string" || !value || value.startsWith("/") || value.includes("..") || value.includes(":") || value.includes("\\")) {
+          throw new Error(`${label} 必须是安全的相对路径`);
+        }
+        return value;
+      }
+
+      function validateManifest(input) {
+        const manifest = requireObject(input, "manifest");
+        if (manifest.schema !== 1) throw new Error("不支持此 manifest schema");
+        if (typeof manifest.name !== "string" || !manifest.name.trim()) throw new Error("manifest 缺少产品名称");
+        if (typeof manifest.version !== "string" || !manifest.version.trim()) throw new Error("manifest 缺少版本号");
+        if (manifest.chipFamily !== EXPECTED_CHIP) throw new Error("manifest 芯片必须为 ESP32");
+        if (manifest.esptoolJs !== ESPTOOL_JS_VERSION) throw new Error(`manifest 必须使用 esptool-js ${ESPTOOL_JS_VERSION}`);
+
+        const flash = requireObject(manifest.flash, "flash");
+        if (flash.mode !== "dio" || flash.frequency !== "80m" || flash.size !== "4MB" || flash.eraseAll !== false) {
+          throw new Error("manifest 的 flash 参数不符合 Wingie2 安全配置");
+        }
+
+        if (!Array.isArray(manifest.preserve) || manifest.preserve.length !== 1) {
+          throw new Error("manifest 必须明确声明唯一的 NVS 保留区");
+        }
+        const preserve = requireObject(manifest.preserve[0], "preserve[0]");
+        if (preserve.name !== "nvs" || preserve.offset !== NVS_OFFSET || preserve.size !== NVS_SIZE) {
+          throw new Error("manifest 的 NVS 保留区必须是 0x9000–0xdfff");
+        }
+
+        if (!Array.isArray(manifest.parts) || manifest.parts.length !== EXPECTED_PARTS.length) {
+          throw new Error("manifest 必须且只能包含四段 Wingie2 镜像");
+        }
+        const normalized = manifest.parts.map((part, index) => {
+          requireObject(part, `parts[${index}]`);
+          const expected = EXPECTED_PARTS[index];
+          if (part.name !== expected.name || part.offset !== expected.offset) {
+            throw new Error(`第 ${index + 1} 段必须是 ${expected.name} @ ${hexadecimal(expected.offset)}`);
+          }
+          if (part.offset % FLASH_SECTOR_SIZE !== 0) throw new Error(`${part.name} 的 offset 未按 4 KiB flash sector 对齐`);
+          if (!Number.isSafeInteger(part.size) || part.size <= 0) throw new Error(`${part.name} 的 size 无效`);
+          if (part.name === "app" && part.size > MAX_APP_SIZE) throw new Error("App 超过 0x140000 字节上限");
+          if (typeof part.sha256 !== "string" || !/^[0-9a-f]{64}$/i.test(part.sha256)) throw new Error(`${part.name} 的 SHA-256 无效`);
+          return {
+            name: part.name,
+            path: requireRelativePath(part.path, `${part.name}.path`),
+            offset: part.offset,
+            size: part.size,
+            sha256: part.sha256.toLowerCase()
+          };
+        });
+
+        normalized.forEach((part, index) => {
+          const next = normalized[index + 1];
+          const partEnd = part.offset + flashSpanSize(part.size);
+          if (next && partEnd > next.offset) throw new Error(`${part.name} 的 4 KiB 擦写范围与下一镜像区域重叠`);
+          const nvsEnd = NVS_OFFSET + NVS_SIZE;
+          if (part.offset < nvsEnd && partEnd > NVS_OFFSET) throw new Error(`${part.name} 的 4 KiB 擦写范围会进入 NVS 保留区`);
+        });
+        return {...manifest, parts: normalized};
+      }
+
+      async function sha256Hex(data) {
+        if (!globalThis.crypto || !crypto.subtle) throw new Error("浏览器缺少 SHA-256 支持，请使用最新版桌面 Chrome 或 Edge");
+        const digest = await crypto.subtle.digest("SHA-256", data);
+        return Array.from(new Uint8Array(digest), value => value.toString(16).padStart(2, "0")).join("");
+      }
+
+      async function verifyImage(part, data) {
+        if (!(data instanceof Uint8Array)) throw new Error(`${part.name} 不是有效的二进制镜像`);
+        if (data.length !== part.size) throw new Error(`${part.name} 大小不符：manifest ${part.size}，实际 ${data.length}`);
+        const actual = await sha256Hex(data);
+        if (actual !== part.sha256) throw new Error(`${part.name} 的 SHA-256 不匹配，发布包可能损坏`);
+        return {part, data};
+      }
+
+      async function downloadImage(part, manifestResponseUrl) {
+        const imageUrl = new URL(part.path, manifestResponseUrl);
+        const response = await fetch(imageUrl, {cache: "no-store"});
+        if (!response.ok) throw new Error(`读取 ${part.path} 失败（HTTP ${response.status}）`);
+        const data = new Uint8Array(await response.arrayBuffer());
+        return verifyImage(part, data);
+      }
+
+      // ---- version comparison ----
+
+      function versionNumbers(value) {
+        if (typeof value !== "string" || !value) return null;
+        const clean = value.replace(/^v/i, "").trim();
+        if (!clean || /^[0-9]*$/.test(clean)) return null;
+        const parts = clean.split(/[^0-9]+/).filter((part) => part.length > 0).map(Number);
+        if (parts.length === 0) return null;
+        while (parts.length < 4) parts.push(0);
+        return parts;
+      }
+
+      function compareVersions(left, right) {
+        const a = versionNumbers(left);
+        const b = versionNumbers(right);
+        if (!a && !b) return 0;
+        if (!a) return -1;
+        if (!b) return 1;
+        for (let index = 0; index < 4; index += 1) {
+          if (a[index] !== b[index]) return a[index] < b[index] ? -1 : 1;
+        }
+        return 0;
+      }
+
+      // ---- latest firmware package ----
+
+      async function loadLatestPackage() {
+        state.packageReady = false;
+        state.images = [];
+        state.latestVersion = null;
+        state.pageStatusLabel = copy("正在读取最新固件包…", "Reading latest firmware…");
+        applyLanguage();
+        try {
+          const manifestResponse = await fetch(LATEST_MANIFEST_URL, {cache: "no-store"});
+          if (!manifestResponse.ok) throw new Error(`读取 latest/manifest.json 失败（HTTP ${manifestResponse.status}）`);
+          const manifest = validateManifest(await manifestResponse.json());
+          const manifestResponseUrl = manifestResponse.url || new URL(LATEST_MANIFEST_URL, location.href).href;
+          state.images = [];
+          for (let index = 0; index < manifest.parts.length; index += 1) {
+            const part = manifest.parts[index];
+            setProgress(0, copy(`正在校验 ${part.name}…`, `Verifying ${part.name}…`));
+            state.images[index] = await downloadImage(part, manifestResponseUrl);
+          }
+          state.latestVersion = manifest.version;
+          elements.latestVersion.textContent = state.latestVersion;
+          state.packageReady = true;
+          state.pageStatusLabel = copy(`最新固件 ${manifest.version} · SHA-256 已校验`, `Latest firmware ${manifest.version} · SHA-256 verified`);
+          appendLog(`最新固件包 ${manifest.version} 的四段 SHA-256 校验通过`);
+          refreshVersionStatus();
+          showAlert("", "info");
+        } catch (error) {
+          state.pageStatusLabel = copy("未找到可用最新固件包（latest/ 目录）", "No latest firmware package found (latest/ directory)");
+          elements.latestVersion.textContent = "—";
+          showAlert(copy(`最新固件包读取失败：${error.message}`, `Failed to read latest firmware: ${error.message}`), "error");
+          appendLog(`最新固件包读取失败：${error.message}`);
+        } finally {
+          applyLanguage();
+          renderControls();
+        }
+      }
+
+      function refreshVersionStatus() {
+        const latest = state.latestVersion;
+        const device = state.deviceVersion;
+        if (!latest) {
+          state.versionStatusLabel = copy("无最新固件包可对比", "No latest package to compare");
+          setStatus(elements.versionStatus, "idle", localized(state.versionStatusLabel));
+          return;
+        }
+        if (!device) {
+          state.versionStatusLabel = copy("设备未识别版本（固件过旧），建议刷入最新固件", "Device version unknown (old firmware); install the latest firmware");
+          setStatus(elements.versionStatus, "warning", localized(state.versionStatusLabel));
+          return;
+        }
+        const comparison = compareVersions(device, latest);
+        if (comparison === 0) {
+          state.versionStatusLabel = copy(`设备已是最新（${device}）`, `Device is up to date (${device})`);
+          setStatus(elements.versionStatus, "pass", localized(state.versionStatusLabel));
+        } else if (comparison < 0) {
+          state.versionStatusLabel = copy(`设备 ${device} 可更新至 ${latest}`, `Device ${device} can be updated to ${latest}`);
+          setStatus(elements.versionStatus, "warning", localized(state.versionStatusLabel));
+        } else {
+          state.versionStatusLabel = copy(`设备 ${device} 比最新包 ${latest} 更新`, `Device ${device} is newer than the latest package ${latest}`);
+          setStatus(elements.versionStatus, "warning", localized(state.versionStatusLabel));
+        }
+      }
+
+      // ---- serial JSON protocol (wingie_config pattern) ----
+
+      async function readSerialLoop() {
+        const decoder = new TextDecoder();
+        try {
+          while (!state.disconnecting && state.port && state.port.readable) {
+            state.reader = state.port.readable.getReader();
+            try {
+              while (true) {
+                const {value, done} = await state.reader.read();
+                if (done) break;
+                state.inputBuffer += decoder.decode(value, {stream: true});
+                if (state.inputBuffer.length > 16384) {
+                  const lastNewline = state.inputBuffer.lastIndexOf("\n");
+                  state.inputBuffer = lastNewline >= 0 ? state.inputBuffer.slice(lastNewline + 1) : "";
+                }
+                let newline = state.inputBuffer.indexOf("\n");
+                while (newline >= 0) {
+                  const line = state.inputBuffer.slice(0, newline).trim();
+                  state.inputBuffer = state.inputBuffer.slice(newline + 1);
+                  if (line.startsWith("<")) receiveResponse(line.slice(1));
+                  newline = state.inputBuffer.indexOf("\n");
+                }
+              }
+            } finally {
+              state.reader.releaseLock();
+              state.reader = null;
+            }
+          }
+        } catch (error) {
+          if (state.connected && !state.disconnecting) transportLost(error);
+        }
+      }
+
+      function receiveResponse(text) {
+        let payload;
+        try {
+          payload = JSON.parse(text);
+        } catch {
+          return;
+        }
+        if (!Number.isInteger(payload.id)) return;
+        const pending = state.pendingRequests.get(payload.id);
+        if (!pending) return;
+        state.pendingRequests.delete(payload.id);
+        window.clearTimeout(pending.timer);
+        if (payload.ok) pending.resolve(payload);
+        else {
+          const error = new Error(payload.error && payload.error.code ? payload.error.code : "device_error");
+          error.payload = payload;
+          pending.reject(error);
+        }
+      }
+
+      async function sendLine(text) {
+        if (!state.writer) throw new Error(languageText("设备未连接。", "Device is not connected."));
+        await state.writer.write(new TextEncoder().encode(text));
+      }
+
+      function request(operation, payload = {}, timeout = 3500) {
+        const id = state.nextId++;
+        const body = {v: 1, id, op: operation, ...payload};
+        return new Promise((resolve, reject) => {
+          const timer = window.setTimeout(() => {
+            state.pendingRequests.delete(id);
+            reject(new Error(`${operation} timeout`));
+          }, timeout);
+          state.pendingRequests.set(id, {resolve, reject, timer});
+          sendLine(`@${JSON.stringify(body)}\n`).catch((error) => {
+            window.clearTimeout(timer);
+            state.pendingRequests.delete(id);
+            reject(error);
+          });
+        });
+      }
+
+      function rejectPendingRequests(error) {
+        for (const pending of state.pendingRequests.values()) {
+          window.clearTimeout(pending.timer);
+          pending.reject(error);
+        }
+        state.pendingRequests.clear();
+      }
+
+      async function helloWhenReady(timeout = 5000) {
+        const deadline = Date.now() + timeout;
+        while (true) {
+          try {
+            return await request("hello");
+          } catch (error) {
+            const code = error.payload && error.payload.error && error.payload.error.code;
+            if (code !== "busy" || Date.now() >= deadline) throw error;
+            await new Promise((resolve) => window.setTimeout(resolve, 100));
+          }
+        }
+      }
+
+      async function connect() {
+        showAlert("");
+        elements.connect.disabled = true;
+        setStatus(elements.serialStatus, "working", languageText("正在连接…", "Connecting…"));
+        try {
+          state.disconnecting = false;
+          state.port = await navigator.serial.requestPort();
+          await state.port.open({baudRate: 115200});
+          state.writer = state.port.writable.getWriter();
+          state.readLoop = readSerialLoop();
+          const hello = await helloWhenReady();
+          if (hello.device !== "Wingie2") throw new Error(languageText("所选设备不是 Wingie2。", "The selected device is not a Wingie2."));
+          state.deviceVersion = typeof hello.firmware === "string" && hello.firmware ? hello.firmware : null;
+          state.protocolSupported = true;
+          state.connected = true;
+          elements.deviceVersion.textContent = state.deviceVersion || languageText("未知（固件过旧）", "Unknown (old firmware)");
+          refreshVersionStatus();
+          startPolling();
+          setStatus(elements.serialStatus, "ready", languageText("Wingie2 已连接", "Connected"));
+          showAlert(copy("已连接；设备每 500ms 上报控件计数与 MIDI 统计。", "Connected; the device reports control counts and MIDI stats every 500 ms."), "success");
+        } catch (error) {
+          await disconnect(false);
+          setStatus(elements.serialStatus, "error", languageText("连接失败", "Connection failed"));
+          showAlert(copy(`连接失败：${error.message}`, `Connection failed: ${error.message}`), "error");
+        } finally {
+          renderControls();
+        }
+      }
+
+      function transportLost(error) {
+        disconnect(false).finally(() => {
+          showAlert(copy(`连接已断开：${error.message}`, `Connection lost: ${error.message}`), "error");
+          setStatus(elements.serialStatus, "error", languageText("已断开", "Disconnected"));
+        });
+      }
+
+      async function disconnect(announce = true) {
+        stopPolling();
+        state.disconnecting = true;
+        state.connected = false;
+        rejectPendingRequests(new Error(languageText("设备已断开。", "Device disconnected.")));
+        try {
+          if (state.reader) await state.reader.cancel();
+        } catch {
+        }
+        try {
+          if (state.readLoop) await state.readLoop;
+        } catch {
+        }
+        try {
+          if (state.writer) {
+            state.writer.releaseLock();
+            state.writer = null;
+          }
+          if (state.port) await state.port.close();
+        } catch {
+        }
+        state.port = null;
+        state.disconnecting = false;
+        state.inputBuffer = "";
+        setStatus(elements.serialStatus, "idle", languageText("未连接", "Not connected"));
+        if (announce) showAlert(copy("已断开。", "Disconnected."), "info");
+        renderControls();
+      }
+
+      // ---- polling ----
+
+      function stopPolling() {
+        if (state.pollTimer !== null) window.clearInterval(state.pollTimer);
+        state.pollTimer = null;
+      }
+
+      function startPolling() {
+        stopPolling();
+        state.pollTimer = window.setInterval(() => {
+          pollTick().catch(() => undefined);
+        }, POLL_INTERVAL_MS);
+      }
+
+      async function pollTick() {
+        let response;
+        try {
+          response = await request("get_controls");
+        } catch (error) {
+          const code = error.payload && error.payload.error && error.payload.error.code;
+          if (code === "unknown_operation") {
+            state.protocolSupported = false;
+            stopPolling();
+            showAlert(copy("设备固件过旧，不支持 get_controls 命令；请先刷入最新固件。", "Device firmware is too old and does not support get_controls; install the latest firmware first."), "warning");
+            setStatus(elements.serialStatus, "warning", languageText("固件过旧", "Old firmware"));
+            renderControls();
+          }
+          return;
+        }
+        state.midiRx = Number(response.midi_rx) || 0;
+        state.notes = response.note || state.notes;
+        state.counts = response.counts || state.counts;
+        renderMidiLive();
+        if (state.midiTestActive) evaluateMidiTest();
+        if (state.monitorActive) {
+          renderCounts();
+        }
+      }
+
+      // ---- MIDI input test ----
+
+      function renderMidiLive() {
+        elements.midiRx.textContent = String(state.midiRx);
+        elements.midiNoteLeft.textContent = state.notes && Number.isInteger(state.notes.left)
+          ? noteName(state.notes.left)
+          : languageText("左 —", "Left —");
+        elements.midiNoteRight.textContent = state.notes && Number.isInteger(state.notes.right)
+          ? noteName(state.notes.right)
+          : languageText("右 —", "Right —");
+      }
+
+      function startMidiTest() {
+        state.midiTestBaseline = state.midiRx;
+        state.midiTestPassed = false;
+        state.midiTestActive = true;
+        setStatus(elements.midiStatus, "working", languageText("测试中：请发送音符…", "Testing: send notes…"));
+        elements.midiResult.textContent = "";
+        renderControls();
+      }
+
+      function stopMidiTest() {
+        state.midiTestActive = false;
+        setStatus(elements.midiStatus, "idle", languageText("已停止", "Stopped"));
+        renderControls();
+      }
+
+      function evaluateMidiTest() {
+        if (state.midiTestPassed) return;
+        const received = Math.max(0, state.midiRx - state.midiTestBaseline);
+        if (received >= MIDI_PASS_THRESHOLD) {
+          state.midiTestPassed = true;
+          state.midiTestActive = false;
+          setStatus(elements.midiStatus, "pass", languageText("通过：MIDI 输入正常", "Passed: MIDI input is working"));
+          elements.midiResult.textContent = languageText(`已收到 ${received} 条消息，输入通路正常。`, `Received ${received} messages; input path is healthy.`);
+          renderControls();
+        } else {
+          elements.midiResult.textContent = languageText(`已收到 ${received} 条消息，继续发送音符…`, `Received ${received} messages so far; keep sending notes…`);
+        }
+      }
+
+      // ---- control monitor ----
+
+      function countValue(controlKey, counts) {
+        if (!counts) return 0;
+        const parts = controlKey.split(":");
+        switch (parts[0]) {
+          case "key": {
+            const side = parts[1] === "0" ? "left" : "right";
+            const keys = counts.key && counts.key[side];
+            return keys ? Number(keys[Number(parts[2])]) || 0 : 0;
+          }
+          case "mode": {
+            const buttons = counts.mode_button;
+            return buttons ? Number(buttons[Number(parts[1])]) || 0 : 0;
+          }
+          case "oct": {
+            const side = parts[1] === "0" ? "left" : "right";
+            const buttons = counts.oct_button && counts.oct_button[side];
+            return buttons ? Number(buttons[Number(parts[2])]) || 0 : 0;
+          }
+          case "source":
+            return Number(counts.source_switch) || 0;
+          case "pot": {
+            const pots = counts.pot;
+            return pots ? Number(pots[Number(parts[1])]) || 0 : 0;
+          }
+          default:
+            return 0;
+        }
+      }
+
+      function renderCounts() {
+        root.querySelectorAll(".wpt-cell").forEach((cell) => {
+          const count = countValue(cell.dataset.control, state.counts);
+          cell.querySelector(".wpt-cell-count").textContent = String(count);
+          if (state.checkFinished) {
+            cell.dataset.state = count >= 1 ? "pass" : "fail";
+          } else {
+            delete cell.dataset.state;
+          }
+        });
+      }
+
+      async function resetCounts() {
+        try {
+          await request("get_controls", {reset: true});
+          state.counts = null;
+          state.checkFinished = false;
+          renderCounts();
+          elements.countsResult.textContent = "";
+          setStatus(elements.countsStatus, "idle", languageText("计数已清零", "Counts reset"));
+          appendLog("控件计数已清零");
+        } catch (error) {
+          showAlert(copy(`清零失败：${error.message}`, `Reset failed: ${error.message}`), "error");
+        }
+      }
+
+      function finishCheck() {
+        if (!state.counts) {
+          showAlert(copy("尚未收到任何计数，请先打开控件监视。", "No counts received yet; enable the control monitor first."), "warning");
+          return;
+        }
+        state.checkFinished = true;
+        const missing = [];
+        root.querySelectorAll(".wpt-cell").forEach((cell) => {
+          const count = countValue(cell.dataset.control, state.counts);
+          if (count < 1) missing.push(cell.querySelector(".wpt-cell-name").textContent + "(" + cell.dataset.control + ")");
+        });
+        renderCounts();
+        if (missing.length === 0) {
+          setStatus(elements.countsStatus, "pass", languageText("全部通过", "All passed"));
+          elements.countsResult.textContent = languageText("34 个控件均已操作，硬件控件检查通过。", "All 34 controls were operated; the hardware control check passed.");
+        } else {
+          setStatus(elements.countsStatus, "fail", languageText(`未操作 ${missing.length} 个控件`, `${missing.length} controls not operated`));
+          elements.countsResult.textContent = languageText(`以下控件计数为 0：${missing.join("，")}`, `Controls with zero counts: ${missing.join(", ")}`);
+        }
+      }
+
+      // ---- flashing ----
+
+      function loadClassicScript(url) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = url;
+          script.async = true;
+          script.addEventListener("load", resolve, {once: true});
+          script.addEventListener("error", () => reject(new Error(`无法加载 ${url}`)), {once: true});
+          document.head.append(script);
+        });
+      }
+
+      async function loadRuntime() {
+        if (state.runtime) return state.runtime;
+        if (mock && mock.esptool) {
+          if (typeof window.md5 !== "function" && typeof mock.md5 === "function") window.md5 = mock.md5;
+          state.runtime = mock.esptool;
+        } else {
+          await loadClassicScript(MD5_VENDOR_URL);
+          state.runtime = await import(ESPTOOL_VENDOR_URL);
+        }
+        if (!state.runtime || typeof state.runtime.Transport !== "function" || typeof state.runtime.ESPLoader !== "function") {
+          throw new Error("esptool-js 0.6.0 未正确加载");
+        }
+        if (typeof window.md5 !== "function") throw new Error("MD5 校验组件未正确加载");
+        return state.runtime;
+      }
+
+      function terminal() {
+        return {
+          clean() {},
+          writeLine(data) { appendLog(data); },
+          write(data) { appendLog(data); }
+        };
+      }
+
+      async function hardResetToApplication(transport) {
+        if (!transport || typeof transport.setDTR !== "function" || typeof transport.setRTS !== "function") {
+          throw new Error(languageText("串口 transport 不支持 DTR/RTS 硬件复位。", "Serial transport does not support DTR/RTS hardware reset."));
+        }
+        await transport.setDTR(false);
+        await transport.setRTS(true);
+        await new Promise(resolve => window.setTimeout(resolve, 100));
+        await transport.setRTS(false);
+        await new Promise(resolve => window.setTimeout(resolve, 200));
+        await transport.setDTR(false);
+      }
+
+      function isMd5Mismatch(error) {
+        return /md5.*(does not match|mismatch)|不匹配/i.test(error && error.message ? error.message : String(error));
+      }
+
+      function connectionMessage(error) {
+        const name = error && error.name ? error.name : "";
+        const message = error && error.message ? error.message : String(error);
+        const lower = message.toLowerCase();
+        if (name === "NotFoundError") return copy("没有选择串口。请重新连接并选择 Wingie2。", "No serial port was selected. Reconnect and choose Wingie2.");
+        if (name === "SecurityError" || lower.includes("secure context")) return copy("浏览器阻止了串口访问。请用桌面版 Chrome 或 Edge 通过 HTTPS 打开此页面。", "Serial access was blocked. Open this page over HTTPS in desktop Chrome or Edge.");
+        if (name === "NetworkError" || lower.includes("busy") || lower.includes("already open") || lower.includes("access denied")) {
+          return copy("串口可能被占用。请关闭配置页、串口监视器和 Arduino IDE，拔插 USB 后重试。", "The serial port may be busy. Close configuration pages, serial monitors, and Arduino IDE, reconnect USB, and try again.");
+        }
+        if (lower.includes("driver") || lower.includes("no device") || lower.includes("device unavailable")) {
+          return copy("系统没有识别 USB 串口。请更换 USB 数据线或 USB 口，并安装串口驱动。", "The USB serial port was not found. Try another data cable or USB port and install the serial driver.");
+        }
+        if (lower.includes("wrong chip") || lower.includes("expected esp32")) {
+          return copy("错误芯片：所选串口不是 Wingie2。请选择正确设备。", "Wrong device: the selected port is not a Wingie2. Choose the correct device.");
+        }
+        return copy("无法进入安装模式。请关闭占用串口的软件，拔插 USB 后重试；仍失败时，可按住设备 BOOT 键再点击连接。", "Could not enter installation mode. Close software using the port, reconnect USB, and try again. If it still fails, hold BOOT while connecting.");
+      }
+
+      async function flashFirmware() {
+        if (state.busy || !state.packageReady) return;
+        const latest = state.latestVersion;
+        const device = state.deviceVersion;
+        if (device && latest && compareVersions(device, latest) > 0) {
+          const proceed = window.confirm(languageText(
+            `设备固件 ${device} 比最新包 ${latest} 更新。仍要刷入 ${latest}（降级）吗？`,
+            `Device firmware ${device} is newer than the latest package ${latest}. Install ${latest} (downgrade) anyway?`
+          ));
+          if (!proceed) return;
+        } else if (latest) {
+          const proceed = window.confirm(languageText(
+            `确认将 Wingie2 刷入最新固件 ${latest}？用户设置会保留。`,
+            `Install latest firmware ${latest} on the Wingie2? User settings are retained.`
+          ));
+          if (!proceed) return;
+        }
+        state.busy = true;
+        showAlert("");
+        setStatus(elements.flashStatus, "working", languageText("准备中…", "Preparing…"));
+        state.pageStatusLabel = copy("正在刷入最新固件…", "Installing latest firmware…");
+        applyLanguage();
+        renderControls();
+        try {
+          if (state.connected) {
+            appendLog("先断开配置串口，再进入刷机模式");
+            await disconnect(false);
+          }
+          const runtime = await loadRuntime();
+          setStatus(elements.flashStatus, "working", languageText("选择串口", "Select port"));
+          const selectedPort = await navigator.serial.requestPort();
+          const transport = new runtime.Transport(selectedPort, false);
+          const loader = new runtime.ESPLoader({
+            transport,
+            baudrate: BAUDRATE,
+            terminal: terminal(),
+            debugLogging: false
+          });
+          appendLog("开始 ROM bootloader 握手");
+          const description = await withTimeout(loader.main("default_reset"), ROM_HANDSHAKE_TIMEOUT_MS, "ROM bootloader 握手超时（USB 无响应或未进入下载模式）");
+          const chipName = loader.chip && loader.chip.CHIP_NAME;
+          if (chipName !== EXPECTED_CHIP) {
+            const wrongChip = chipName || description || "未知芯片";
+            throw new Error(`错误芯片：检测到 ${wrongChip}，此固件只允许写入 ESP32。`);
+          }
+          for (let index = 0; index < state.images.length; index += 1) {
+            const image = state.images[index];
+            const expected = EXPECTED_PARTS[index];
+            const localMd5 = window.md5(image.data);
+            if (typeof localMd5 !== "string" || !/^[0-9a-f]{32}$/i.test(localMd5)) throw new Error("MD5 组件返回了无效结果");
+            appendLog(`写入 ${expected.label} @ ${hexadecimal(image.part.offset)}`);
+            await withTimeout(loader.writeFlash({
+              fileArray: [{data: image.data, address: image.part.offset}],
+              flashMode: "dio",
+              flashFreq: "80m",
+              flashSize: "4MB",
+              eraseAll: false,
+              compress: true,
+              calculateMD5Hash: window.md5,
+              reportProgress(_fileIndex, written, total) {
+                const withinPart = total ? written / total : 0;
+                const overall = ((index + withinPart) / state.images.length) * 100;
+                setProgress(overall, copy(`正在安装… ${Math.round(overall)}%`, `Installing… ${Math.round(overall)}%`));
+              }
+            }), FLASH_WRITE_TIMEOUT_MS, "写入超时（USB 连接可能中断）");
+          }
+          setProgress(100, copy("安装完成", "Installation complete"));
+          appendLog("全部镜像写入并校验通过，执行 DTR/RTS 硬件复位");
+          let resetCompleted = false;
+          try {
+            await hardResetToApplication(transport);
+            resetCompleted = true;
+            appendLog("硬件复位完成，释放串口");
+          } catch (resetError) {
+            appendLog(`镜像已验证，但自动重启未确认：${resetError.message || resetError}`);
+          }
+          if (transport && typeof transport.disconnect === "function") {
+            try { await transport.disconnect(); } catch (_) {}
+          }
+          setStatus(elements.flashStatus, "pass", languageText("刷机完成", "Installation complete"));
+          state.pageStatusLabel = resetCompleted
+            ? copy(`刷机完成：已写入 ${latest || ""}，请点击“连接 Wingie2”验证版本`, `Installation complete: ${latest || ""} written. Click “Connect Wingie2” to verify the version.`)
+            : copy("刷机完成：请拔插 USB，再点击“连接 Wingie2”验证版本", "Installation complete: reconnect USB, then click “Connect Wingie2” to verify the version.");
+          showAlert(resetCompleted
+            ? copy("刷机完成，Wingie2 已重启。点击“连接 Wingie2”验证新版本。", "Installation complete and Wingie2 restarted. Click “Connect Wingie2” to verify the new version.")
+            : copy("刷机完成，但未确认自动重启。请拔插 USB 后点击“连接 Wingie2”。", "Installation complete, but automatic restart was not confirmed. Reconnect USB, then click “Connect Wingie2”."),
+            resetCompleted ? "success" : "warning");
+        } catch (error) {
+          appendLog(`刷机失败：${error.message || error}`);
+          setStatus(elements.flashStatus, "error", languageText("刷机失败", "Installation failed"));
+          state.pageStatusLabel = copy("刷机失败，请重试", "Installation failed; retry");
+          if (isMd5Mismatch(error)) {
+            showAlert(copy("安装校验失败，已安全停止。请保持 USB 连接并重试。", "Verification failed and installation stopped safely. Keep USB connected and retry."), "error");
+          } else {
+            showAlert(connectionMessage(error), "error");
+          }
+        } finally {
+          state.busy = false;
+          renderControls();
+          applyLanguage();
+        }
+      }
+
+      // ---- controls rendering ----
+
+      function renderControls() {
+        elements.connect.disabled = state.busy;
+        elements.connect.hidden = state.connected;
+        elements.disconnect.hidden = !state.connected;
+        elements.disconnect.disabled = state.busy;
+        elements.reloadLatest.disabled = state.busy;
+        elements.flash.disabled = !state.packageReady || state.busy;
+        elements.midiStart.disabled = !state.connected || state.busy || state.midiTestActive || !state.protocolSupported;
+        elements.midiStop.hidden = !state.midiTestActive;
+        elements.midiStop.disabled = state.busy;
+        elements.monitorToggle.disabled = !state.connected || state.busy || !state.protocolSupported;
+        elements.countsReset.disabled = !state.connected || state.busy || !state.monitorActive;
+        elements.countsFinish.disabled = !state.connected || state.busy || !state.monitorActive;
+      }
+
+      // ---- events ----
+
+      elements.language.addEventListener("click", () => {
+        state.language = state.language === "zh" ? "en" : "zh";
+        localStorage.setItem("wpt-lang", state.language);
+        applyLanguage();
+      });
+      elements.connect.addEventListener("click", connect);
+      elements.disconnect.addEventListener("click", async () => {
+        await disconnect();
+        showAlert(copy("Wingie2 已断开。", "Wingie2 disconnected."), "info");
+      });
+      elements.reloadLatest.addEventListener("click", loadLatestPackage);
+      elements.flash.addEventListener("click", flashFirmware);
+      elements.midiStart.addEventListener("click", startMidiTest);
+      elements.midiStop.addEventListener("click", stopMidiTest);
+      elements.monitorToggle.addEventListener("change", () => {
+        state.monitorActive = elements.monitorToggle.checked;
+        state.checkFinished = false;
+        elements.countsResult.textContent = "";
+        if (state.monitorActive) {
+          state.counts = null;
+          setStatus(elements.countsStatus, "working", languageText("监视中：请逐一操作控件…", "Monitoring: operate each control…"));
+        } else {
+          setStatus(elements.countsStatus, "idle", languageText("已停止", "Stopped"));
+        }
+        renderControls();
+        renderCounts();
+      });
+      elements.countsReset.addEventListener("click", resetCounts);
+      elements.countsFinish.addEventListener("click", finishCheck);
+      if (navigator.serial && typeof navigator.serial.addEventListener === "function") {
+        navigator.serial.addEventListener("disconnect", event => {
+          if (state.port && event.target === state.port) {
+            showAlert(copy("USB 已断开。请重新插好数据线并继续。", "USB disconnected. Reconnect the cable to continue."), "warning");
+            disconnect(false);
+          }
+        });
+      }
+
+      // ---- test hooks ----
+
+      if (mock) {
+        window.__WINGIE_PROD_PAGE__ = {
+          connect,
+          disconnect: () => disconnect(),
+          flash: flashFirmware,
+          loadLatest: loadLatestPackage,
+          startMidiTest,
+          stopMidiTest,
+          setMonitor(active) {
+            elements.monitorToggle.checked = Boolean(active);
+            elements.monitorToggle.dispatchEvent(new Event("change", {bubbles: true}));
+          },
+          resetCounts,
+          finishCheck,
+          pollTick,
+          snapshot() {
+            return {
+              connected: state.connected,
+              portReleased: state.port === null,
+              deviceVersion: state.deviceVersion,
+              latestVersion: state.latestVersion,
+              packageReady: state.packageReady,
+              busy: state.busy,
+              midiRx: state.midiRx,
+              midiTestActive: state.midiTestActive,
+              midiTestPassed: state.midiTestPassed,
+              monitorActive: state.monitorActive,
+              checkFinished: state.checkFinished,
+              counts: state.counts ? JSON.parse(JSON.stringify(state.counts)) : null
+            };
+          }
+        };
+      }
+
+      renderCounts();
+      renderControls();
+      applyLanguage();
+      loadLatestPackage();
+    })();
+  </script>
+</body>
+</html>
