@@ -93,6 +93,30 @@ void testConventionalAndMpePitchRemainIsolated() {
   assert(fabsf(totalPitchBend(true, 2.0f, -1.0f, 6.0f) - 5.0f) < 0.0001f);
 }
 
+void testChannelExpressionState() {
+  State state;
+  state.reset();
+  assert(state.pressure(2) == 0);
+  assert(state.cc74(2) == 0);
+  state.setPressure(2, 127);
+  state.setCc74(2, 64);
+  assert(state.pressure(2) == 127);
+  assert(state.cc74(2) == 64);
+  assert(state.pressure(1) == 0);
+  assert(state.cc74(1) == 0);
+  state.setPressure(0, 99);
+  state.setCc74(17, 99);
+  assert(state.pressure(0) == 0);
+  assert(state.cc74(17) == 0);
+  state.setPressure(16, 0);
+  state.setCc74(16, 0);
+  assert(state.pressure(16) == 0);
+  assert(state.cc74(16) == 0);
+  state.reset();
+  assert(state.pressure(2) == 0);
+  assert(state.cc74(2) == 0);
+}
+
 int main() {
   testFullZoneClaimsAllChannels();
   testEmptyZoneClaimsNothing();
@@ -100,5 +124,6 @@ int main() {
   testPitchBendRangesAndEndpoints();
   testVoiceOwnershipAndStealing();
   testConventionalAndMpePitchRemainIsolated();
+  testChannelExpressionState();
   return 0;
 }

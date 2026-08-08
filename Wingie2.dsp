@@ -21,6 +21,10 @@ anti_feedback_enabled = hslider("../../anti_feedback_enabled", 1, 0, 1, 1);
 anti_feedback_energy_limit = hslider("../../anti_feedback_energy_limit", 1, 0.000001, 65536, 0.000001);
 anti_feedback_rho_guard = hslider("../../anti_feedback_rho_guard", 0.998435, 0.001, 0.999999, 0.000001);
 decay = hslider("decay", 5, 0.1, 10, 0.01) : si.smoo;
+// per-voice decay boost (MPE channel pressure, additive seconds; index/3 分组，每声部三个共鸣器)
+decay_boost_0 = hslider("decay_boost_0", 0, 0, 10, 0.01);
+decay_boost_1 = hslider("decay_boost_1", 0, 0, 10, 0.01);
+decay_boost_2 = hslider("decay_boost_2", 0, 0, 10, 0.01);
 output_gain = 1 : ba.lin2LogGain;
 left_thresh = hslider("left_thresh", 0.1, 0, 1, 0.01);
 right_thresh = hslider("right_thresh", 0.1, 0, 1, 0.01);
@@ -123,9 +127,16 @@ pn2 = vslider("poly_note_2", 36, 24, 96, 1);
 pr0 = vslider("poly_pitch_ratio_0", 1, 0.00000762939453125, 131072, 0.000001);
 pr1 = vslider("poly_pitch_ratio_1", 1, 0.00000762939453125, 131072, 0.000001);
 pr2 = vslider("poly_pitch_ratio_2", 1, 0.00000762939453125, 131072, 0.000001);
+// per-voice timbre stretch (MPE CC74): 声部内第 k 个泛音乘 (1 + s*k/(P-1))，P=3
+ps0 = hslider("poly_stretch_0", 0, 0, 1, 0.001);
+ps1 = hslider("poly_stretch_1", 0, 0, 1, 0.001);
+ps2 = hslider("poly_stretch_2", 0, 0, 1, 0.001);
+
+partial2(x, s) = x * 2 * (1 + s / 2);
+partial3(x, s) = x * 3 * (1 + s);
 
 // standard tuning poly mode
-poly_norm(n) = a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3 : ba.selectn(nHarmonics, n)
+poly_norm(n) = a, partial2(a, ps0), partial3(a, ps0), b, partial2(b, ps1), partial3(b, ps1), c, partial2(c, ps2), partial3(c, ps2) : ba.selectn(nHarmonics, n)
 with
 {
     a = (pn0 : mtof) * pr0;
@@ -134,20 +145,12 @@ with
 };
 
 // alt tuning poly mode
-poly_quantized(n, tuning) = a1, a2, a3, b1, b2, b3, c1, c2, c3 : ba.selectn(nHarmonics, n)
+poly_quantized(n, tuning) = a1, partial2(a1, ps0), partial3(a1, ps0), b1, partial2(b1, ps1), partial3(b1, ps1), c1, partial2(c1, ps2), partial3(c1, ps2) : ba.selectn(nHarmonics, n)
 with
 {
     a1 = (pn0 : mtoq) * pr0;
-    a2 = (pn0 : mtoq2) * pr0;
-    a3 = (pn0 : mtoq3) * pr0;
-
     b1 = (pn1 : mtoq) * pr1;
-    b2 = (pn1 : mtoq2) * pr1;
-    b3 = (pn1 : mtoq3) * pr1;
-
     c1 = (pn2 : mtoq) * pr2;
-    c2 = (pn2 : mtoq2) * pr2;
-    c3 = (pn2 : mtoq3) * pr2;
 };
 
 poly(n) = poly_norm(n), poly_quantized(n) : ba.selectn(2, use_alt_tuning);
@@ -202,7 +205,7 @@ r(index, source) = blockRateMode(a, b, ba.lin2LogGain(c))
 with
 {
   a = max(16, min(f(index, source), 16000));
-  b = decay;
+  b = decay + select2(index >= 6, select2(index >= 3, decay_boost_0, decay_boost_1), decay_boost_2);
   c = env_mute(button("mute_%index"));
 };
 

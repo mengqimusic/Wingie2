@@ -2,6 +2,52 @@ float mpe_manager_bend() {
   return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
 
+// MPE 0xD0/CC74 映射常量：深度与曲线硬编码，真机听调定值。
+const float kPressureDecayDepthSeconds = 3.0f; // pressure=127 → decay +3s
+const float kCc74StretchDepth = 1.0f;          // cc74=127 → 拉伸 δ=1.0（顶泛音 ×2）
+
+float mpe_pressure_decay_delta(byte channel) {
+  return kPressureDecayDepthSeconds * mpe_state.pressure(channel) / 127.0f;
+}
+
+float mpe_cc74_stretch(byte channel) {
+  return kCc74StretchDepth * mpe_state.cc74(channel) / 127.0f;
+}
+
+void set_decay_boost(byte ch, byte voice, float seconds) {
+  char path[40];
+  snprintf(path, sizeof(path), ch ? "/Wingie/right/decay_boost_%u" : "/Wingie/left/decay_boost_%u", voice);
+  dsp.setParamValue(path, seconds);
+}
+
+void set_poly_stretch(byte ch, byte voice, float stretch) {
+  char path[40];
+  snprintf(path, sizeof(path), ch ? "/Wingie/right/poly_stretch_%u" : "/Wingie/left/poly_stretch_%u", voice);
+  dsp.setParamValue(path, stretch);
+}
+
+void set_side_decay_boost(byte ch, float seconds) {
+  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) set_decay_boost(ch, voice, seconds);
+}
+
+void reset_voice_expressions(byte ch) {
+  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
+    set_decay_boost(ch, voice, 0.0f);
+    set_poly_stretch(ch, voice, 0.0f);
+  }
+}
+
+// 声部表情源通道：MPE voice 用 owner channel；conventional 用该侧路由通道。
+byte voice_expression_channel(byte ch, byte voice) {
+  const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+  return state.channel != 0 ? state.channel : conventionalPitchChannel[ch];
+}
+
+// 单音（String/Bar）表情源通道：MPE mono owner 优先，否则该侧路由通道。
+byte mono_expression_source(byte ch) {
+  return mpeMonoState[ch].active ? mpeMonoState[ch].channel : conventionalPitchChannel[ch];
+}
+
 float mono_total_bend(byte ch) {
   return wingie_mpe::totalPitchBend(mpeMonoState[ch].channel != 0, conventionalPitchBend[ch],
                                     mpe_manager_bend(), mpeMonoState[ch].memberBendSemitones);
@@ -14,12 +60,16 @@ float poly_total_bend(byte ch, byte voice) {
 }
 
 void set_poly_voice_dsp(byte ch, byte voice, byte noteValue, float bendSemitones) {
+  const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
   char notePath[48];
   char ratioPath[48];
+  char stretchPath[48];
   snprintf(notePath, sizeof(notePath), ch ? "/Wingie/right/poly_note_%u" : "/Wingie/left/poly_note_%u", voice);
   snprintf(ratioPath, sizeof(ratioPath), ch ? "/Wingie/right/poly_pitch_ratio_%u" : "/Wingie/left/poly_pitch_ratio_%u", voice);
+  snprintf(stretchPath, sizeof(stretchPath), ch ? "/Wingie/right/poly_stretch_%u" : "/Wingie/left/poly_stretch_%u", voice);
   dsp.setParamValue(notePath, noteValue);
   dsp.setParamValue(ratioPath, wingie_mpe::pitchRatio(bendSemitones));
+  dsp.setParamValue(stretchPath, mpe_cc74_stretch(voice_expression_channel(ch, voice)));
 }
 
 void apply_poly_voice_pitch(byte ch, byte voice) {
@@ -50,11 +100,12 @@ void cycle_poly_voice_note(byte ch, byte noteValue) {
 void apply_ratio_voice_pitch(byte ch, byte voice) {
   const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
   const float fundamental = configured_note_frequency(state.note) * wingie_mpe::pitchRatio(poly_total_bend(ch, voice));
+  const float stretch = mpe_cc74_stretch(voice_expression_channel(ch, voice));
   for (byte k = 0; k < 3; k++) {
     const byte index = 3 * voice + k;
     const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
-                                    fundamental * ratio_profile.ratios[index]));
+                                    fundamental * ratio_profile.ratios[index] * (1.0f + 0.5f * k * stretch)));
     cm_freq_set(ch, index, frequency);
   }
 }
@@ -84,7 +135,9 @@ void cycle_ratio_voice_note(byte ch, byte noteValue) {
 }
 
 // 按 Mode[ch] 分发的复音声部入口（POLY / RATIO 共用声部分配与弯音语义）。
+// 顺带按声部表情源通道重写 decay boost，保证任何 refresh/重分配路径值一致。
 void apply_voice_pitch(byte ch, byte voice) {
+  set_decay_boost(ch, voice, mpe_pressure_decay_delta(voice_expression_channel(ch, voice)));
   if (Mode[ch] == RATIO_MODE) apply_ratio_voice_pitch(ch, voice);
   else apply_poly_voice_pitch(ch, voice);
 }
@@ -144,6 +197,7 @@ void reset_mpe_performance(uint16_t channelMask) {
     }
     if (channelMask & wingie_mpe::channelBit(mpeMonoState[ch].channel)) clear_mpe_mono_assignment(ch);
     if (serial_config_ready) refresh_side_pitch(ch);
+    reset_voice_expressions(ch);
   }
 }
 
@@ -253,6 +307,21 @@ void refresh_mpe_member_pitch(byte channel) {
   }
 }
 
+// 0xD0/CC74 per-note 表情：按 owner channel 刷新声部 decay boost 与泛音拉伸。
+// boost 与 stretch 均由 apply_voice_pitch / apply_pitched_mode_channel 按表情源通道重写。
+void refresh_mpe_member_expression(byte channel) {
+  for (byte ch = 0; ch < 2; ch++) {
+    if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
+      for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
+        const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
+        if (state.active && state.channel == channel) apply_voice_pitch(ch, voice);
+      }
+    } else if (mpeMonoState[ch].active && mpeMonoState[ch].channel == channel) {
+      refresh_mono_pitch(ch);
+    }
+  }
+}
+
 void apply_pitch_bend_range(byte channel, byte controller, byte value) {
   wingie_mpe::PitchBendRange range = mpe_state.pitchBendRange(channel);
   if (controller == 6) range.semitones = value;
@@ -293,6 +362,11 @@ bool handle_mpe_control_change(byte channel, byte number, byte value) {
     // 单 Manager 全局语义：Ch1 CC 同时作用左右两侧。
     MIDISetParam(0, number, value);
     MIDISetParam(1, number, value);
+    return true;
+  }
+  if (number == 74) {
+    mpe_state.setCc74(channel, value);
+    refresh_mpe_member_expression(channel);
   }
   return true;
 }
@@ -316,5 +390,20 @@ void handlePitchBend(byte channel, int bend) {
   if (channel == midi_ch_both) {
     set_conventional_side_pitch(0, channel);
     set_conventional_side_pitch(1, channel);
+  }
+}
+
+void handleChannelPressure(byte channel, byte value) {
+  mpe_state.setPressure(channel, value);
+  if (mpe_state.zoneForChannel(channel) == wingie_mpe::kLowerZone) {
+    if (mpe_state.channelIsManager(channel)) return;
+    refresh_mpe_member_expression(channel);
+    return;
+  }
+  if (channel == midi_ch_l) set_side_decay_boost(0, mpe_pressure_decay_delta(channel));
+  if (channel == midi_ch_r) set_side_decay_boost(1, mpe_pressure_decay_delta(channel));
+  if (channel == midi_ch_both) {
+    set_side_decay_boost(0, mpe_pressure_decay_delta(channel));
+    set_side_decay_boost(1, mpe_pressure_decay_delta(channel));
   }
 }

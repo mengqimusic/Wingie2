@@ -27,6 +27,8 @@ struct ChannelState {
   uint8_t rpnLsb;
   int16_t pitchBend;
   PitchBendRange conventionalRange;
+  uint8_t pressure; // 0xD0 channel pressure，per-note decay 增量源
+  uint8_t cc74;     // per-note timbre CC，泛音拉伸源
 };
 
 struct ZoneState {
@@ -201,6 +203,26 @@ struct State {
     if (pitchBend < kPitchBendMinimum) pitchBend = kPitchBendMinimum;
     if (pitchBend > kPitchBendMaximum) pitchBend = kPitchBendMaximum;
     channels[channel - 1].pitchBend = static_cast<int16_t>(pitchBend);
+  }
+
+  void setPressure(uint8_t channel, uint8_t value) {
+    if (channel < 1 || channel > kChannelCount) return;
+    channels[channel - 1].pressure = value;
+  }
+
+  uint8_t pressure(uint8_t channel) const {
+    if (channel < 1 || channel > kChannelCount) return 0;
+    return channels[channel - 1].pressure;
+  }
+
+  void setCc74(uint8_t channel, uint8_t value) {
+    if (channel < 1 || channel > kChannelCount) return;
+    channels[channel - 1].cc74 = value;
+  }
+
+  uint8_t cc74(uint8_t channel) const {
+    if (channel < 1 || channel > kChannelCount) return 0;
+    return channels[channel - 1].cc74;
   }
 
   float channelPitchBendSemitones(uint8_t channel) const {

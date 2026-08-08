@@ -92,6 +92,35 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn("set_conventional_channel_note(ch, channel, pitch);", midi)
         self.assertIn("(value * 5) >> 7", midi)
 
+    def test_per_voice_expression_parameters_match_contract(self):
+        source = (REPO_ROOT / "Wingie2.dsp").read_text(encoding="utf-8")
+        generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        mpe = (REPO_ROOT / "Wingie2/MPE.ino").read_text(encoding="utf-8")
+
+        self.assertIn('hslider("decay_boost_0"', source)
+        self.assertIn('hslider("decay_boost_1"', source)
+        self.assertIn('hslider("decay_boost_2"', source)
+        self.assertIn('hslider("poly_stretch_0"', source)
+        self.assertIn('hslider("poly_stretch_1"', source)
+        self.assertIn('hslider("poly_stretch_2"', source)
+        self.assertIn("select2(index >= 6, select2(index >= 3, decay_boost_0, decay_boost_1), decay_boost_2)", source)
+        self.assertNotIn("ba.selectn(3, index / 3)", source)
+        self.assertIn("partial2(a, ps0)", source)
+        self.assertIn("partial3(a, ps0)", source)
+        self.assertIn('addHorizontalSlider("decay_boost_0"', generated)
+        self.assertIn('addHorizontalSlider("poly_stretch_0"', generated)
+        self.assertIn('addHorizontalSlider("decay_boost_2"', generated)
+        self.assertIn('addHorizontalSlider("poly_stretch_2"', generated)
+
+        self.assertIn("mpe_cc74_stretch(voice_expression_channel(ch, voice))", mpe)
+        self.assertIn("mpe_cc74_stretch(mono_expression_source(ch))", firmware)
+        self.assertIn("mpe_pressure_decay_delta(voice_expression_channel(ch, voice))", mpe)
+        self.assertIn("mpe_pressure_decay_delta(mono_expression_source(ch))", firmware)
+        self.assertIn("reset_voice_expressions(ch)", mpe)
+        self.assertIn("handleChannelPressure", firmware)
+        self.assertIn("MIDI.setHandleAfterTouchChannel(handleChannelPressure)", firmware)
+
     def test_faust_compute_uses_iram_with_local_literals(self):
         build_options = (REPO_ROOT / "Wingie2/build_opt.h").read_text(encoding="utf-8")
         generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
@@ -121,6 +150,7 @@ class RatioModeReferenceTest(unittest.TestCase):
         ratio_voice_block = extract_braced_block(mpe, "void apply_ratio_voice_pitch")
         self.assertIn("const byte index = 3 * voice + k;", ratio_voice_block)
         self.assertIn("fundamental * ratio_profile.ratios[index]", ratio_voice_block)
+        self.assertIn("(1.0f + 0.5f * k * stretch)", ratio_voice_block)
         self.assertIn("configured_note_frequency(state.note)", ratio_voice_block)
         self.assertIn("poly_total_bend(ch, voice)", ratio_voice_block)
         self.assertIn("cm_freq_set(ch, index, frequency);", ratio_voice_block)

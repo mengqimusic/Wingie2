@@ -19,7 +19,7 @@ private func destination(named name: String) -> MIDIEndpointRef {
 }
 
 private func usage() -> Never {
-    FileHandle.standardError.write(Data("usage: midi_stress.swift batch <channel> <pairs> <interval-us> | marker <channel> <pitch> | bend <channel> <value> | pb-range <channel> <semitones> | note-on <channel> <pitch> <bend> | note-off <channel> <pitch> | mpe-note <channel> <pitch> <bend> <hold-ms> | mpe-config <lower-members> <upper-members>\n".utf8))
+    FileHandle.standardError.write(Data("usage: midi_stress.swift batch <channel> <pairs> <interval-us> | marker <channel> <pitch> | bend <channel> <value> | pb-range <channel> <semitones> | note-on <channel> <pitch> <bend> | note-off <channel> <pitch> | mpe-note <channel> <pitch> <bend> <hold-ms> | mpe-config <lower-members> <upper-members> | pressure <channel> <value> | cc74 <channel> <value> | load <channel> <seconds> <interval-us>\n".utf8))
     exit(2)
 }
 
@@ -165,6 +165,45 @@ case "mpe-config":
     sendMpeConfiguration(channel: 16, memberCount: upperMembers)
     usleep(20_000)
     print("mpe-config lower_members=\(lowerMembers) upper_members=\(upperMembers)")
+case "pressure":
+    guard arguments.count == 3, let value = Int(arguments[2]),
+          (0...127).contains(value) else { usage() }
+    let channel = validatedChannel(arguments[1])
+    send([UInt8(0xD0 | (channel - 1)), UInt8(value)])
+    usleep(20_000)
+    print("pressure channel=\(channel) value=\(value)")
+case "cc74":
+    guard arguments.count == 3, let value = Int(arguments[2]),
+          (0...127).contains(value) else { usage() }
+    let channel = validatedChannel(arguments[1])
+    sendControlChange(channel: channel, controller: 74, value: UInt8(value))
+    usleep(20_000)
+    print("cc74 channel=\(channel) value=\(value)")
+case "load":
+    guard arguments.count == 4,
+          let seconds = Int(arguments[2]), (1...60).contains(seconds),
+          let interval = useconds_t(arguments[3]), interval >= 200 else { usage() }
+    let channel = validatedChannel(arguments[1])
+    let noteOn = UInt8(0x90 | (channel - 1))
+    let noteOff = UInt8(0x80 | (channel - 1))
+    var sent = 0
+    let deadline = ContinuousClock.now + .seconds(seconds)
+    var cycle = 0
+    while ContinuousClock.now < deadline {
+        sendPitchBend(channel: channel, bend: Int.random(in: -8192...8191))
+        send([UInt8(0xD0 | (channel - 1)), UInt8.random(in: 0...127)])
+        sendControlChange(channel: channel, controller: 74, value: UInt8.random(in: 0...127))
+        sent += 3
+        if cycle % 20 == 0 {
+            let pitch = UInt8(36 + (cycle / 20) % 60)
+            send([noteOn, pitch, 100])
+            send([noteOff, pitch, 0])
+            sent += 2
+        }
+        cycle += 1
+        usleep(interval)
+    }
+    print("load channel=\(channel) seconds=\(seconds) interval_us=\(interval) sent=\(sent)")
 default:
     usage()
 }
