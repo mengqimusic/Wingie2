@@ -264,7 +264,7 @@ class WingieProdTestBrowserTest(unittest.TestCase):
             """
         )
 
-    def test_control_monitor_counts_reset_and_finish_check(self):
+    def test_control_monitor_counts_reset_and_live_coloring(self):
         self.open_scenario()
         self.evaluate(
             WAIT_JS + """
@@ -274,27 +274,27 @@ class WingieProdTestBrowserTest(unittest.TestCase):
               page().setMonitor(true);
               await waitFor(() => snapshot().monitorActive, "monitor enable");
               assert(element("#wpt-counts-reset").disabled === false, "reset should be enabled while monitoring");
+              assert(!element("#wpt-counts-finish"), "finish check button must be removed");
+              assert(document.querySelectorAll(".wpt-cell[data-state='fail']").length === 34, "all cells should start red before counts");
               assert(element('[data-control="pot:0"] .wpt-cell-count').textContent === "0", "initial pot count should be zero");
               mock.setCounts({key: {left: [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, mode_button: [1, 0], source_switch: 1, pot: [2, 0, 0]});
-              mock.setMidi({midiRx: 0});
               await sleep(700);
               assert(element('[data-control="key:0:0"] .wpt-cell-count').textContent === "1", "key count not rendered");
               assert(element('[data-control="pot:0"] .wpt-cell-count').textContent === "2", "pot count not rendered");
               assert(element('[data-control="source"] .wpt-cell-count').textContent === "1", "source count not rendered");
-              page().finishCheck();
-              assert(snapshot().checkFinished, "finish check did not run");
-              assert(element("#wpt-counts-status").textContent.includes("未操作"), "missing-control fail status missing: " + element("#wpt-counts-status").textContent);
-              assert(element('[data-control="key:0:1"]').dataset.state === "fail", "zero-count control not marked fail");
-              assert(element('[data-control="pot:0"]').dataset.state === "pass", "operated control not marked pass");
+              assert(element('[data-control="key:0:0"]').dataset.state === "pass", "operated control should turn green live");
+              assert(element('[data-control="pot:0"]').dataset.state === "pass", "operated pot should turn green live");
+              assert(element('[data-control="key:0:1"]').dataset.state === "fail", "unoperated control should stay red");
+              assert(document.querySelectorAll(".wpt-cell[data-state='pass']").length === 4, "exactly four operated controls should be green");
               page().resetCounts();
               await waitFor(() => mock.snapshot().counts.pot[0] === 0 && mock.snapshot().counts.key.left[0] === 0, "reset reached the device");
               assert(mock.writes.some((request) => request.op === "get_controls" && request.reset === true), "reset request missing");
               await waitFor(() => element('[data-control="pot:0"] .wpt-cell-count').textContent === "0", "reset not reflected in the table");
+              assert(document.querySelectorAll(".wpt-cell[data-state='fail']").length === 34, "all cells should turn red after reset");
               mock.setCounts({key: {left: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], right: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}, mode_button: [1, 1], oct_button: {left: [1, 1], right: [1, 1]}, source_switch: 1, pot: [1, 1, 1]});
               await sleep(700);
-              page().finishCheck();
-              assert(element("#wpt-counts-status").textContent.includes("全部通过"), "all-pass status missing: " + element("#wpt-counts-status").textContent);
-              assert(document.querySelectorAll(".wpt-cell[data-state='fail']").length === 0, "fail cells remain after all-pass");
+              assert(document.querySelectorAll(".wpt-cell[data-state='fail']").length === 0, "fail cells remain after all counts");
+              assert(document.querySelectorAll(".wpt-cell[data-state='pass']").length === 34, "all cells should be green when every control is operated");
               return "PASS";
             })()
             """

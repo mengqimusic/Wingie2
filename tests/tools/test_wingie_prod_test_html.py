@@ -63,9 +63,9 @@ class WingieProdTestHtmlTest(unittest.TestCase):
     def test_bilingual_copy_is_complete(self):
         for chinese, english in self.parser.i18n_pairs:
             self.assertTrue(chinese and english, f"i18n pair incomplete: {chinese!r} / {english!r}")
-        for fragment in ("串口与固件版本", "一键刷入最新固件", "MIDI 输入检测", "控件监视", "完成检查"):
+        for fragment in ("串口与固件版本", "一键刷入最新固件", "MIDI 输入检测", "控件监视", "清零计数"):
             self.assertIn(fragment, self.source)
-        for fragment in ("Serial &amp; firmware version", "Install latest firmware", "MIDI input test", "Control monitor", "Finish check"):
+        for fragment in ("Serial &amp; firmware version", "Install latest firmware", "MIDI input test", "Control monitor", "Reset counts"):
             self.assertIn(fragment, self.source)
 
     def test_serial_protocol_matches_firmware(self):
@@ -129,6 +129,13 @@ class WingieProdTestHtmlTest(unittest.TestCase):
         for index in range(3):
             expected.add(f"pot:{index}")
         self.assertEqual(controls, expected)
+        self.assertNotIn("wpt-counts-finish", self.source)
+        self.assertNotIn("finishCheck", self.source)
+        self.assertNotIn("checkFinished", self.source)
+        self.assertNotIn("wpt-counts-result", self.source)
+        self.assertIn('cell.dataset.state = count >= 1 ? "pass" : "fail"', self.source)
+        self.assertIn("格子全部为红", self.source)
+        self.assertIn("实时变绿", self.source)
 
     def test_midi_test_threshold(self):
         self.assertIn("MIDI_PASS_THRESHOLD = 2", self.source)
