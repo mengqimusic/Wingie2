@@ -13,7 +13,9 @@
 
 namespace wingie_serial {
 
-static const size_t kMaxFrameBytes = 512;
+// get_settings 含性能参数 limits 段（约 650 字节最坏情况），512 只够扁平裸数组；
+// 1024 为命名格式保留余量。hello 按此常量动态上报 max_frame，旧客户端忽略。
+static const size_t kMaxFrameBytes = 1024;
 
 enum Operation {
   kOperationInvalid,

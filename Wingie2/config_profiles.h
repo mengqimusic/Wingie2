@@ -21,6 +21,17 @@ static const float kClipGainStep = 0.055f;
 static const float kA3FrequencyMin = 358.08f;
 static const float kA3FrequencyMax = 521.91f;
 static const float kA3FrequencyStep = 0.01f;
+// set_param 整数参数范围（get_settings limits 单一真值；与 Wingie2.ino 枚举的
+// 一致性由 serial_config.ino 的 static_assert 锁定，消除网页端双份维护）
+static const int kModeMin = 0;              // POLY_MODE
+static const int kModeMax = 4;              // RATIO_MODE
+static const int kTuningMin = -1;
+static const int kTuningMax = 7;
+static const int kMidiChannelMin = 1;
+static const int kMidiChannelMax = 16;
+static const int kMpeEnabledMin = 0;
+static const int kMpeEnabledMax = 1;
+static const float kClipGainMax = 0.99f;
 static const float kDefaultA3Frequency = 440.0f;
 static const float kDefaultPreClipGain = 0.2475f;
 static const float kDefaultPostClipGain = 0.825f;

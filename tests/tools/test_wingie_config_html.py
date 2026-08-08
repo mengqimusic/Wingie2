@@ -407,7 +407,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         ):
             self.assertIn(f'request.op === "{operation}"', self.mock_source)
         self.assertIn("setSettings(values)", self.mock_source)
-        self.assertIn("max_frame: 512", self.mock_source)
+        self.assertIn("max_frame: 1024", self.mock_source)
         self.assertIn("caves_changed: cavesChanged", self.mock_source)
         self.assertNotIn('event: "changed"', self.mock_source)
 
@@ -488,6 +488,40 @@ class WingieConfigHtmlTest(unittest.TestCase):
         combined = self.firmware_source + self.protocol_source + self.control_source + self.main_source
         for forbidden in ("config_runtime", "config_event_pending", "sendChangedEvent", "get_state"):
             self.assertNotIn(forbidden, combined)
+
+    def test_parameter_limits_flow_from_firmware_to_page(self):
+        # F11：get_settings 由固件下发性能参数 limits，页面按 name 动态消费，消除 parameterSpecs 双份维护
+        self.assertIn("applyParameterLimits(response.limits)", self.source)
+        self.assertIn("limits[spec.name]", self.source)
+        self.assertIn("spec.min = min;", self.source)
+        self.assertIn("spec.max = max;", self.source)
+        self.assertIn("spec.step = step;", self.source)
+        # 回退路径：旧固件无 limits 时 parameterSpecs 硬编码默认值原样保留
+        self.assertIn("min: 0.0825, max: 0.99, step: 0.0825", self.source)
+        self.assertIn("min: 358.08, max: 521.91, step: 0.01", self.source)
+        self.assertIn("min: -1, max: 7, step: 1", self.source)
+        self.assertIn("min: 0.385, max: 0.99, step: 0.055", self.source)
+        # 固件编码端：named 扁平数组 [min,max,step]，数值单一真值在 config_profiles.h
+        self.assertIn('"limits\\":{\\"mode\\":[%g,%g,1]', self.response_source)
+        self.assertIn('"threshold\\":[%g,%g,%g]', self.response_source)
+        self.assertIn('"a3_hz\\":[%g,%g,%g]', self.response_source)
+        self.assertIn('"tuning\\":[%g,%g,1]', self.response_source)
+        self.assertIn('"pre_clip_gain\\":[%g,%g,%g]', self.response_source)
+        self.assertIn('"post_clip_gain\\":[%g,%g,%g]', self.response_source)
+        self.assertIn('"midi_left\\":[%g,%g,1]', self.response_source)
+        self.assertIn('"mpe_enabled\\":[%g,%g,1]', self.response_source)
+        # 量化范围收拢为单一常量源，serial_config.ino 与编码端共用
+        self.assertIn("kModeMin", self.firmware_source)
+        self.assertIn("kModeMax", self.firmware_source)
+        self.assertIn("kMidiChannelMin", self.firmware_source)
+        self.assertIn("kMpeEnabledMin", self.firmware_source)
+        self.assertIn("kClipGainMax", self.firmware_source)
+        # mock 与固件一致地下发 limits；legacy 模式省略（回退路径由浏览器测试覆盖）
+        self.assertIn("if (!legacyFirmware) response.limits = buildLimits();", self.mock_source)
+        self.assertIn("function buildLimits()", self.mock_source)
+        self.assertIn("setLimits(name, min, max, step)", self.mock_source)
+        # 帧预算：1024 承载 named limits，512 只够扁平裸数组
+        self.assertIn("kMaxFrameBytes = 1024", self.protocol_source)
 
     def test_inline_javascript_and_mock_parse(self):
         node = shutil.which("node")

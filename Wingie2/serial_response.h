@@ -132,6 +132,31 @@ inline void appendChannelSettings(JsonResponse &response, const ChannelSettings 
                   settings.mode, settings.mix, settings.decay, settings.volume, settings.threshold);
 }
 
+// 性能参数 limits（单一真值在 config_profiles.h；网页按 name 消费，缺失时回退页面默认）
+inline void appendSettingsLimits(JsonResponse &response) {
+  response.append(
+      ",\"limits\":{\"mode\":[%g,%g,1],"
+      "\"threshold\":[%g,%g,%g],"
+      "\"a3_hz\":[%g,%g,%g],"
+      "\"tuning\":[%g,%g,1],"
+      "\"pre_clip_gain\":[%g,%g,%g],"
+      "\"post_clip_gain\":[%g,%g,%g],"
+      "\"midi_left\":[%g,%g,1],"
+      "\"midi_right\":[%g,%g,1],"
+      "\"midi_both\":[%g,%g,1],"
+      "\"mpe_enabled\":[%g,%g,1]}",
+      static_cast<float>(wingie_config::kModeMin), static_cast<float>(wingie_config::kModeMax),
+      wingie_config::kThresholdMin, wingie_config::kThresholdMax, wingie_config::kThresholdStep,
+      wingie_config::kA3FrequencyMin, wingie_config::kA3FrequencyMax, wingie_config::kA3FrequencyStep,
+      static_cast<float>(wingie_config::kTuningMin), static_cast<float>(wingie_config::kTuningMax),
+      wingie_config::kPreClipGainMin, wingie_config::kClipGainMax, wingie_config::kThresholdStep,
+      wingie_config::kPostClipGainMin, wingie_config::kClipGainMax, wingie_config::kClipGainStep,
+      static_cast<float>(wingie_config::kMidiChannelMin), static_cast<float>(wingie_config::kMidiChannelMax),
+      static_cast<float>(wingie_config::kMidiChannelMin), static_cast<float>(wingie_config::kMidiChannelMax),
+      static_cast<float>(wingie_config::kMidiChannelMin), static_cast<float>(wingie_config::kMidiChannelMax),
+      static_cast<float>(wingie_config::kMpeEnabledMin), static_cast<float>(wingie_config::kMpeEnabledMax));
+}
+
 inline void encodeHello(JsonResponse &response, uint32_t id, const char *firmware) {
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"hello\","
                   "\"device\":\"Wingie2\","
@@ -154,11 +179,13 @@ inline void encodeSettings(JsonResponse &response, uint32_t id, bool sourceLine,
   appendChannelSettings(response, right);
   response.append(",\"shared\":{\"a3_hz\":%.2f,\"tuning\":%d,"
                   "\"pre_clip_gain\":%.4f,\"post_clip_gain\":%.4f,"
-                  "\"midi\":{\"left\":%d,\"right\":%d,\"both\":%d},\"mpe_enabled\":%s}}",
+                  "\"midi\":{\"left\":%d,\"right\":%d,\"both\":%d},\"mpe_enabled\":%s}",
                   shared.a3Hz, shared.tuning,
                   shared.preClipGain, shared.postClipGain,
                   shared.midiLeft, shared.midiRight, shared.midiBoth,
                   shared.mpeEnabled ? "true" : "false");
+  appendSettingsLimits(response);
+  response.append("}");
 }
 
 inline void encodeRatioProfile(JsonResponse &response, uint32_t id, const float *ratios,

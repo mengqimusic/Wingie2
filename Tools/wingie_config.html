@@ -1073,7 +1073,25 @@
         return state.lightPolling === false ? pollFullSnapshot() : pollLightSnapshot();
       }
 
+      // 固件 get_settings 下发性能参数 limits（named 扁平数组 [min,max,step]）；
+      // 旧固件无 limits 时保留 parameterSpecs 硬编码默认值（渐进增强，不回退校验逻辑）
+      function applyParameterLimits(limits) {
+        if (!limits || typeof limits !== "object") return;
+        for (const spec of Object.values(parameterSpecs)) {
+          const limit = limits[spec.name];
+          if (!Array.isArray(limit) || limit.length < 3) continue;
+          const min = Number(limit[0]);
+          const max = Number(limit[1]);
+          const step = Number(limit[2]);
+          if (![min, max, step].every(Number.isFinite) || !(step > 0) || min > max) continue;
+          spec.min = min;
+          spec.max = max;
+          spec.step = step;
+        }
+      }
+
       function normalizeSettings(response) {
+        applyParameterLimits(response.limits);
         return {
           dirty: Boolean(response.dirty),
           left: clone(response.left),

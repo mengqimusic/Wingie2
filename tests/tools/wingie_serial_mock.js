@@ -65,24 +65,35 @@
     return Number((min + steps * step).toFixed(decimalsFor(step)));
   }
 
+  const parameterRanges = {
+    left: {
+      mode: [0, 4, 1, true], mix: [0, 1, 0.001, false], decay: [0.1, 10, 0.01, false],
+      volume: [0, 1, 0.001, false], threshold: [0.0825, 0.99, 0.0825, true]
+    },
+    right: {
+      mode: [0, 4, 1, true], mix: [0, 1, 0.001, false], decay: [0.1, 10, 0.01, false],
+      volume: [0, 1, 0.001, false], threshold: [0.0825, 0.99, 0.0825, true]
+    },
+    shared: {
+      a3_hz: [358.08, 521.91, 0.01, true], tuning: [-1, 7, 1, true],
+      pre_clip_gain: [0.0825, 0.99, 0.0825, true], post_clip_gain: [0.385, 0.99, 0.055, true],
+      midi_left: [1, 16, 1, true], midi_right: [1, 16, 1, true], midi_both: [1, 16, 1, true],
+      mpe_enabled: [0, 1, 1, true]
+    }
+  };
+
   function parameterSpec(target, name) {
-    const specs = {
-      left: {
-        mode: [0, 4, 1, true], mix: [0, 1, 0.001, false], decay: [0.1, 10, 0.01, false],
-        volume: [0, 1, 0.001, false], threshold: [0.0825, 0.99, 0.0825, true]
-      },
-      right: {
-        mode: [0, 4, 1, true], mix: [0, 1, 0.001, false], decay: [0.1, 10, 0.01, false],
-        volume: [0, 1, 0.001, false], threshold: [0.0825, 0.99, 0.0825, true]
-      },
-      shared: {
-        a3_hz: [358.08, 521.91, 0.01, true], tuning: [-1, 7, 1, true],
-        pre_clip_gain: [0.0825, 0.99, 0.0825, true], post_clip_gain: [0.385, 0.99, 0.055, true],
-        midi_left: [1, 16, 1, true], midi_right: [1, 16, 1, true], midi_both: [1, 16, 1, true],
-        mpe_enabled: [0, 1, 1, true]
-      }
-    };
-    return specs[target] && specs[target][name];
+    return parameterRanges[target] && parameterRanges[target][name];
+  }
+
+  // 与固件 encodeSettings 的 limits 段逐项一致：shared 全部参数 + left/right 的 mode/threshold
+  function buildLimits() {
+    const limits = {};
+    for (const [name, spec] of Object.entries(parameterRanges.shared)) limits[name] = [spec[0], spec[1], spec[2]];
+    for (const [name, spec] of Object.entries(parameterRanges.left)) {
+      if (name === "mode" || name === "threshold") limits[name] = [spec[0], spec[1], spec[2]];
+    }
+    return limits;
   }
 
   function retuneCaves() {
@@ -122,10 +133,12 @@
     const failed = failIfRequested(request);
     if (failed) return failed;
     if (request.op === "hello") {
-      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 5, transport: {baud: 115200, max_frame: 512}};
+      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 5, transport: {baud: 115200, max_frame: 1024}};
     }
     if (request.op === "get_settings") {
-      return {v: 1, id: request.id, ok: true, op: "get_settings", source: settings.source, dirty: settingsDirty, left: clone(settings.left), right: clone(settings.right), shared: clone(settings.shared)};
+      const response = {v: 1, id: request.id, ok: true, op: "get_settings", source: settings.source, dirty: settingsDirty, left: clone(settings.left), right: clone(settings.right), shared: clone(settings.shared)};
+      if (!legacyFirmware) response.limits = buildLimits();
+      return response;
     }
     if (request.op === "get") {
       return {v: 1, id: request.id, ok: true, op: "get", profile: {ratios: ratios.slice(), revision: ratioRevision, dirty: ratioDirty}, factory_profile: {ratios: factoryRatios.slice()}, limits: {min: 0.125, max: 32, step: 0.001, frequency_min: 16, frequency_max: 16000}};
@@ -269,6 +282,16 @@
     failNext(operation, code = "mock_failure") { failure = {operation, code}; },
     setResponseDelay(milliseconds) { responseDelay = Math.max(0, Number(milliseconds) || 0); },
     setLegacyFirmware(value) { legacyFirmware = Boolean(value); },
+    // 覆盖单参数 [min,max,step]（get_settings limits 与 set_param 量化同步生效），用于验证页面动态消费 limits
+    setLimits(name, min, max, step) {
+      for (const target of Object.keys(parameterRanges)) {
+        const spec = parameterRanges[target][name];
+        if (!spec) continue;
+        spec[0] = min;
+        spec[1] = max;
+        spec[2] = step;
+      }
+    },
     disconnect() {
       if (controller) {
         try { controller.error(new DOMException("Mock disconnect", "NetworkError")); } catch {

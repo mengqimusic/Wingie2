@@ -98,6 +98,14 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   const modeWrite = mock.writes.find((request) => request.op === "set_param" && request.name === "mode");
   assert(modeWrite && modeWrite.target === "left" && modeWrite.value === 2, "set_param shape is wrong");
   assert(!Object.prototype.hasOwnProperty.call(modeWrite, "expected_revision"), "set_param sent an unsupported revision");
+
+  // 固件下发 limits 驱动量化：max 收窄到 0.5 后输入 0.6 必须钳位到 0.495（而非硬编码 0.99 下的 0.5775）
+  mock.setLimits("threshold", 0.0825, 0.5, 0.0825);
+  await window.__wingieConfigTest.refresh();
+  edit(element("#wg-left-threshold"), "0.6");
+  await waitFor(() => mock.writes.some((request) => request.op === "set_param" && request.name === "threshold" && request.value === 0.495), "firmware limits did not clamp the canonical value");
+  mock.setLimits("threshold", 0.0825, 0.99, 0.0825);
+  await window.__wingieConfigTest.refresh();
 })()
 JS
 
@@ -412,6 +420,11 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
     if (!condition) throw new Error(message);
   };
   const element = (selector) => document.querySelector(selector);
+  const edit = (control, value) => {
+    control.focus();
+    control.value = value;
+    control.dispatchEvent(new InputEvent("input", {bubbles: true, data: value}));
+  };
   const mock = window.__wingieSerialMock;
   const state = () => window.__wingieConfigTest.state();
   const ops = () => mock.writes.map((request) => request.op);
@@ -452,6 +465,10 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   mock.clearWrites();
   await window.__wingieConfigTest.pollTick();
   assert(JSON.stringify(ops()) === JSON.stringify(["get_settings", "get", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave", "get_cave"]), "legacy fallback did not run the full snapshot directly");
+
+  // 旧固件无 limits：回退到页面硬编码默认（max 0.99），输入 0.6 量化到 0.5775 而非 0.495
+  edit(element("#wg-left-threshold"), "0.6");
+  await waitFor(() => mock.writes.some((request) => request.op === "set_param" && request.name === "threshold" && request.value === 0.5775), "legacy fallback limits did not canonicalize with hardcoded defaults");
 
   mock.setLegacyFirmware(false);
   mock.disconnect();

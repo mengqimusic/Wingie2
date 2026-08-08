@@ -1,6 +1,10 @@
 #include "device_state.h"
 #include "serial_response.h"
 
+// Web 协议 mode 范围与固件模式枚举必须一致，防 get_settings limits 漂移
+static_assert(POLY_MODE == wingie_config::kModeMin && RATIO_MODE == wingie_config::kModeMax,
+              "Web protocol mode limits drifted from firmware mode enum");
+
 void apply_ratio_profile_to_dsp();
 bool save_all_preferences();
 #if MIDI_DIAGNOSTICS
@@ -177,8 +181,9 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
   if (strcmp(request.target, "left") == 0 || strcmp(request.target, "right") == 0) {
     const byte ch = strcmp(request.target, "right") == 0 ? 1 : 0;
     if (strcmp(request.name, "mode") == 0) {
-      int mode = POLY_MODE;
-      if (!quantizeIntegerParameter(request.value, POLY_MODE, RATIO_MODE, mode)) return false;
+      int mode = wingie_config::kModeMin;
+      if (!quantizeIntegerParameter(request.value, wingie_config::kModeMin, wingie_config::kModeMax, mode))
+        return false;
       bool changed = false;
       taskENTER_CRITICAL(&g_deviceMux);
       if (Mode[ch] != mode) {
@@ -248,8 +253,10 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     return true;
   }
   if (strcmp(request.name, "tuning") == 0) {
-    int tuning = -1;
-    if (!quantizeIntegerParameter(request.value, -1, 7, tuning)) return false;
+    int tuning = wingie_config::kTuningMin;
+    if (!quantizeIntegerParameter(request.value, wingie_config::kTuningMin,
+                                  wingie_config::kTuningMax, tuning))
+      return false;
     if ((use_alt_tuning ? alt_tuning_index : -1) != tuning) {
       setWebTuning(tuning);
       cavesChanged = true;
@@ -261,7 +268,7 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     const bool post = strcmp(request.name, "post_clip_gain") == 0;
     const float minimum = post ? wingie_config::kPostClipGainMin : wingie_config::kPreClipGainMin;
     const float step = post ? wingie_config::kClipGainStep : wingie_config::kThresholdStep;
-    if (!quantizeParameter(request.value, minimum, 0.99f, step, canonical)) return false;
+    if (!quantizeParameter(request.value, minimum, wingie_config::kClipGainMax, step, canonical)) return false;
     float &gain = post ? post_clip_gain : pre_clip_gain;
     if (fabsf(gain - canonical) > 0.0001f) {
       gain = canonical;
@@ -275,8 +282,10 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
   int *midiValues[3] = {&midi_ch_l, &midi_ch_r, &midi_ch_both};
   for (byte index = 0; index < 3; index++) {
     if (strcmp(request.name, midiNames[index]) != 0) continue;
-    int midiValue = 1;
-    if (!quantizeIntegerParameter(request.value, 1, 16, midiValue)) return false;
+    int midiValue = wingie_config::kMidiChannelMin;
+    if (!quantizeIntegerParameter(request.value, wingie_config::kMidiChannelMin,
+                                  wingie_config::kMidiChannelMax, midiValue))
+      return false;
     if (*midiValues[index] != midiValue) {
       *midiValues[index] = midiValue;
       dirty[kDirtyMidiLeft + index] = true;
@@ -285,8 +294,10 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     return true;
   }
   if (strcmp(request.name, "mpe_enabled") == 0) {
-    int enabled = 0;
-    if (!quantizeIntegerParameter(request.value, 0, 1, enabled)) return false;
+    int enabled = wingie_config::kMpeEnabledMin;
+    if (!quantizeIntegerParameter(request.value, wingie_config::kMpeEnabledMin,
+                                  wingie_config::kMpeEnabledMax, enabled))
+      return false;
     if (mpe_enabled != static_cast<bool>(enabled)) {
       mpe_enabled = enabled;
       configure_mpe_startup();
