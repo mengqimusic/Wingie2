@@ -70,11 +70,26 @@ boot 按键（control.ino:313-345）/ MIDI CC23（MIDI.ino:49-79）/ Web（seria
 
 ## 修复计划（按影响排序，每项独立提交）
 
-1. 收敛跨核写者为单一权威核 + 请求队列（H1）
-2. 统一 alternate tuning 单一入口状态机，修复 unq 备份覆盖缺陷（H4）
-3. 表驱动 settings 层替换 `dirty[11]`，默认值/常量并入 `wingie_config`（H3/H5）
-4. 响应编码下沉纯头 + 保存/迁移状态机 host 测试（H5/中优先级）
-5. 单一 flash layout.json + 参数 limits 固件下发（H2）
+1. 收敛跨核写者为单一权威核 + 请求队列（H1）— **已修复** f0d2fce
+2. 统一 alternate tuning 单一入口状态机，修复 unq 备份覆盖缺陷（H4）— **已修复** 53ab3ae
+3. 表驱动 settings 层替换 `dirty[11]`，默认值/常量并入 `wingie_config`（H3/H5）— **已修复** 21223c7
+4. 响应编码下沉纯头 + 保存/迁移状态机 host 测试（H5/中优先级）— **已修复** 395fd04（编码下沉完成；保存状态机 host 测试暂缓，见下）
+5. 单一 flash layout.json + 参数 limits 固件下发（H2）— **已修复** 8719fa7（layout.json）、7995b07（参数 limits）
+
+### 修复记录（2026-08-08）
+
+- **f0d2fce**：跨任务共享状态收敛为 `device_state` 模块 + portMUX 临界区。新增 device_state.h/ino，cave bank 事务与模式切换标志原子化；删除 3 处无效 noInterrupts；volatile 修正。行为零改变。
+- **53ab3ae**：alternate tuning 统一为 `set_alt_tuning(index, persist_backup)` 单一入口。修复缺陷 A（boot right 禁用残留 unq_caves_store 覆盖备份）与缺陷 B（boot left 启用不建未量化备份）。
+- **21223c7**：settings 保存表驱动化（`GeneralSettingEntry` 表 + 循环），`dirty[11]` 魔数改 `SettingsDirtyIndex` 命名枚举；性能参数量化/默认值常量并入 `wingie_config`。
+- **395fd04**：serial 响应编码下沉 `serial_response.h`（Arduino-free 纯头，11 个 encode*），新增 host 字节级测试覆盖全部响应格式。
+- **8719fa7**：flash 分区布局单一真值 `Tools/firmware_release/layout.json`，build_release / flash_mode_filter_candidate / draft 清单全部对齐 + 6 项一致性测试。
+- **7995b07**：参数 limits 由固件 get_settings 下发（named 扁平数组），页面渐进增强回退；`kMaxFrameBytes` 512→1024；config_schema 保持 5。
+
+### 遗留（未做）
+
+- 保存/迁移状态机（dirty 四象限、migration_pending 回滚）host 测试：决策逻辑与全局数组/Preferences 交织，抽纯函数代价较高，单独排期。
+- serial 帧无超时（`@` 后无 `\n` 永久挂死）、NVS 写放大（legacy 双写）、midi 通道唯一性校验、`CaveBankState::dirty` 死字段、`wingie_prod_test.html` NVS 常量入 layout.json：属中优先级，未纳入本次修复序列。
+- 硬件行为验证：本批 5 个修复均为编译 + host + Python 测试验证，未烧录物理设备；烧录前建议先做一次覆盖受影响的 audio/MIDI/I2C/prefs 路径的 smoke test。
 
 ## 验收方式
 
