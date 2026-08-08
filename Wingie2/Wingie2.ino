@@ -139,6 +139,8 @@ bool source, key[2][12], keyPrev[2][12], firstPress[2] = {true, true};
 bool sourceChanged = false, sourceChanged2 = false;
 int note[2], currentNote[2] = {36, 36}, octPrev[2], oct[2], Mode[2] = {POLY_MODE, POLY_MODE}, allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
 bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false, false}, modeChangingFromMIDI[2] = {false, false}, duck_env_triggered[2] = {false, false};
+bool octButtonPrev[2][2] = {{true, true}, {true, true}};
+bool octButtonPrevValid = false, potMoving[3] = {false, false, false}, potReadValid = false;
 
 //
 // for MIDI
@@ -146,6 +148,16 @@ bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false,
 bool realtime_value_valid[3] = {true, true, true}, polyFlip = false, mpeFlip = false;
 int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use_alt_tuning, alt_tuning_index;
 volatile uint32_t midi_rx_count = 0; // 成功解析的 MIDI 消息总数，用于串口 status 观测 TRS 接收是否存活
+
+struct ControlActivity {
+  volatile uint32_t key[2][12];      // 24 键
+  volatile uint32_t modeButton[2];   // 2 模式键
+  volatile uint32_t octButton[2][2]; // 4 八度键
+  volatile uint32_t sourceSwitch;    // 音源开关
+  volatile uint32_t pot[3];          // 3 电位器
+};
+
+volatile ControlActivity controlActivity;
 float a3_freq, currentPitchBend[2] = {0.0f, 0.0f};
 int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // Channel, Type, (MSB, LSB)
 bool unq_caves_store = false;

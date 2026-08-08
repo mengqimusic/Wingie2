@@ -410,9 +410,16 @@ void control(void *pvParameters) {
     for (int i = 0; i < 3; i++) {
       potValRealtime[i] = analogRead(potPin[i]);
       int difference = abs(potValRealtime[i] - potValSampled[i]);
+      if (!potReadValid) potValSampled[i] = potValRealtime[i];
       if (!realtime_value_valid[i])
         if (difference > slider_movement_detect) realtime_value_valid[i] = true;
+      if (potReadValid) {
+        bool moving = difference > slider_movement_detect;
+        if (moving && !potMoving[i]) controlActivity.pot[i]++;
+        potMoving[i] = moving;
+      }
     }
+    potReadValid = true;
 
     float Mix = potValRealtime[0] / 4095.;
     if (realtime_value_valid[MIX]) {
@@ -440,6 +447,7 @@ void control(void *pvParameters) {
     // source change
     //
     if (sourceSwitchPos != source) {
+      controlActivity.sourceSwitch++;
       source = sourceSwitchPos;
       sourceChanged = true;
       ac.SetVolumeHeadphone(0);
@@ -469,8 +477,19 @@ void control(void *pvParameters) {
     //
     // oct change
     //
-    oct[0] = -!aw1.digitalRead(lOctPin[0]) + !aw1.digitalRead(lOctPin[1]);
-    oct[1] = -!aw1.digitalRead(rOctPin[0]) + !aw1.digitalRead(rOctPin[1]);
+    bool octPressed[2][2] = {{!aw1.digitalRead(lOctPin[0]), !aw1.digitalRead(lOctPin[1])},
+                             {!aw1.digitalRead(rOctPin[0]), !aw1.digitalRead(rOctPin[1])}};
+    for (int ch = 0; ch < 2; ch++) {
+      for (int i = 0; i < 2; i++) {
+        if (octButtonPrevValid && octPressed[ch][i] && !octButtonPrev[ch][i]) {
+          controlActivity.octButton[ch][i]++;
+        }
+        octButtonPrev[ch][i] = octPressed[ch][i];
+      }
+    }
+    octButtonPrevValid = true;
+    oct[0] = -octPressed[0][0] + octPressed[0][1];
+    oct[1] = -octPressed[1][0] + octPressed[1][1];
 
     for (int ch = 0; ch < 2; ch++) {
       if (octPrev[ch] != oct[ch]) {
@@ -569,8 +588,10 @@ void control(void *pvParameters) {
         //
         // mode change
         //
-        if (!modeButtonState[ch]) modeButtonPressed[ch] = true;
-        else if (modeButtonState[ch]) {
+        if (!modeButtonState[ch]) {
+          if (!modeButtonPressed[ch]) controlActivity.modeButton[ch]++;
+          modeButtonPressed[ch] = true;
+        } else if (modeButtonState[ch]) {
           if (modeButtonPressed[ch] && !threshChanged[ch] && !stuff_saved) modeChangingFromKeys[ch] = true;
           threshChanged[ch] = false;
           modeButtonPressed[ch] = false;
@@ -586,6 +607,7 @@ void control(void *pvParameters) {
 
           if (key[ch][i] != keyPrev[ch][i]) {
             if (!key[ch][i]) {
+              controlActivity.key[ch][i]++;
 
               if (modeButtonPressed[0]) {  // Change threshold
                 threshChanged[0] = true;
