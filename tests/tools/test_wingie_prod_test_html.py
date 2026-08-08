@@ -134,6 +134,21 @@ class WingieProdTestHtmlTest(unittest.TestCase):
         self.assertIn("MIDI_PASS_THRESHOLD = 2", self.source)
         self.assertIn("state.midiRx - state.midiTestBaseline", self.source)
 
+    def test_midi_send_test_uses_web_midi(self):
+        self.assertIn('root.querySelector("#wpt-midi-device")', self.source)
+        self.assertIn('root.querySelector("#wpt-midi-refresh")', self.source)
+        self.assertIn('root.querySelector("#wpt-midi-send")', self.source)
+        self.assertIn("navigator.requestMIDIAccess", self.source)
+        self.assertIn("state.midiAccess.outputs.forEach", self.source)
+        self.assertIn('output.send([0x90, pitch, 100])', self.source)
+        self.assertIn('output.send([0x80, pitch, 0])', self.source)
+        self.assertIn("MIDI_SEND_NOTES = [60, 64, 67, 72, 76]", self.source)
+        self.assertIn("MIDI_SEND_ACCEPT_LOSS = 2", self.source)
+        self.assertIn("state.midiRx - pending.baseline", self.source)
+        self.assertIn("midiRefresh.addEventListener(\"click\", loadMidiAccess)", self.source)
+        self.assertIn("midiSend.addEventListener(\"click\", sendMidiTestSequence)", self.source)
+        self.assertIn('localStorage.getItem("wpt-midi-device")', self.source)
+
     def test_version_comparison_handles_unknown_and_numeric(self):
         self.assertIn("function versionNumbers(", self.source)
         self.assertIn("function compareVersions(", self.source)

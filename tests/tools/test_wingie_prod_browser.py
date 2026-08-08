@@ -175,6 +175,69 @@ class WingieProdTestBrowserTest(unittest.TestCase):
             """
         )
 
+    def test_midi_send_test_sends_notes_and_passes_on_rx(self):
+        self.open_scenario()
+        self.evaluate(
+            WAIT_JS + """
+            (async () => {
+              element("#wpt-connect").click();
+              await waitFor(() => snapshot().connected, "connection");
+              element("#wpt-midi-refresh").click();
+              await waitFor(() => snapshot().midiOutputCount === 1, "MIDI device list");
+              assert(element("#wpt-midi-device").options.length === 1, "device dropdown should list one mock device");
+              assert(element("#wpt-midi-device").options[0].textContent === "USB MIDI DevicePort 1", "device name is wrong");
+              assert(element("#wpt-midi-send").disabled === false, "send button should be enabled after loading devices");
+              mock.clearWrites();
+              mock.midi.sent.length = 0;
+              element("#wpt-midi-send").click();
+              await waitFor(() => !snapshot().midiSendActive && mock.midi.sent.length === 10, "send test completion", 6000);
+              const messages = mock.midi.sent.map((entry) => entry.data);
+              const noteOns = messages.filter((data) => (data[0] & 0xf0) === 0x90);
+              const noteOffs = messages.filter((data) => (data[0] & 0xf0) === 0x80);
+              assert(noteOns.length === 5 && noteOffs.length === 5, "expected five note-on and five note-off messages");
+              assert(noteOns.every((data, index) => data[1] === [60, 64, 67, 72, 76][index]), "note sequence is wrong");
+              assert(element("#wpt-midi-send-status").textContent.includes("通过"), "send test did not pass: " + element("#wpt-midi-send-status").textContent);
+              assert(element("#wpt-midi-send-result").textContent.includes("10 条"), "send result summary missing");
+              assert(element("#wpt-midi-rx").textContent === "10", "receive counter did not track sent messages");
+              return "PASS";
+            })()
+            """
+        )
+
+    def test_midi_send_test_fails_when_rx_lost(self):
+        self.open_scenario()
+        self.evaluate(
+            WAIT_JS + """
+            (async () => {
+              element("#wpt-connect").click();
+              await waitFor(() => snapshot().connected, "connection");
+              element("#wpt-midi-refresh").click();
+              await waitFor(() => snapshot().midiOutputCount === 1, "MIDI device list");
+              mock.midi.setAcknowledge(false);
+              mock.midi.sent.length = 0;
+              element("#wpt-midi-send").click();
+              await waitFor(() => !snapshot().midiSendActive && element("#wpt-midi-send-status").textContent.includes("失败"), "send test failure", 8000);
+              assert(element("#wpt-midi-send-result").textContent.includes("0 条"), "failure summary missing");
+              mock.midi.setAcknowledge(true);
+              return "PASS";
+            })()
+            """
+        )
+
+    def test_midi_send_requires_loaded_device(self):
+        self.open_scenario()
+        self.evaluate(
+            WAIT_JS + """
+            (async () => {
+              element("#wpt-connect").click();
+              await waitFor(() => snapshot().connected, "connection");
+              assert(element("#wpt-midi-send").disabled, "send must stay disabled before devices load");
+              assert(element("#wpt-midi-refresh").disabled === false, "refresh must be enabled without devices");
+              return "PASS";
+            })()
+            """
+        )
+
     def test_midi_input_test_passes_and_stops(self):
         self.open_scenario()
         self.evaluate(

@@ -310,9 +310,21 @@
 
     <section class="wpt-section">
       <h2 data-i18n-zh="3 · MIDI 输入检测" data-i18n-en="3 · MIDI input test"></h2>
-      <p data-i18n-zh="点击开始后，从外部 MIDI 源（TRS 输入）发送至少一个音符：按下并松开。收到完整消息即判通过。" data-i18n-en="Start the test, then send at least one note (press and release) from an external MIDI source on the TRS input. Receiving complete messages passes the test."></p>
+      <p data-i18n-zh="选择电脑的 MIDI 输出设备（连接 Wingie2 TRS 输入），页面直接发送音符序列并核对 Wingie2 的接收计数；也可从外部 MIDI 源发送、页面监听。" data-i18n-en="Pick a MIDI output device (cabled to the Wingie2 TRS input); the page sends a note sequence and checks Wingie2's receive counter. An external MIDI source can also be used while the page listens."></p>
       <div class="wpt-row">
-        <button id="wpt-midi-start" type="button" data-i18n-zh="开始测试" data-i18n-en="Start test" disabled></button>
+        <label class="wpt-field">
+          <span class="wpt-label" data-i18n-zh="MIDI 输出设备" data-i18n-en="MIDI output device"></span>
+          <select id="wpt-midi-device">
+            <option value="" data-i18n-zh="未加载" data-i18n-en="Not loaded"></option>
+          </select>
+        </label>
+        <button id="wpt-midi-refresh" type="button" data-i18n-zh="加载 / 刷新设备" data-i18n-en="Load / refresh devices"></button>
+        <button id="wpt-midi-send" type="button" data-i18n-zh="发送测试音符" data-i18n-en="Send test notes" disabled></button>
+        <span id="wpt-midi-send-status" class="wpt-status" data-state="idle"></span>
+      </div>
+      <div id="wpt-midi-send-result" class="wpt-field"></div>
+      <div class="wpt-row">
+        <button id="wpt-midi-start" type="button" data-i18n-zh="监听测试（外部源）" data-i18n-en="Listen test (external source)" disabled></button>
         <button id="wpt-midi-stop" type="button" data-i18n-zh="停止测试" data-i18n-en="Stop test" hidden></button>
         <span id="wpt-midi-status" class="wpt-status" data-state="idle"></span>
       </div>
@@ -430,6 +442,9 @@
       const FLASH_WRITE_TIMEOUT_MS = 180000;
       const POLL_INTERVAL_MS = 500;
       const MIDI_PASS_THRESHOLD = 2;
+      const MIDI_SEND_NOTES = [60, 64, 67, 72, 76];
+      const MIDI_SEND_GAP_MS = 80;
+      const MIDI_SEND_ACCEPT_LOSS = 2;
       const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
       const EXPECTED_PARTS = [
         {name: "bootloader", offset: 0x1000, label: "Bootloader"},
@@ -457,6 +472,11 @@
         progressFill: root.querySelector("#wpt-progress-fill"),
         progressLabel: root.querySelector("#wpt-progress-label"),
         log: root.querySelector("#wpt-log"),
+        midiDevice: root.querySelector("#wpt-midi-device"),
+        midiRefresh: root.querySelector("#wpt-midi-refresh"),
+        midiSend: root.querySelector("#wpt-midi-send"),
+        midiSendStatus: root.querySelector("#wpt-midi-send-status"),
+        midiSendResult: root.querySelector("#wpt-midi-send-result"),
         midiStart: root.querySelector("#wpt-midi-start"),
         midiStop: root.querySelector("#wpt-midi-stop"),
         midiStatus: root.querySelector("#wpt-midi-status"),
@@ -490,6 +510,10 @@
         midiRx: 0,
         notes: {left: null, right: null},
         counts: null,
+        midiAccess: null,
+        midiOutputs: [],
+        midiSendActive: false,
+        midiSendPending: null,
         midiTestActive: false,
         midiTestBaseline: 0,
         midiTestPassed: false,
@@ -962,9 +986,134 @@
         state.notes = response.note || state.notes;
         state.counts = response.counts || state.counts;
         renderMidiLive();
+        if (state.midiSendPending) evaluateMidiSendTest();
         if (state.midiTestActive) evaluateMidiTest();
         if (state.monitorActive) {
           renderCounts();
+        }
+      }
+
+      // ---- MIDI output device (Web MIDI) ----
+
+      async function loadMidiAccess() {
+        try {
+          if (mock && mock.midiAccess) {
+            state.midiAccess = mock.midiAccess;
+          } else if (navigator.requestMIDIAccess) {
+            state.midiAccess = await navigator.requestMIDIAccess();
+          } else {
+            showAlert(copy("当前浏览器不支持 Web MIDI。请使用最新版桌面 Chrome 或 Edge。", "This browser does not support Web MIDI. Use the latest desktop Chrome or Edge."), "warning");
+          }
+          if (state.midiAccess) {
+            if (typeof state.midiAccess.addEventListener === "function") {
+              state.midiAccess.addEventListener("statechange", () => populateMidiDevices());
+            }
+            populateMidiDevices();
+          }
+        } catch (error) {
+          showAlert(copy(`MIDI 设备访问被拒绝或失败：${error.message}`, `MIDI access denied or failed: ${error.message}`), "error");
+        }
+      }
+
+      function populateMidiDevices() {
+        const select = elements.midiDevice;
+        const previous = localStorage.getItem("wpt-midi-device");
+        select.replaceChildren();
+        state.midiOutputs = [];
+        if (!state.midiAccess) {
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.textContent = languageText("未加载", "Not loaded");
+          select.append(placeholder);
+        } else {
+          state.midiAccess.outputs.forEach((output) => {
+            state.midiOutputs.push(output);
+            const option = document.createElement("option");
+            option.value = output.id;
+            option.textContent = output.name || output.id;
+            select.append(option);
+          });
+          if (state.midiOutputs.length === 0) {
+            const placeholder = document.createElement("option");
+            placeholder.value = "";
+            placeholder.textContent = languageText("未找到 MIDI 输出设备", "No MIDI output device found");
+            select.append(placeholder);
+          } else if (previous && state.midiOutputs.some((output) => output.id === previous)) {
+            select.value = previous;
+          }
+        }
+        renderControls();
+      }
+
+      function selectedMidiOutput() {
+        return state.midiOutputs.find((output) => output.id === elements.midiDevice.value) || state.midiOutputs[0] || null;
+      }
+
+      async function sendMidiTestSequence() {
+        const output = selectedMidiOutput();
+        if (!output) {
+          showAlert(copy("请先加载并选择 MIDI 输出设备。", "Load and pick a MIDI output device first."), "warning");
+          return;
+        }
+        if (state.midiSendActive) return;
+        state.midiSendActive = true;
+        state.midiSendPending = {
+          baseline: state.midiRx,
+          expected: MIDI_SEND_NOTES.length * 2,
+          received: 0,
+          startedAt: Date.now()
+        };
+        localStorage.setItem("wpt-midi-device", output.id);
+        setStatus(elements.midiSendStatus, "working", languageText("正在发送…", "Sending…"));
+        elements.midiSendResult.textContent = "";
+        renderControls();
+        try {
+          for (const pitch of MIDI_SEND_NOTES) {
+            output.send([0x90, pitch, 100]);
+            await new Promise((resolve) => window.setTimeout(resolve, MIDI_SEND_GAP_MS));
+            output.send([0x80, pitch, 0]);
+            await new Promise((resolve) => window.setTimeout(resolve, MIDI_SEND_GAP_MS));
+          }
+          appendLog(`已向 ${output.name || output.id} 发送 ${MIDI_SEND_NOTES.length} 个音符（${MIDI_SEND_NOTES.length * 2} 条消息），等待 Wingie2 接收计数…`);
+        } catch (error) {
+          state.midiSendActive = false;
+          state.midiSendPending = null;
+          setStatus(elements.midiSendStatus, "error", languageText("发送失败", "Send failed"));
+          elements.midiSendResult.textContent = languageText(`发送失败：${error.message}`, `Send failed: ${error.message}`);
+          renderControls();
+        }
+      }
+
+      function evaluateMidiSendTest() {
+        if (!state.midiSendPending) return;
+        const pending = state.midiSendPending;
+        pending.received = Math.max(pending.received, state.midiRx - pending.baseline);
+        const minimum = pending.expected - MIDI_SEND_ACCEPT_LOSS;
+        if (pending.received >= minimum) {
+          state.midiSendPending = null;
+          state.midiSendActive = false;
+          setStatus(elements.midiSendStatus, "pass", languageText("通过：MIDI 输入通路正常", "Passed: MIDI input path is healthy"));
+          elements.midiSendResult.textContent = languageText(
+            `已发送 ${pending.expected} 条，Wingie2 收到 ${pending.received} 条。`,
+            `Sent ${pending.expected} messages; Wingie2 received ${pending.received}.`
+          );
+          appendLog(`MIDI 发送测试通过：收到 ${pending.received}/${pending.expected} 条`);
+          renderControls();
+        } else if (Date.now() - pending.startedAt > 4000) {
+          state.midiSendPending = null;
+          state.midiSendActive = false;
+          setStatus(elements.midiSendStatus, "fail", languageText("失败：接收计数不足", "Failed: receive count too low"));
+          elements.midiSendResult.textContent = languageText(
+            `已发送 ${pending.expected} 条，Wingie2 仅收到 ${pending.received} 条。请检查 TRS 连接与设备选择。`,
+            `Sent ${pending.expected} messages; Wingie2 only received ${pending.received}. Check the TRS cable and device selection.`
+          );
+          appendLog(`MIDI 发送测试失败：仅收到 ${pending.received}/${pending.expected} 条`);
+          renderControls();
+        } else {
+          elements.midiSendResult.textContent = languageText(
+            `已收到 ${pending.received}/${pending.expected} 条…`,
+            `Received ${pending.received}/${pending.expected} messages…`
+          );
         }
       }
 
@@ -1270,7 +1419,9 @@
         elements.disconnect.disabled = state.busy;
         elements.reloadLatest.disabled = state.busy;
         elements.flash.disabled = !state.packageReady || state.busy;
-        elements.midiStart.disabled = !state.connected || state.busy || state.midiTestActive || !state.protocolSupported;
+        elements.midiRefresh.disabled = state.busy;
+        elements.midiSend.disabled = state.busy || state.midiSendActive || state.midiOutputs.length === 0;
+        elements.midiStart.disabled = !state.connected || state.busy || state.midiTestActive || state.midiSendActive || !state.protocolSupported;
         elements.midiStop.hidden = !state.midiTestActive;
         elements.midiStop.disabled = state.busy;
         elements.monitorToggle.disabled = !state.connected || state.busy || !state.protocolSupported;
@@ -1292,6 +1443,8 @@
       });
       elements.reloadLatest.addEventListener("click", loadLatestPackage);
       elements.flash.addEventListener("click", flashFirmware);
+      elements.midiRefresh.addEventListener("click", loadMidiAccess);
+      elements.midiSend.addEventListener("click", sendMidiTestSequence);
       elements.midiStart.addEventListener("click", startMidiTest);
       elements.midiStop.addEventListener("click", stopMidiTest);
       elements.monitorToggle.addEventListener("change", () => {
@@ -1326,6 +1479,8 @@
           disconnect: () => disconnect(),
           flash: flashFirmware,
           loadLatest: loadLatestPackage,
+          loadMidi: loadMidiAccess,
+          sendMidi: sendMidiTestSequence,
           startMidiTest,
           stopMidiTest,
           setMonitor(active) {
@@ -1346,6 +1501,8 @@
               midiRx: state.midiRx,
               midiTestActive: state.midiTestActive,
               midiTestPassed: state.midiTestPassed,
+              midiSendActive: state.midiSendActive,
+              midiOutputCount: state.midiOutputs.length,
               monitorActive: state.monitorActive,
               checkFinished: state.checkFinished,
               counts: state.counts ? JSON.parse(JSON.stringify(state.counts)) : null

@@ -261,6 +261,40 @@
     return sum.toString(16).padStart(32, "0").slice(-32);
   }
 
+  // ---- Web MIDI mock ----
+
+  const midiOutputs = new Map();
+  const midiSent = [];
+  let midiAcknowledge = true;
+
+  function installMidiAccess() {
+    const access = {
+      outputs: midiOutputs,
+      addEventListener() {}
+    };
+    Object.defineProperty(navigator, "requestMIDIAccess", {
+      configurable: true,
+      value: async () => access
+    });
+    return access;
+  }
+
+  navigator.requestMIDIAccess = navigator.requestMIDIAccess || (() => Promise.reject(new Error("not installed")));
+
+  function mockOutput(id, name) {
+    return {
+      id,
+      name,
+      send(data) {
+        midiSent.push({id, data: Array.from(data)});
+        if (midiAcknowledge) {
+          if (data[0] === 0x80 || (data[0] & 0xf0) === 0x80) live.midiRx += 1;
+          if ((data[0] & 0xf0) === 0x90) live.midiRx += 1;
+        }
+      }
+    };
+  }
+
   window.__WINGIE_PROD_MOCK__ = {
     esptool: {Transport: MockTransport, ESPLoader: MockESPLoader},
     md5: mockMd5,
@@ -288,8 +322,23 @@
     failNext(operation, code = "mock_failure") { failure = {operation, code}; },
     setResponseDelay(milliseconds) { responseDelay = Math.max(0, Number(milliseconds) || 0); },
     esptoolLog,
+    midiAccess: installMidiAccess(),
+    midi: {
+      installDevice(id, name) {
+        midiOutputs.set(id, mockOutput(id, name));
+      },
+      sent: midiSent,
+      setAcknowledge(value) {
+        midiAcknowledge = Boolean(value);
+      },
+      snapshot() {
+        return {outputs: Array.from(midiOutputs.keys()), sent: midiSent.slice()};
+      }
+    },
     snapshot() {
       return {opened, firmwareVersion, legacyFirmware, counts: clone(counts), midiRx: live.midiRx, note: clone(live.note), esptoolLog: esptoolLog.slice()};
     }
   };
+
+  window.__WINGIE_PROD_MOCK__.midi.installDevice("midi-out-1", "USB MIDI DevicePort 1");
 })();
