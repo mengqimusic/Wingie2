@@ -227,24 +227,7 @@ bool quantizeIntegerParameter(float value, int minimum, int maximum, int &canoni
 }
 
 void setWebTuning(int tuning) {
-  if (tuning < 0) {
-    if (unq_caves_store) restore_caves_to_unq();
-    unq_caves_store = false;
-    use_alt_tuning = 0;
-    alt_tuning_index = -1;
-    alt_tuning_set(-1);
-    dsp.setParamValue("use_alt_tuning", 0);
-  } else {
-    if (!use_alt_tuning) {
-      store_unq_caves();
-      unq_caves_store = true;
-    }
-    use_alt_tuning = 1;
-    alt_tuning_index = tuning;
-    dsp.setParamValue("use_alt_tuning", 1);
-    alt_tuning_set(tuning);
-    tune_caves();
-  }
+  set_alt_tuning(tuning, false);
   tuning_preferences_dirty = true;
   apply_note_profiles_to_dsp();
 }

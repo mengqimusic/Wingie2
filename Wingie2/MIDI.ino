@@ -1,6 +1,7 @@
 #include "device_state.h"
 
 void apply_note_profiles_to_dsp();
+void set_alt_tuning(int index, bool persist_backup);
 
 void handleNoteOn (byte channel, byte pitch, byte velocity) {
 #if MIDI_DIAGNOSTICS
@@ -52,27 +53,11 @@ void MIDISetTuning(byte cc, byte value) {
   if (cc == CC_TUNING) {
     const int previousTuning = use_alt_tuning ? alt_tuning_index : -1;
     if (value == 0) {
-      use_alt_tuning = 0;
-      alt_tuning_index = -1;
-      alt_tuning_set(-1);
-      if (unq_caves_store) {
-        restore_caves_to_unq();
-        unq_caves_store = false;
-      }
-      dsp.setParamValue("use_alt_tuning", 0);
+      set_alt_tuning(-1, false);
       Serial.println("MIDI: Alt tuning disabled");
     } else if (value < 9) {
       int t = value - 1;
-      alt_tuning_index = t;
-      alt_tuning_set(alt_tuning_index);
-      if (!use_alt_tuning) {
-        use_alt_tuning = 1;
-        dsp.setParamValue("use_alt_tuning", 1);
-        store_unq_caves();
-        unq_caves_store = true;
-        store_unq_caves_to_prefs(false);
-      }
-      tune_caves();
+      set_alt_tuning(t, true);
       Serial.printf("MIDI: Alt tuning enabled: %d\n", t);
     }
     if ((use_alt_tuning ? alt_tuning_index : -1) != previousTuning) tuning_preferences_dirty = true;

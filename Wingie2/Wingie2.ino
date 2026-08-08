@@ -391,6 +391,33 @@ void set_mode_led(byte ch) {
 
 // mark_cave_changed 已收进 device_state.ino，见 device_state.h（revision 与 dirty 在同一临界区内更新）。
 
+// 单一入口：启用/禁用 alternate tuning 的完整状态机
+// index >= 0 启用（选择 0-7 调律），index < 0 禁用并恢复未量化 cave
+// persist_backup: 启用时是否立即把未量化备份写入 NVS（MIDI 路径需要，Web/boot 不需要）
+void set_alt_tuning(int index, bool persist_backup) {
+  if (index < 0) {
+    if (unq_caves_store) {
+      restore_caves_to_unq();
+      unq_caves_store = false;
+    }
+    use_alt_tuning = 0;
+    alt_tuning_index = -1;
+    alt_tuning_set(-1);
+    dsp.setParamValue("use_alt_tuning", 0);
+  } else {
+    if (!use_alt_tuning) {
+      store_unq_caves();
+      unq_caves_store = true;
+    }
+    use_alt_tuning = 1;
+    alt_tuning_index = index;
+    dsp.setParamValue("use_alt_tuning", 1);
+    alt_tuning_set(index);
+    tune_caves();
+    if (persist_backup) store_unq_caves_to_prefs(false);
+  }
+}
+
 // create an array of the ratios used in this tuning
 // tuning param >= 0 is index into ratios
 // tuning param < 0 set ratios to 0

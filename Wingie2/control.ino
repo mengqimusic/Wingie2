@@ -323,27 +323,20 @@ void control(void *pvParameters) {
   } else if (!modeButtonState[0]) {
     // left button only
     Serial.printf("Enabling/resetting alt tuning\n");
-    if (use_alt_tuning == 0) {
-      dsp.setParamValue("use_alt_tuning", 1);
-      use_alt_tuning = 1;
-    }
-    alt_tuning_index = get_int_from_sliders();
+    set_alt_tuning(get_int_from_sliders(), false);
   } else if (!modeButtonState[1]) {
     // right button only
-    if (use_alt_tuning != 0) {
-      Serial.printf("Disabling alt tuning\n");
-      dsp.setParamValue("use_alt_tuning", 0);
-      use_alt_tuning = 0;
-      alt_tuning_index = -1;
-      alt_tuning_set(-1);
-    }
+    Serial.printf("Disabling alt tuning\n");
+    set_alt_tuning(-1, false);
   }
 
   if ((use_alt_tuning ? alt_tuning_index : -1) != loadedTuning) tuning_preferences_dirty = true;
 
-  if (use_alt_tuning != 0 && alt_tuning_index != -1) {
-    alt_tuning_set(alt_tuning_index);
-    tune_caves();
+  if (modeButtonState[0] && modeButtonState[1]) {
+    // 无模式键按下：恢复 prefs 中的调律状态（按键路径已由 set_alt_tuning 处理，跳过）
+    if (use_alt_tuning != 0 && alt_tuning_index != -1) {
+      set_alt_tuning(alt_tuning_index, false);
+    }
   }
 
   Serial.printf("Using %s tuning\n", use_alt_tuning == 0 ? "standard" : "alternate");
