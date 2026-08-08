@@ -84,18 +84,6 @@ void handleControlChange (byte channel, byte number, byte value) {
 
   if (handle_mpe_control_change(channel, number, value)) return;
 
-  if (number == 74) {
-    // conventional CC74：整侧泛音拉伸（voice 表情源 = 该侧路由通道）。
-    mpe_state.setCc74(channel, value);
-    if (channel == midi_ch_l) refresh_side_pitch(0);
-    if (channel == midi_ch_r) refresh_side_pitch(1);
-    if (channel == midi_ch_both) {
-      refresh_side_pitch(0);
-      refresh_side_pitch(1);
-    }
-    return;
-  }
-
   if (channel == midi_ch_l) MIDISetParam(0, number, value);
   if (channel == midi_ch_r) MIDISetParam(1, number, value);
 

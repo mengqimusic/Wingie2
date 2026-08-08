@@ -97,18 +97,15 @@ void printMidiDiagnostics() {
     for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
       const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
       char boostPath[40];
-      char stretchPath[40];
       snprintf(boostPath, sizeof(boostPath), ch ? "/Wingie/right/decay_boost_%u" : "/Wingie/left/decay_boost_%u", voice);
-      snprintf(stretchPath, sizeof(stretchPath), ch ? "/Wingie/right/poly_stretch_%u" : "/Wingie/left/poly_stretch_%u", voice);
-      Serial.printf("MPE side=%u voice=%u note=%u ch=%u active=%d member_pb=%.3f total_pb=%.3f boost=%.2f stretch=%.3f\n",
+      Serial.printf("MPE side=%u voice=%u note=%u ch=%u active=%d member_pb=%.3f total_pb=%.3f boost=%.2f\n",
                     ch, voice, state.note, state.channel, state.active,
                     state.memberBendSemitones, poly_total_bend(ch, voice),
-                    dsp.getParamValue(boostPath), dsp.getParamValue(stretchPath));
+                    dsp.getParamValue(boostPath));
     }
   }
-  Serial.printf("EXPR ch2 pressure=%u cc74=%u ch3 pressure=%u cc74=%u\n",
-                mpe_state.pressure(2), mpe_state.cc74(2),
-                mpe_state.pressure(3), mpe_state.cc74(3));
+  Serial.printf("EXPR ch2 pressure=%u ch3 pressure=%u\n",
+                mpe_state.pressure(2), mpe_state.pressure(3));
   Serial.printf("ANTI_FEEDBACK enabled=%.0f energy_limit=%.6f rho_guard=%.6f\n",
                 dsp.getParamValue("anti_feedback_enabled"),
                 dsp.getParamValue("anti_feedback_energy_limit"),

@@ -447,14 +447,11 @@ float pitched_mode_ratio(byte mode, uint8_t index) {
 
 void apply_pitched_mode_channel(byte ch, int midiNote) {
   const float fundamental = configured_note_frequency(midiNote) * wingie_mpe::pitchRatio(currentPitchBend[ch]);
-  const float stretch = mpe_cc74_stretch(mono_expression_source(ch));
   set_side_decay_boost(ch, mpe_pressure_decay_delta(mono_expression_source(ch)));
   for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    // 泛音拉伸：基频锚定，第 index 个泛音乘 (1 + δ·index/(P-1))，与 DSP poly 公式同构。
-    const float partialFactor = 1.0f + index * stretch / (wingie_config::kRatioCount - 1);
     const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
-                                    fundamental * pitched_mode_ratio(Mode[ch], index) * partialFactor));
+                                    fundamental * pitched_mode_ratio(Mode[ch], index)));
     cm_freq_set(ch, index, frequency);
   }
   unmute_channel_resonators(ch);

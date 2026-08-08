@@ -2,28 +2,17 @@ float mpe_manager_bend() {
   return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
 
-// MPE 0xD0/CC74 映射常量：深度与曲线硬编码，真机听调定值。
+// MPE 0xD0 映射常量：深度与曲线硬编码，真机听调定值。
 const float kPressureDecayDepthSeconds = 3.0f; // pressure=127 → decay +3s
-const float kCc74StretchDepth = 1.0f;          // cc74=127 → 拉伸 δ=1.0（顶泛音 ×2）
 
 float mpe_pressure_decay_delta(byte channel) {
   return kPressureDecayDepthSeconds * mpe_state.pressure(channel) / 127.0f;
-}
-
-float mpe_cc74_stretch(byte channel) {
-  return kCc74StretchDepth * mpe_state.cc74(channel) / 127.0f;
 }
 
 void set_decay_boost(byte ch, byte voice, float seconds) {
   char path[40];
   snprintf(path, sizeof(path), ch ? "/Wingie/right/decay_boost_%u" : "/Wingie/left/decay_boost_%u", voice);
   dsp.setParamValue(path, seconds);
-}
-
-void set_poly_stretch(byte ch, byte voice, float stretch) {
-  char path[40];
-  snprintf(path, sizeof(path), ch ? "/Wingie/right/poly_stretch_%u" : "/Wingie/left/poly_stretch_%u", voice);
-  dsp.setParamValue(path, stretch);
 }
 
 void set_side_decay_boost(byte ch, float seconds) {
@@ -33,7 +22,6 @@ void set_side_decay_boost(byte ch, float seconds) {
 void reset_voice_expressions(byte ch) {
   for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
     set_decay_boost(ch, voice, 0.0f);
-    set_poly_stretch(ch, voice, 0.0f);
   }
 }
 
@@ -60,16 +48,12 @@ float poly_total_bend(byte ch, byte voice) {
 }
 
 void set_poly_voice_dsp(byte ch, byte voice, byte noteValue, float bendSemitones) {
-  const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
   char notePath[48];
   char ratioPath[48];
-  char stretchPath[48];
   snprintf(notePath, sizeof(notePath), ch ? "/Wingie/right/poly_note_%u" : "/Wingie/left/poly_note_%u", voice);
   snprintf(ratioPath, sizeof(ratioPath), ch ? "/Wingie/right/poly_pitch_ratio_%u" : "/Wingie/left/poly_pitch_ratio_%u", voice);
-  snprintf(stretchPath, sizeof(stretchPath), ch ? "/Wingie/right/poly_stretch_%u" : "/Wingie/left/poly_stretch_%u", voice);
   dsp.setParamValue(notePath, noteValue);
   dsp.setParamValue(ratioPath, wingie_mpe::pitchRatio(bendSemitones));
-  dsp.setParamValue(stretchPath, mpe_cc74_stretch(voice_expression_channel(ch, voice)));
 }
 
 void apply_poly_voice_pitch(byte ch, byte voice) {
@@ -100,12 +84,11 @@ void cycle_poly_voice_note(byte ch, byte noteValue) {
 void apply_ratio_voice_pitch(byte ch, byte voice) {
   const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
   const float fundamental = configured_note_frequency(state.note) * wingie_mpe::pitchRatio(poly_total_bend(ch, voice));
-  const float stretch = mpe_cc74_stretch(voice_expression_channel(ch, voice));
   for (byte k = 0; k < 3; k++) {
     const byte index = 3 * voice + k;
     const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
-                                    fundamental * ratio_profile.ratios[index] * (1.0f + 0.5f * k * stretch)));
+                                    fundamental * ratio_profile.ratios[index]));
     cm_freq_set(ch, index, frequency);
   }
 }
@@ -307,8 +290,8 @@ void refresh_mpe_member_pitch(byte channel) {
   }
 }
 
-// 0xD0/CC74 per-note 表情：按 owner channel 刷新声部 decay boost 与泛音拉伸。
-// boost 与 stretch 均由 apply_voice_pitch / apply_pitched_mode_channel 按表情源通道重写。
+// 0xD0 per-note 表情：按 owner channel 刷新声部 decay boost。
+// boost 由 apply_voice_pitch / apply_pitched_mode_channel 按表情源通道重写。
 void refresh_mpe_member_expression(byte channel) {
   for (byte ch = 0; ch < 2; ch++) {
     if (Mode[ch] == POLY_MODE || Mode[ch] == RATIO_MODE) {
@@ -363,10 +346,6 @@ bool handle_mpe_control_change(byte channel, byte number, byte value) {
     MIDISetParam(0, number, value);
     MIDISetParam(1, number, value);
     return true;
-  }
-  if (number == 74) {
-    mpe_state.setCc74(channel, value);
-    refresh_mpe_member_expression(channel);
   }
   return true;
 }

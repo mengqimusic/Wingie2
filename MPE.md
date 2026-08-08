@@ -1,9 +1,9 @@
 # Wingie2 MPE
 
-Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, Pitch
-Bend, Channel Pressure, and per-note timbre path over its existing MIDI 1.0 input, as an optional
-single Lower Zone with per-note left/right alternating engine assignment. Member Channel Pressure
-(0xD0) increases the owning note's decay, and member CC 74 stretches its partials (inharmonicity).
+Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
+Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
+left/right alternating engine assignment. Member Channel Pressure (0xD0) increases the owning
+note's decay; member CC 74 is consumed but not mapped.
 
 ## The MPE Switch
 
@@ -54,10 +54,10 @@ is accepted on Manager and Member Channels; a Member range received on one chann
 every Member. Pitch Bend state is tracked before Note On so an MPE source can establish a note's
 initial microtonal offset.
 
-## Per-note Expression (0xD0 and CC 74)
+## Per-note Expression (0xD0)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 latches both expression values per channel, so a note sounds with the
+before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
 expression already established.
 
 - **Channel Pressure (0xD0) adds decay**: effective decay per voice = base decay + depth ×
@@ -65,12 +65,12 @@ expression already established.
   Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it
   applies to all resonators of the side (one owner). The boost latches: it stays on the ringing
   tail after Note Off, and drops when a later pressure value (including 0) overwrites it.
-- **CC 74 stretches partials**: each voice's partial `k` is multiplied by `1 + δ·k/(P−1)` with
-  `δ = cc74 / 127` (depth 1.0 hardcoded, P = partials per voice). The fundamental is anchored; the
-  top partial reaches ×2 at CC 74 = 127. Poly Modes apply it in the DSP (`poly_stretch_*`);
-  Ratio, String, and Bar apply it while computing frequencies in firmware.
-- Conventional (non-MPE) Channel Pressure and CC 74 on a routed channel apply to that side as a
-  whole, following the Pitch Bend routing precedent.
+- Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters. The
+  DSP keeps the poly-stretch structure (`poly_stretch_*`, default 0) that was added for the
+  rejected CC 74 stretch mapping: removing it changes the Faust 2.59.6-generated signal layout and
+  triggers a DSP-task watchdog reset, so it stays in place unused.
+- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
+  following the Pitch Bend routing precedent.
 - Note: the anti-feedback rho guard (`anti_feedback_rho_guard`) caps the effective decay to about
   0.1 s T60 whenever the mode energy exceeds `anti_feedback_energy_limit`; long pressure-boosted
   tails are audible in quiet playing and may be clamped in loud sustained playing.
