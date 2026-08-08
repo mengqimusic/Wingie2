@@ -26,7 +26,8 @@ enum Operation {
   kOperationGetCave,
   kOperationSetCave,
   kOperationGetSettings,
-  kOperationSetParam
+  kOperationSetParam,
+  kOperationGetControls
 };
 
 enum ParseErrorCode {
@@ -58,6 +59,7 @@ struct Request {
   char target[8];
   char name[20];
   float value;
+  bool reset;
 };
 
 inline void setError(ParseError &error, ParseErrorCode code, int index = -1) {
@@ -187,6 +189,7 @@ inline Operation operationFromString(const char *value) {
   if (strcmp(value, "set_cave") == 0) return kOperationSetCave;
   if (strcmp(value, "get_settings") == 0) return kOperationGetSettings;
   if (strcmp(value, "set_param") == 0) return kOperationSetParam;
+  if (strcmp(value, "get_controls") == 0) return kOperationGetControls;
   return kOperationInvalid;
 }
 
@@ -287,6 +290,14 @@ inline bool parseRequestLine(const char *line, size_t length, Request &request, 
          strcmp(request.target, "shared") != 0) ||
         !name || !parseString(name, request.name, sizeof(request.name)) || request.name[0] == '\0' ||
         !value || !parseNumber(value, request.value)) {
+      setError(error, kParseInvalidField);
+      return false;
+    }
+  }
+
+  if (request.operation == kOperationGetControls) {
+    const char *resetValue = findField(object, "reset");
+    if (resetValue && !parseBoolean(resetValue, request.reset, nullptr)) {
       setError(error, kParseInvalidField);
       return false;
     }

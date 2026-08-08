@@ -150,11 +150,11 @@ int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use
 volatile uint32_t midi_rx_count = 0; // 成功解析的 MIDI 消息总数，用于串口 status 观测 TRS 接收是否存活
 
 struct ControlActivity {
-  volatile uint32_t key[2][12];      // 24 键
-  volatile uint32_t modeButton[2];   // 2 模式键
-  volatile uint32_t octButton[2][2]; // 4 八度键
-  volatile uint32_t sourceSwitch;    // 音源开关
-  volatile uint32_t pot[3];          // 3 电位器
+  volatile uint16_t key[2][12];      // 24 键
+  volatile uint16_t modeButton[2];   // 2 模式键
+  volatile uint16_t octButton[2][2]; // 4 八度键
+  volatile uint16_t sourceSwitch;    // 音源开关
+  volatile uint16_t pot[3];          // 3 电位器
 };
 
 volatile ControlActivity controlActivity;

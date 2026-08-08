@@ -70,6 +70,26 @@ static void testSettingsCommands() {
   assert(fabsf(shared.value - 0.825f) < 1e-6f);
 }
 
+static void testControlCountsCommand() {
+  Request plain = parse("@{\"v\":1,\"id\":9,\"op\":\"get_controls\"}");
+  assert(plain.operation == kOperationGetControls);
+  assert(!plain.reset);
+
+  Request withReset = parse("@{\"v\":1,\"id\":10,\"op\":\"get_controls\",\"reset\":true}");
+  assert(withReset.operation == kOperationGetControls);
+  assert(withReset.reset);
+
+  Request withFalse = parse("@{\"v\":1,\"id\":11,\"op\":\"get_controls\",\"reset\":false}");
+  assert(withFalse.operation == kOperationGetControls);
+  assert(!withFalse.reset);
+
+  Request request;
+  ParseError error;
+  const char *badReset = "@{\"v\":1,\"id\":1,\"op\":\"get_controls\",\"reset\":yes}";
+  assert(!parseRequestLine(badReset, strlen(badReset), request, error));
+  assert(error.code == kParseInvalidField);
+}
+
 static void testInvalidRequests() {
   Request request;
   ParseError error;
@@ -117,6 +137,7 @@ int main() {
   testRatioSet();
   testCaveCommands();
   testSettingsCommands();
+  testControlCountsCommand();
   testInvalidRequests();
   return 0;
 }

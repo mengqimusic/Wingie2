@@ -481,6 +481,37 @@ void sendStatus(uint32_t id) {
   sendJson(response);
 }
 
+void appendControlCounterArray(JsonResponse &response, const volatile uint16_t *values, size_t count) {
+  for (size_t i = 0; i < count; i++) {
+    if (i) response.append(",");
+    response.append("%u", static_cast<unsigned>(values[i]));
+  }
+}
+
+void sendControlCounts(uint32_t id, bool reset) {
+  if (reset) const_cast<ControlActivity &>(controlActivity) = ControlActivity{};
+  JsonResponse response;
+  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_controls\","
+                  "\"midi_rx\":%lu,\"note\":{\"left\":%d,\"right\":%d},"
+                  "\"counts\":{\"key\":{\"left\":[",
+                  static_cast<unsigned long>(id), static_cast<unsigned long>(midi_rx_count),
+                  currentNote[0], currentNote[1]);
+  appendControlCounterArray(response, controlActivity.key[0], 12);
+  response.append("],\"right\":[");
+  appendControlCounterArray(response, controlActivity.key[1], 12);
+  response.append("]},\"mode_button\":[");
+  appendControlCounterArray(response, controlActivity.modeButton, 2);
+  response.append("],\"oct_button\":{\"left\":[");
+  appendControlCounterArray(response, controlActivity.octButton[0], 2);
+  response.append("],\"right\":[");
+  appendControlCounterArray(response, controlActivity.octButton[1], 2);
+  response.append("]},\"source_switch\":%u,\"pot\":[",
+                  static_cast<unsigned>(controlActivity.sourceSwitch));
+  appendControlCounterArray(response, controlActivity.pot, 3);
+  response.append("]}}");
+  sendJson(response);
+}
+
 void sendQueued(uint32_t id, const char *operation, uint32_t revision) {
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"%s\",\"state\":\"queued\",\"revision\":%lu}",
@@ -518,6 +549,9 @@ void processSerialConfigFrame() {
       return;
     case wingie_serial::kOperationStatus:
       sendStatus(request.id);
+      return;
+    case wingie_serial::kOperationGetControls:
+      sendControlCounts(request.id, request.reset);
       return;
     case wingie_serial::kOperationGetCave: {
       const byte ch = caveSideIndex(request.side);
