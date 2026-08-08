@@ -252,6 +252,22 @@
       border-color: #333 #999 #999 #333;
     }
 
+    /* ---- unsaved changes: red flag ---- */
+    #wingie-config .wg-button.wg-dirty {
+      border-color: #c66 #6b2a2a #6b2a2a #c66;
+      color: #fff;
+      background: #a33a3a;
+    }
+
+    #wingie-config .wg-button.wg-dirty:hover:not(:disabled) {
+      background: #933131;
+      border-color: #d77 #6b2a2a #6b2a2a #d77;
+    }
+
+    #wingie-config .wg-button.wg-dirty:active:not(:disabled) {
+      border-color: #6b2a2a #c66 #c66 #6b2a2a;
+    }
+
     #wingie-config .wg-button:disabled,
     #wingie-config input:disabled,
     #wingie-config select:disabled {
@@ -482,6 +498,13 @@
 
     #wingie-config .wg-state .wg-actions {
       justify-content: flex-end;
+    }
+
+    #wingie-config #wg-state-summary.wg-dirty {
+      padding: 3px 8px;
+      border: 2px outset #6b2a2a;
+      color: #3d1414;
+      background: #e6c6c0;
     }
 
     #wingie-config .wg-footer {
@@ -1692,6 +1715,9 @@
         else if (state.pollError) elements.stateSummary.textContent = languageText(`后台同步失败：${state.pollError}；请点刷新。`, `Background sync failed: ${state.pollError}; click Refresh.`);
         else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入闪存。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
         else elements.stateSummary.textContent = languageText("配置与闪存已同步。", "Configuration matches flash.");
+        const dirty = dirtyCount() > 0;
+        elements.stateSummary.classList.toggle("wg-dirty", dirty);
+        elements.save.classList.toggle("wg-dirty", dirty);
       }
 
       function renderAll() {

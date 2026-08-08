@@ -163,8 +163,11 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   edit(ratio, "1.1");
   await waitFor(() => mock.writes.some((request) => request.op === "set"), "first Ratio write started");
   edit(ratio, "1.2");
+  await waitFor(() => element("#wg-state-summary").classList.contains("wg-dirty") && element("#wg-save").classList.contains("wg-dirty"), "dirty red flag on summary and Save button");
+  window.confirm = () => true;  // Save 确认对话框会阻塞页面 JS，与 factory 测试同法覆盖
   element("#wg-save").click();
   await waitFor(() => mock.snapshot().saveCount === saveCount + 1, "Save waited for Ratio writes", 9000);
+  await waitFor(() => !element("#wg-state-summary").classList.contains("wg-dirty") && !element("#wg-save").classList.contains("wg-dirty"), "red flag cleared after Save");
   const ratioAndSave = mock.writes.filter((request) => request.op === "set" || request.op === "save");
   assert(ratioAndSave.length === 3, "rapid Ratio edits were not coalesced into two full writes plus Save");
   assert(ratioAndSave[0].ratios.length === 9 && ratioAndSave[0].ratios[0] === 1.1, "first Ratio snapshot is wrong");
