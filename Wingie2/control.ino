@@ -103,10 +103,10 @@ void control(void *pvParameters) {
     prefs.putUChar("midi_ch_r", 2);
     prefs.putUChar("midi_ch_both", 3);
     prefs.putFloat("a3_freq_offset", 0.);
-    prefs.putFloat("pre_clip_gain", 0.2475);
-    prefs.putFloat("post_clip_gain", 0.825);
-    prefs.putFloat("left_thresh", 0.4125);
-    prefs.putFloat("right_thresh", 0.4125);
+    prefs.putFloat("pre_clip_gain", wingie_config::kDefaultPreClipGain);
+    prefs.putFloat("post_clip_gain", wingie_config::kDefaultPostClipGain);
+    prefs.putFloat("left_thresh", wingie_config::kDefaultThreshold);
+    prefs.putFloat("right_thresh", wingie_config::kDefaultThreshold);
     prefs.putUChar("left_mode", 0);
     prefs.putUChar("right_mode", 0);
     prefs.putUChar("use_alt_tuning", 0);
@@ -150,18 +150,18 @@ void control(void *pvParameters) {
   a3_freq = 440. + a3_freq_offset;
   dsp.setParamValue("a3_freq", a3_freq);
   Serial.printf("a3_freq = %.2f\n", a3_freq);
-  pre_clip_gain = prefs.getFloat("pre_clip_gain", 0.2475);
+  pre_clip_gain = prefs.getFloat("pre_clip_gain", wingie_config::kDefaultPreClipGain);
   dsp.setParamValue("pre_clip_gain", pre_clip_gain);
   Serial.printf("pre_clip_gain = %.4f\n", pre_clip_gain);
-  post_clip_gain = prefs.getFloat("post_clip_gain", 0.825);
+  post_clip_gain = prefs.getFloat("post_clip_gain", wingie_config::kDefaultPostClipGain);
   dsp.setParamValue("post_clip_gain", post_clip_gain);
   Serial.printf("post_clip_gain = %.4f\n", post_clip_gain);
 
-  left_thresh = prefs.getFloat("left_thresh", 0.4125);
+  left_thresh = prefs.getFloat("left_thresh", wingie_config::kDefaultThreshold);
   dsp.setParamValue("left_thresh", left_thresh);
   Serial.printf("left_thresh = %.4f\n", left_thresh);
 
-  right_thresh = prefs.getFloat("right_thresh", 0.4125);
+  right_thresh = prefs.getFloat("right_thresh", wingie_config::kDefaultThreshold);
   dsp.setParamValue("right_thresh", right_thresh);
   Serial.printf("right_thresh = %.4f\n", right_thresh);
 
@@ -599,12 +599,12 @@ void control(void *pvParameters) {
                 if (!ch) {
                   left_thresh = 0.0825 * i + 0.0825;
                   dsp.setParamValue("left_thresh", left_thresh);
-                  dirty[4] = true;
+                  dirty[kDirtyLeftThreshold] = true;
                 }
                 if (ch) {
                   right_thresh = 0.0825 * i + 0.0825;
                   dsp.setParamValue("right_thresh", right_thresh);
-                  dirty[5] = true;
+                  dirty[kDirtyRightThreshold] = true;
                 }
               }
 
@@ -613,12 +613,12 @@ void control(void *pvParameters) {
                 if (!ch) {
                   pre_clip_gain = 0.0825 * i + 0.0825;
                   dsp.setParamValue("pre_clip_gain", pre_clip_gain);
-                  dirty[6] = true;
+                  dirty[kDirtyPreClipGain] = true;
                 }
                 if (ch) {
                   post_clip_gain = 0.055 * i + 0.385;
                   dsp.setParamValue("post_clip_gain", post_clip_gain);
-                  dirty[7] = true;
+                  dirty[kDirtyPostClipGain] = true;
                 }
               }
 

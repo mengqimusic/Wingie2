@@ -185,7 +185,7 @@ bool saveCaveBankV2(Preferences &store, byte ch, byte bank, bool unquantized,
 
 bool generalSettingsAreDirty() {
   if (tuning_preferences_dirty) return true;
-  for (byte index = 0; index < 11; index++) {
+  for (byte index = 0; index < kDirtyCount; index++) {
     if (dirty[index]) return true;
   }
   return false;
@@ -276,12 +276,14 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     }
 
     if (strcmp(request.name, "threshold") == 0) {
-      if (!quantizeParameter(request.value, 0.0825f, 0.99f, 0.0825f, canonical)) return false;
+      if (!quantizeParameter(request.value, wingie_config::kThresholdMin, wingie_config::kThresholdMax,
+                             wingie_config::kThresholdStep, canonical))
+        return false;
       float &threshold = ch ? right_thresh : left_thresh;
       if (fabsf(threshold - canonical) > 0.0001f) {
         threshold = canonical;
         dsp.setParamValue(ch ? "right_thresh" : "left_thresh", canonical);
-        dirty[4 + ch] = true;
+        dirty[kDirtyLeftThreshold + ch] = true;
       }
       return true;
     }
@@ -290,7 +292,9 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
 
   if (strcmp(request.target, "shared") != 0) return false;
   if (strcmp(request.name, "a3_hz") == 0) {
-    if (!quantizeParameter(request.value, 358.08f, 521.91f, 0.01f, canonical)) return false;
+    if (!quantizeParameter(request.value, wingie_config::kA3FrequencyMin, wingie_config::kA3FrequencyMax,
+                           wingie_config::kA3FrequencyStep, canonical))
+      return false;
     if (fabsf(a3_freq - canonical) > 0.0051f) {
       a3_freq = canonical;
       dsp.setParamValue("a3_freq", canonical);
@@ -298,7 +302,7 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
         cavesChanged = tune_caves();
       }
       apply_note_profiles_to_dsp();
-      dirty[3] = true;
+      dirty[kDirtyA3Frequency] = true;
     }
     return true;
   }
@@ -314,14 +318,14 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
   }
   if (strcmp(request.name, "pre_clip_gain") == 0 || strcmp(request.name, "post_clip_gain") == 0) {
     const bool post = strcmp(request.name, "post_clip_gain") == 0;
-    const float minimum = post ? 0.385f : 0.0825f;
-    const float step = post ? 0.055f : 0.0825f;
+    const float minimum = post ? wingie_config::kPostClipGainMin : wingie_config::kPreClipGainMin;
+    const float step = post ? wingie_config::kClipGainStep : wingie_config::kThresholdStep;
     if (!quantizeParameter(request.value, minimum, 0.99f, step, canonical)) return false;
     float &gain = post ? post_clip_gain : pre_clip_gain;
     if (fabsf(gain - canonical) > 0.0001f) {
       gain = canonical;
       dsp.setParamValue(post ? "post_clip_gain" : "pre_clip_gain", canonical);
-      dirty[post ? 7 : 6] = true;
+      dirty[post ? kDirtyPostClipGain : kDirtyPreClipGain] = true;
     }
     return true;
   }
@@ -334,7 +338,7 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     if (!quantizeIntegerParameter(request.value, 1, 16, midiValue)) return false;
     if (*midiValues[index] != midiValue) {
       *midiValues[index] = midiValue;
-      dirty[index] = true;
+      dirty[kDirtyMidiLeft + index] = true;
     }
     canonical = *midiValues[index];
     return true;
@@ -345,7 +349,7 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     if (mpe_enabled != static_cast<bool>(enabled)) {
       mpe_enabled = enabled;
       configure_mpe_startup();
-      dirty[10] = true;
+      dirty[kDirtyMpeEnabled] = true;
     }
     canonical = mpe_enabled ? 1.0f : 0.0f;
     return true;

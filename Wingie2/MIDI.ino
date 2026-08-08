@@ -101,7 +101,6 @@ void handleControlChange (byte channel, byte number, byte value) {
 
             set_cave_bank_from_midi(ch, cave, v, midi_value_14bit);
             cm_freq_set(ch, v, cm_freq[ch][cave][v]);
-            //cave_midi_set[ch] = true;
           }
         }
       }
@@ -110,9 +109,9 @@ void handleControlChange (byte channel, byte number, byte value) {
 
   if (channel == 16) { // Global Settings
 
-    if (number == CC_MIDI_CH_L && value >= 1 && value <= 16) { midi_ch_l = value; dirty[0] = true; }
-    if (number == CC_MIDI_CH_R && value >= 1 && value <= 16) { midi_ch_r = value; dirty[1] = true; }
-    if (number == CC_MIDI_CH_BOTH && value >= 1 && value <= 16) { midi_ch_both = value; dirty[2] = true; }
+    if (number == CC_MIDI_CH_L && value >= 1 && value <= 16) { midi_ch_l = value; dirty[kDirtyMidiLeft] = true; }
+    if (number == CC_MIDI_CH_R && value >= 1 && value <= 16) { midi_ch_r = value; dirty[kDirtyMidiRight] = true; }
+    if (number == CC_MIDI_CH_BOTH && value >= 1 && value <= 16) { midi_ch_both = value; dirty[kDirtyMidiBoth] = true; }
 
     if (number == CC_A3_FREQ_MSB || number == CC_A3_FREQ_LSB) {
 
@@ -127,7 +126,7 @@ void handleControlChange (byte channel, byte number, byte value) {
         dsp.setParamValue("a3_freq", a3_freq);
         if (use_alt_tuning && alt_tuning_index >= 0) tune_caves();
         apply_note_profiles_to_dsp();
-        dirty[3] = true;
+        dirty[kDirtyA3Frequency] = true;
       }
     }
   }

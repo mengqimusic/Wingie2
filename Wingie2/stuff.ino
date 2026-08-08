@@ -1,106 +1,70 @@
+// 通用设置保存项表：key（NVS 键名）、类型（0=UChar, 1=Float, 2=Bool,
+// 3=Float 存 offset）、dirty 索引、成功后的 Serial 输出格式、取值地址（volatile 兼容）。
+// 输出格式逐字保留历史格式，表序即保存/打印顺序。
+struct GeneralSettingEntry {
+  const char *key;
+  uint8_t type;
+  uint8_t dirtyIndex;
+  const char *format;
+  const volatile void *value;
+};
+
+enum GeneralSettingType {
+  kSettingUChar = 0,
+  kSettingFloat = 1,
+  kSettingBool = 2,
+  kSettingA3Offset = 3,
+};
+
+static const GeneralSettingEntry kGeneralSettings[kDirtyCount] = {
+  {"midi_ch_l", kSettingUChar, kDirtyMidiLeft, "%s is saved, value is %d.\n", &midi_ch_l},
+  {"midi_ch_r", kSettingUChar, kDirtyMidiRight, "%s is saved, value is %d.\n", &midi_ch_r},
+  {"midi_ch_both", kSettingUChar, kDirtyMidiBoth, "%s is saved, value is %d.\n", &midi_ch_both},
+  {"a3_freq_offset", kSettingA3Offset, kDirtyA3Frequency, "a3_freq_offset (%.2fHz) is saved. a3 = %.2fHz.\n", &a3_freq},
+  {"left_thresh", kSettingFloat, kDirtyLeftThreshold, "%s is saved, value is %.4f\n", &left_thresh},
+  {"right_thresh", kSettingFloat, kDirtyRightThreshold, "%s is saved, value is %.4f\n", &right_thresh},
+  {"pre_clip_gain", kSettingFloat, kDirtyPreClipGain, "%s is saved, value is %.4f\n", &pre_clip_gain},
+  {"post_clip_gain", kSettingFloat, kDirtyPostClipGain, "%s is saved, value is %.4f\n", &post_clip_gain},
+  {"left_mode", kSettingUChar, kDirtyLeftMode, "%s is saved, value is %d.\n", &Mode[0]},
+  {"right_mode", kSettingUChar, kDirtyRightMode, "%s is saved, value is %d.\n", &Mode[1]},
+  {"mpe_enabled", kSettingBool, kDirtyMpeEnabled, "%s is saved, value is %d.\n", &mpe_enabled},
+};
+
 bool save_general_preferences(Preferences &store) {
   bool saved = true;
-  if (dirty[0]) {
-    dirty[0] = false;
-    const int value = midi_ch_l;
-    if (store.putUChar("midi_ch_l", value)) Serial.printf("midi_ch_l is saved, value is %d.\n", value);
-    else {
-      dirty[0] = true;
-      saved = false;
+  for (const GeneralSettingEntry &entry : kGeneralSettings) {
+    if (!dirty[entry.dirtyIndex]) continue;
+    dirty[entry.dirtyIndex] = false;
+    bool entrySaved = false;
+    switch (entry.type) {
+      case kSettingUChar: {
+        const int value = *static_cast<const volatile int *>(entry.value);
+        entrySaved = store.putUChar(entry.key, value);
+        if (entrySaved) Serial.printf(entry.format, entry.key, value);
+        break;
+      }
+      case kSettingFloat: {
+        const float value = *static_cast<const volatile float *>(entry.value);
+        entrySaved = store.putFloat(entry.key, value);
+        if (entrySaved) Serial.printf(entry.format, entry.key, value);
+        break;
+      }
+      case kSettingBool: {
+        const bool value = *static_cast<const volatile bool *>(entry.value);
+        entrySaved = store.putBool(entry.key, value);
+        if (entrySaved) Serial.printf(entry.format, entry.key, value);
+        break;
+      }
+      case kSettingA3Offset: {
+        const float frequency = *static_cast<const volatile float *>(entry.value);
+        const float freq_offset = frequency - wingie_config::kDefaultA3Frequency;
+        entrySaved = store.putFloat(entry.key, freq_offset);
+        if (entrySaved) Serial.printf(entry.format, freq_offset, frequency);
+        break;
+      }
     }
-  }
-  if (dirty[1]) {
-    dirty[1] = false;
-    const int value = midi_ch_r;
-    if (store.putUChar("midi_ch_r", value)) Serial.printf("midi_ch_r is saved, value is %d.\n", value);
-    else {
-      dirty[1] = true;
-      saved = false;
-    }
-  }
-  if (dirty[2]) {
-    dirty[2] = false;
-    const int value = midi_ch_both;
-    if (store.putUChar("midi_ch_both", value)) Serial.printf("midi_ch_both is saved, value is %d.\n", value);
-    else {
-      dirty[2] = true;
-      saved = false;
-    }
-  }
-
-  if (dirty[3]) {
-    dirty[3] = false;
-    const float frequency = a3_freq;
-    const float freq_offset = frequency - 440.;
-    if (store.putFloat("a3_freq_offset", freq_offset)) {
-      Serial.printf("a3_freq_offset (%.2fHz) is saved. a3 = %.2fHz.\n", freq_offset, frequency);
-    } else {
-      dirty[3] = true;
-      saved = false;
-    }
-  }
-
-  if (dirty[4]) {
-    dirty[4] = false;
-    const float value = left_thresh;
-    if (store.putFloat("left_thresh", value)) Serial.printf("left_thresh is saved, value is %.4f\n", value);
-    else {
-      dirty[4] = true;
-      saved = false;
-    }
-  }
-  if (dirty[5]) {
-    dirty[5] = false;
-    const float value = right_thresh;
-    if (store.putFloat("right_thresh", value)) Serial.printf("right_thresh is saved, value is %.4f\n", value);
-    else {
-      dirty[5] = true;
-      saved = false;
-    }
-  }
-  if (dirty[6]) {
-    dirty[6] = false;
-    const float value = pre_clip_gain;
-    if (store.putFloat("pre_clip_gain", value)) Serial.printf("pre_clip_gain is saved, value is %.4f\n", value);
-    else {
-      dirty[6] = true;
-      saved = false;
-    }
-  }
-  if (dirty[7]) {
-    dirty[7] = false;
-    const float value = post_clip_gain;
-    if (store.putFloat("post_clip_gain", value)) Serial.printf("post_clip_gain is saved, value is %.4f\n", value);
-    else {
-      dirty[7] = true;
-      saved = false;
-    }
-  }
-
-  if (dirty[8]) {
-    dirty[8] = false;
-    const int value = Mode[0];
-    if (store.putUChar("left_mode", value)) Serial.printf("left_mode is saved, value is %d.\n", value);
-    else {
-      dirty[8] = true;
-      saved = false;
-    }
-  }
-  if (dirty[9]) {
-    dirty[9] = false;
-    const int value = Mode[1];
-    if (store.putUChar("right_mode", value)) Serial.printf("right_mode is saved, value is %d.\n", value);
-    else {
-      dirty[9] = true;
-      saved = false;
-    }
-  }
-
-  if (dirty[10]) {
-    dirty[10] = false;
-    if (store.putBool("mpe_enabled", mpe_enabled)) Serial.printf("mpe_enabled is saved, value is %d.\n", mpe_enabled);
-    else {
-      dirty[10] = true;
+    if (!entrySaved) {
+      dirty[entry.dirtyIndex] = true;
       saved = false;
     }
   }

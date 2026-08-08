@@ -217,7 +217,6 @@ bool cm_ms_prev[2][3][9] = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0}
   }
 };
-bool cave_midi_set[2] = {false, false};
 uint32_t cave_config_revision[2][3] = {};
 bool cave_config_dirty[2][3] = {};
 bool cave_storage_migration_pending[2][3] = {};
@@ -261,7 +260,7 @@ float frequencies[NUM_NOTES+6];
 // global settings
 //
 float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
-bool save_routine_flag = false, stuff_saved = false, dirty[11], tuning_preferences_dirty = false;
+bool save_routine_flag = false, stuff_saved = false, dirty[kDirtyCount], tuning_preferences_dirty = false;
 volatile bool preferences_save_requested = false;
 byte led_flash_color = 0, led_blink = 0;;
 #define LED_FLASH_INTERVAL 250
@@ -520,7 +519,7 @@ void apply_channel_mode_change(byte ch) {
   reset_voice_expressions(ch);
   set_channel_dsp_mode(ch);
   dsp.setParamValue(ch ? "/Wingie/right/mode_changed" : "/Wingie/left/mode_changed", 1);
-  dirty[8 + ch] = true;
+  dirty[kDirtyLeftMode + ch] = true;
   duck_env_triggered[ch] = true;
   duck_env_init_timer[ch] = changedAt;
   ratio_led_phase[ch] = 0;

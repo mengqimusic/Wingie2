@@ -10,6 +10,21 @@ namespace wingie_config {
 
 static const uint8_t kRatioCount = 9;
 static const uint8_t kCaveBankCount = 3;
+
+// 性能参数量化与默认值（网页 set_param 与按键微调共用）
+static const float kThresholdMin = 0.0825f;
+static const float kThresholdMax = 0.99f;
+static const float kThresholdStep = 0.0825f;
+static const float kPreClipGainMin = 0.0825f;
+static const float kPostClipGainMin = 0.385f;
+static const float kClipGainStep = 0.055f;
+static const float kA3FrequencyMin = 358.08f;
+static const float kA3FrequencyMax = 521.91f;
+static const float kA3FrequencyStep = 0.01f;
+static const float kDefaultA3Frequency = 440.0f;
+static const float kDefaultPreClipGain = 0.2475f;
+static const float kDefaultPostClipGain = 0.825f;
+static const float kDefaultThreshold = 0.4125f;
 static const float kRatioMin = 0.125f;
 static const float kRatioMax = 32.0f;
 static const float kRatioStep = 0.001f;

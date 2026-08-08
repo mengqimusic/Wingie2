@@ -30,6 +30,22 @@ extern portMUX_TYPE g_deviceMux;
 // 保证 serial config 的快照/条件写看到一致的 (revision, dirty) 对。
 void mark_cave_changed(byte ch, byte bank);
 
+// 通用设置 dirty 位索引（stuff.ino save_general_preferences 保存块与各写入点共用）
+enum SettingsDirtyIndex {
+  kDirtyMidiLeft = 0,
+  kDirtyMidiRight,
+  kDirtyMidiBoth,
+  kDirtyA3Frequency,
+  kDirtyLeftThreshold,
+  kDirtyRightThreshold,
+  kDirtyPreClipGain,
+  kDirtyPostClipGain,
+  kDirtyLeftMode,
+  kDirtyRightMode,
+  kDirtyMpeEnabled,
+  kDirtyCount
+};
+
 // 一次性快照整个 bank：freq/mute/revision/dirty 在同一临界区内读出，
 // 供 serial config 组装响应，替代无实效的 noInterrupts() 包夹。
 void snapshot_cave_bank(byte ch, byte bank, float *freq_out, bool *mute_out,
