@@ -15,15 +15,13 @@ import tempfile
 from typing import Optional
 
 
-APP_OFFSET = 0x10000
-APP_MAX_SIZE = 0x140000
+LAYOUT_PATH = Path(__file__).resolve().parent / "layout.json"
+
 BOOT_APP0_SHA256 = "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
 ESPTOOL_JS_VERSION = "0.6.0"
 ESPTOOL_BUNDLE_SHA256 = "7c361337d5bba7271cb0d9741f165a3b87137ff9284c13f112a6e197c48cd0da"
 MD5_SCRIPT_SHA256 = "6164d009d3fcf65edd5c47c4b76a0d0580dea4bce929eec89bec744fdec10e15"
 FLASH_SECTOR_SIZE = 0x1000
-NVS_OFFSET = 0x9000
-NVS_SIZE = 0x5000
 PACKAGE_PREFIX = "wingie2-firmware-"
 VERSION_PATTERN = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._+-]*$")
 STANDALONE_MARKER = "  <!-- WINGIE_STANDALONE_BUNDLE -->"
@@ -73,12 +71,36 @@ LICENSE_FILES = (
 )
 
 
-EXPECTED_PARTITIONS = (
-    ("nvs", "data", "nvs", 0x9000, 0x5000, ""),
-    ("otadata", "data", "ota", 0xE000, 0x2000, ""),
-    ("app0", "app", "ota_0", 0x10000, 0x140000, ""),
-    ("app1", "app", "ota_1", 0x150000, 0x140000, ""),
-    ("spiffs", "data", "spiffs", 0x290000, 0x170000, ""),
+def load_layout(path=LAYOUT_PATH):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise RuntimeError(f"无法读取 flash 布局真值 {path}: {error}") from error
+
+
+LAYOUT = load_layout()
+PARTITION_ROW_ORDER = ("nvs", "otadata", "app0", "app1", "spiffs")
+APP_OFFSET = int(LAYOUT["app0"]["offset"], 0)
+APP_MAX_SIZE = int(LAYOUT["app0"]["size"], 0)
+NVS_OFFSET = int(LAYOUT["nvs"]["offset"], 0)
+NVS_SIZE = int(LAYOUT["nvs"]["size"], 0)
+EXPECTED_PARTITIONS = tuple(
+    (
+        name,
+        LAYOUT[name]["type"],
+        LAYOUT[name]["subtype"],
+        int(LAYOUT[name]["offset"], 0),
+        int(LAYOUT[name]["size"], 0),
+        "",
+    )
+    for name in PARTITION_ROW_ORDER
+)
+FLASH_REGIONS = {key: int(value, 0) for key, value in LAYOUT["partition_table"].items()}
+EXPECTED_OFFSETS = (
+    FLASH_REGIONS["bootloader"],
+    FLASH_REGIONS["offset"],
+    FLASH_REGIONS["partition_bin"],
+    APP_OFFSET,
 )
 
 
@@ -254,7 +276,7 @@ def validate_flash_parts(parts):
             )
         span_size = flash_span_size(size)
         if ranges_overlap(part.offset, span_size, NVS_OFFSET, NVS_SIZE):
-            raise ReleaseError(f"{part.name} 的 4 KiB 擦写范围与 0x9000 NVS 相交")
+            raise ReleaseError(f"{part.name} 的 4 KiB 擦写范围与 0x{NVS_OFFSET:x} NVS 相交")
         regions.append((part.name, part.offset, span_size))
 
     for index, (name, offset, size) in enumerate(regions):
@@ -289,9 +311,9 @@ def validate_manifest(manifest):
     if manifest["preserve"] != [
         {"name": "nvs", "offset": NVS_OFFSET, "size": NVS_SIZE}
     ]:
-        raise ReleaseError("manifest 未精确保留 0x9000 NVS")
+        raise ReleaseError(f"manifest 未精确保留 0x{NVS_OFFSET:x} NVS")
 
-    expected_offsets = [0x1000, 0x8000, 0xE000, 0x10000]
+    expected_offsets = list(EXPECTED_OFFSETS)
     expected_names = ["bootloader", "partitions", "boot_app0", "app"]
     if [part.get("offset") for part in manifest["parts"]] != expected_offsets:
         raise ReleaseError("manifest 写入 offset 错误")
@@ -402,7 +424,7 @@ def chinese_instructions(version, package_parts):
 ## 安全边界
 
 - 标准安装只写四个固定区域，不执行整片擦除。
-- `0x9000` 开始的 20 KiB NVS 保持不变，MIDI、调律、Cave、Ratio 等设置不会被标准安装主动擦除。
+- `0x{NVS_OFFSET:x}` 开始的 {NVS_SIZE // 1024} KiB NVS 保持不变，MIDI、调律、Cave、Ratio 等设置不会被标准安装主动擦除。
 - 标准刷机不会读取或备份设备当前 app0。
 - 恢复出厂设置或擦除配置不属于此页面的标准流程。
 
@@ -445,7 +467,7 @@ For normal users, open the single-file `Wingie2-{version}.standalone.html`. It e
 ## Safety boundaries
 
 - Standard installation writes only four fixed regions and never performs a full-chip erase.
-- The 20 KiB NVS region at `0x9000` is preserved, so the standard install does not intentionally erase MIDI, tuning, Cave, or Ratio settings.
+- The {NVS_SIZE // 1024} KiB NVS region at `0x{NVS_OFFSET:x}` is preserved, so the standard install does not intentionally erase MIDI, tuning, Cave, or Ratio settings.
 - Standard flashing never reads or backs up the existing app0 image.
 - Factory reset and configuration erasure are outside this page's standard workflow.
 
@@ -569,21 +591,21 @@ def build_release(inputs):
             "bootloader",
             source_files["bootloader"],
             f"Wingie2-{version}.bootloader.bin",
-            0x1000,
+            FLASH_REGIONS["bootloader"],
             0x7000,
         ),
         FlashPart(
             "partitions",
             source_files["partitions"],
             f"Wingie2-{version}.partitions.bin",
-            0x8000,
-            0x1000,
+            FLASH_REGIONS["offset"],
+            FLASH_REGIONS["size"],
         ),
         FlashPart(
             "boot_app0",
             inputs.boot_app0,
             f"Wingie2-{version}.boot_app0.bin",
-            0xE000,
+            FLASH_REGIONS["partition_bin"],
             0x2000,
         ),
         FlashPart(

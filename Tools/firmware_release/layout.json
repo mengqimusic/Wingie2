@@ -1,0 +1,60 @@
+{
+  "partition_table": {
+    "offset": "0x8000",
+    "size": "0x1000",
+    "bootloader": "0x1000",
+    "partition_bin": "0xE000"
+  },
+  "nvs": {
+    "name": "nvs",
+    "type": "data",
+    "subtype": "nvs",
+    "offset": "0x9000",
+    "size": "0x5000"
+  },
+  "otadata": {
+    "name": "otadata",
+    "type": "data",
+    "subtype": "ota",
+    "offset": "0xE000",
+    "size": "0x2000"
+  },
+  "app0": {
+    "name": "app0",
+    "type": "app",
+    "subtype": "ota_0",
+    "offset": "0x10000",
+    "size": "0x140000"
+  },
+  "app1": {
+    "name": "app1",
+    "type": "app",
+    "subtype": "ota_1",
+    "offset": "0x150000",
+    "size": "0x140000"
+  },
+  "spiffs": {
+    "name": "spiffs",
+    "type": "data",
+    "subtype": "spiffs",
+    "offset": "0x290000",
+    "size": "0x170000"
+  },
+  "release_files": [
+    "manifest.json",
+    "SHA256SUMS.txt",
+    "THIRD_PARTY_LICENSES.txt",
+    "README.zh-CN.md",
+    "README.en.md",
+    "wingie_flasher.html",
+    "Wingie2-$version.standalone.html",
+    "vendor/esptool-js.bundle.js",
+    "vendor/md5.min.js",
+    "licenses/esptool-js-0.6.0-LICENSE.txt",
+    "licenses/atob-lite-2.0.0-LICENSE.md",
+    "licenses/pako-2.1.0-LICENSE.txt",
+    "licenses/pako-2.1.0-zlib-README.txt",
+    "licenses/tslib-2.4.1-LICENSE.txt",
+    "licenses/js-md5-0.8.0-LICENSE.txt"
+  ]
+}

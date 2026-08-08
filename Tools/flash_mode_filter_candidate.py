@@ -16,8 +16,7 @@ import sys
 from typing import Any, Iterable
 
 
-APP_ADDRESS = 0x10000
-APP_MAX_SIZE = 0x140000
+LAYOUT_PATH = Path(__file__).resolve().parent / "firmware_release" / "layout.json"
 DEFAULT_MANIFEST = Path(__file__).with_name("mode_filter_candidates.json")
 DEFAULT_CACHE = Path(
     os.environ.get(
@@ -35,6 +34,19 @@ PORT_PATTERNS = (
 
 class FlashError(RuntimeError):
     pass
+
+
+def load_layout():
+    try:
+        data = json.loads(LAYOUT_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise FlashError(f"无法读取 flash 布局真值 {LAYOUT_PATH}: {error}") from error
+    return data
+
+
+LAYOUT = load_layout()
+APP_ADDRESS = int(LAYOUT["app0"]["offset"], 0)
+APP_MAX_SIZE = int(LAYOUT["app0"]["size"], 0)
 
 
 def parse_int(value: int | str) -> int:
@@ -59,7 +71,7 @@ def load_manifest(path: Path) -> dict[str, Any]:
         raise FlashError("候选清单 schema_version 必须为 1")
     flash = data.get("flash", {})
     if parse_int(flash.get("app_address", -1)) != APP_ADDRESS:
-        raise FlashError("安全边界错误：app_address 必须是 0x10000")
+        raise FlashError(f"安全边界错误：app_address 必须是 0x{APP_ADDRESS:x}")
     candidates = data.get("candidates")
     if not isinstance(candidates, list):
         raise FlashError("候选清单缺少 candidates 数组")
@@ -103,7 +115,7 @@ def verify_candidate(candidate: dict[str, Any], path: Path) -> str:
             f"{candidate['id']} 大小不符：期望 {expected_size}，实际 {actual_size}"
         )
     if actual_size > APP_MAX_SIZE:
-        raise FlashError(f"{candidate['id']} 超过 app0 边界 0x140000 bytes")
+        raise FlashError(f"{candidate['id']} 超过 app0 边界 0x{APP_MAX_SIZE:x} bytes")
     actual_hash = sha256_file(path)
     if actual_hash != candidate.get("sha256"):
         raise FlashError(

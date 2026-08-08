@@ -17,6 +17,9 @@ if [ ! -d "$release_dir" ]; then
   exit 1
 fi
 
+# 发布产物清单真值在 Tools/firmware_release/layout.json 的 release_files；
+# 本循环是发布前门禁，tests/tools/test_flash_layout.py 校验两者一致。
+# 新增或改名发布产物时先改 layout.json。
 for required in manifest.json SHA256SUMS.txt THIRD_PARTY_LICENSES.txt README.zh-CN.md README.en.md wingie_flasher.html "$standalone" vendor/esptool-js.bundle.js vendor/md5.min.js licenses/esptool-js-0.6.0-LICENSE.txt licenses/atob-lite-2.0.0-LICENSE.md licenses/pako-2.1.0-LICENSE.txt licenses/pako-2.1.0-zlib-README.txt licenses/tslib-2.4.1-LICENSE.txt licenses/js-md5-0.8.0-LICENSE.txt; do
   if [ ! -f "$release_dir/$required" ]; then
     echo "Release artifact missing: $release_dir/$required" >&2
