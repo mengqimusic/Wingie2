@@ -1,3 +1,5 @@
+#include "device_state.h"
+
 float mpe_manager_bend() {
   return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
@@ -135,9 +137,13 @@ void cycle_voice_note(byte ch, byte noteValue) {
 }
 
 void clear_mpe_mono_assignment(byte ch) {
+  // 三字段复位合并为单一临界区事务：control 任务（set_channel_note / apply_channel_mode_change）
+  // 与 loop 任务（MPE 回调）都会写 mpeMonoState[ch]，避免交叉观察到半复位状态。
+  taskENTER_CRITICAL(&g_deviceMux);
   mpeMonoState[ch].active = false;
   mpeMonoState[ch].channel = 0;
   mpeMonoState[ch].memberBendSemitones = 0.0f;
+  taskEXIT_CRITICAL(&g_deviceMux);
   currentPitchBend[ch] = mono_total_bend(ch);
 }
 

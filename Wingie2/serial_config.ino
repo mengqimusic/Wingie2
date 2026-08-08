@@ -1,5 +1,7 @@
 #include <stdarg.h>
 
+#include "device_state.h"
+
 void apply_ratio_profile_to_dsp();
 bool save_all_preferences();
 #if MIDI_DIAGNOSTICS
@@ -253,10 +255,14 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     if (strcmp(request.name, "mode") == 0) {
       int mode = POLY_MODE;
       if (!quantizeIntegerParameter(request.value, POLY_MODE, RATIO_MODE, mode)) return false;
+      bool changed = false;
+      taskENTER_CRITICAL(&g_deviceMux);
       if (Mode[ch] != mode) {
         Mode[ch] = mode;
-        apply_channel_mode_change(ch);
+        changed = true;
       }
+      taskEXIT_CRITICAL(&g_deviceMux);
+      if (changed) apply_channel_mode_change(ch);
       canonical = Mode[ch];
       return true;
     }
@@ -427,15 +433,9 @@ void sendRatioProfile(uint32_t id) {
 
 void sendCaveBank(uint32_t id, byte ch, byte bank) {
   CaveBankSnapshot snapshot;
-  noInterrupts();
-  for (byte index = 0; index < wingie_config::kRatioCount; index++) {
-    snapshot.frequencies[index] = cm_freq[ch][bank][index];
-    snapshot.mute[index] = cm_ms[ch][bank][index];
-  }
-  snapshot.revision = cave_config_revision[ch][bank];
-  snapshot.dirty = cave_config_dirty[ch][bank];
+  snapshot_cave_bank(ch, bank, snapshot.frequencies, snapshot.mute,
+                     &snapshot.revision, &snapshot.dirty);
   snapshot.active = activeCaveBank(ch) == bank;
-  interrupts();
 
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_cave\","
@@ -456,13 +456,7 @@ void sendStatus(uint32_t id) {
   const int leftNote = currentNote[0];
   const int rightNote = currentNote[1];
   uint32_t caveRevision[2][wingie_config::kCaveBankCount];
-  noInterrupts();
-  for (byte ch = 0; ch < 2; ch++) {
-    for (byte bank = 0; bank < wingie_config::kCaveBankCount; bank++) {
-      caveRevision[ch][bank] = cave_config_revision[ch][bank];
-    }
-  }
-  interrupts();
+  snapshot_cave_revisions(caveRevision);
   JsonResponse response;
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"status\","
                   "\"mode\":{\"left\":%d,\"right\":%d},"
@@ -580,9 +574,8 @@ void processSerialConfigFrame() {
     }
     case wingie_serial::kOperationSetCave: {
       const byte ch = caveSideIndex(request.side);
-      noInterrupts();
-      const uint32_t currentRevision = cave_config_revision[ch][request.bank];
-      interrupts();
+      uint32_t currentRevision = 0;
+      snapshot_cave_revision(ch, request.bank, &currentRevision);
       if (request.hasExpectedRevision && request.expectedRevision != currentRevision) {
         sendError(request.id, "revision_conflict", "expected_revision", nullptr);
         return;
@@ -597,25 +590,13 @@ void processSerialConfigFrame() {
         wingie_config::caveFrequencyToCentiHz(request.frequencies[index], frequencyCentiHz);
         frequencies[index] = static_cast<float>(frequencyCentiHz) / wingie_config::kCaveFrequencyScale;
       }
-      bool revisionConflict = false;
       uint32_t revision = 0;
-      noInterrupts();
-      if (request.hasExpectedRevision && request.expectedRevision != cave_config_revision[ch][request.bank]) {
-        revisionConflict = true;
-      } else {
-        for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-          cm_freq[ch][request.bank][index] = frequencies[index];
-          cm_ms[ch][request.bank][index] = request.mute[index];
-        }
-        mark_cave_changed(ch, request.bank);
-        applyCaveBank(ch, request.bank);
-        revision = cave_config_revision[ch][request.bank];
-      }
-      interrupts();
-      if (revisionConflict) {
+      if (!set_cave_bank_atomic(ch, request.bank, frequencies, request.mute,
+                                request.hasExpectedRevision, request.expectedRevision, &revision)) {
         sendError(request.id, "revision_conflict", "expected_revision", nullptr);
         return;
       }
+      applyCaveBank(ch, request.bank);
       sendQueued(request.id, "set_cave", revision);
       return;
     }

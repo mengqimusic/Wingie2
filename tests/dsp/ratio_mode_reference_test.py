@@ -211,7 +211,7 @@ class RatioModeReferenceTest(unittest.TestCase):
         led_block = extract_braced_block(firmware, "void set_mode_led")
         mode_change_block = extract_braced_block(
             control,
-            "if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch])",
+            "if (consume_mode_change_request(ch))",
         )
         channel_mode_block = extract_braced_block(
             firmware,

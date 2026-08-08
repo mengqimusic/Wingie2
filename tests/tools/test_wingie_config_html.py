@@ -439,8 +439,9 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("> 0.0051f", self.main_source)
         self.assertIn("dsp.getParamValue", self.firmware_source)
         self.assertIn("struct CaveBankSnapshot", self.firmware_source)
-        self.assertIn("const uint32_t currentRevision", self.firmware_source)
-        self.assertIn("bool revisionConflict = false;", self.firmware_source)
+        self.assertIn("#include \"device_state.h\"", self.firmware_source)
+        self.assertIn("snapshot_cave_revision(ch, request.bank, &currentRevision);", self.firmware_source)
+        self.assertIn("if (!set_cave_bank_atomic(", self.firmware_source)
         self.assertIn("if (!isfinite(value)) return false;", self.firmware_source)
         reset_block = self.firmware_source.split("case wingie_serial::kOperationReset:", 1)[1]
         self.assertIn("request.expectedRevision != ratio_profile.revision", reset_block)

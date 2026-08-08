@@ -1,3 +1,5 @@
+#include "device_state.h"
+
 void apply_note_profiles_to_dsp();
 
 void handleNoteOn (byte channel, byte pitch, byte velocity) {
@@ -112,8 +114,7 @@ void handleControlChange (byte channel, byte number, byte value) {
             midi_value_14bit = max(midi_value_14bit, CAVE_LOWEST_FREQ);
             midi_value_14bit = min(midi_value_14bit, CAVE_HIGHEST_FREQ);
 
-            cm_freq[ch][cave][v] = midi_value_14bit;
-            mark_cave_changed(ch, cave);
+            set_cave_bank_from_midi(ch, cave, v, midi_value_14bit);
             cm_freq_set(ch, v, cm_freq[ch][cave][v]);
             //cave_midi_set[ch] = true;
           }
@@ -153,10 +154,7 @@ void MIDISetParam(int ch, byte number, byte value) {
   if (number == CC_MODE) {
     // 5 模式均分: 0-25 Poly / 26-51 String / 52-76 Bar / 77-102 Cave / 103-127 Ratio
     int modeFromMIDI = (value * 5) >> 7;
-    if (modeFromMIDI <= RATIO_MODE && Mode[ch] != modeFromMIDI) {
-      Mode[ch] = modeFromMIDI;
-      modeChangingFromMIDI[ch] = true;
-    }
+    set_mode_from_midi(ch, modeFromMIDI);
   }
 
   if (number == CC_MIX or number == CC_MIX + 32) {

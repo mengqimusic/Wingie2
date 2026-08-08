@@ -28,6 +28,7 @@
 #include <Wire.h>
 #include "Wingie2.h"
 #include "config_profiles.h"
+#include "device_state.h"
 #include "mpe_state.h"
 #include "serial_config_protocol.h"
 #include "tap_sequence.h"
@@ -137,17 +138,25 @@ volatile bool an[2] = {0, 0};
 bool keyChanged = false;
 bool source, key[2][12], keyPrev[2][12], firstPress[2] = {true, true};
 bool sourceChanged = false, sourceChanged2 = false;
-int note[2], currentNote[2] = {36, 36}, octPrev[2], oct[2], Mode[2] = {POLY_MODE, POLY_MODE}, allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
-bool modeButtonState[2], modeButtonPressed[2], modeChangingFromKeys[2] = {false, false}, modeChangingFromMIDI[2] = {false, false}, duck_env_triggered[2] = {false, false};
+int note[2], currentNote[2] = {36, 36}, octPrev[2], oct[2], allKeys[2] = {0, 0}, currentPoly[2] = {0, 0};
+// Mode 由 control 任务（模式键递增）与 loop 任务（MIDI CC / 网页 set_param）共同读写
+volatile int Mode[2] = {POLY_MODE, POLY_MODE};
+bool modeButtonState[2], modeButtonPressed[2], duck_env_triggered[2] = {false, false};
+// 模式切换标志：keys 侧仅 control 任务，MIDI 侧由 loop 任务挂起、control 任务原子消费
+volatile bool modeChangingFromKeys[2] = {false, false}, modeChangingFromMIDI[2] = {false, false};
 bool octButtonPrev[2][2] = {{true, true}, {true, true}};
 bool octButtonPrevValid = false, potMoving[3] = {false, false, false}, potReadValid = false;
 
 //
 // for MIDI
 //
-bool realtime_value_valid[3] = {true, true, true}, polyFlip = false, mpeFlip = false;
+// pot 与 MIDI CC / 网页 set_param 的 last-writer-wins 仲裁：
+// - control 任务检测到 pot 大幅移动（> slider_movement_detect）时置 true（pot 接管）；
+// - loop 任务（MIDI CC、serial config）写入参数时置 false（外部控制接管）。
+// 两写方都在 core 1，volatile 保证编译器不缓存陈旧值；bool 单字节读写天然原子。
+volatile bool realtime_value_valid[3] = {true, true, true}, polyFlip = false, mpeFlip = false;
 int potValRealtime[3], potValSampled[3], midi_ch_l, midi_ch_r, midi_ch_both, use_alt_tuning, alt_tuning_index;
-volatile uint32_t midi_rx_count = 0; // 成功解析的 MIDI 消息总数，用于串口 status 观测 TRS 接收是否存活
+uint32_t midi_rx_count = 0; // 成功解析的 MIDI 消息总数，用于串口 status 观测 TRS 接收是否存活；仅在 core 1 loop() 内读写
 
 struct ControlActivity {
   volatile uint16_t key[2][12];      // 24 键
@@ -158,7 +167,7 @@ struct ControlActivity {
 };
 
 volatile ControlActivity controlActivity;
-float a3_freq, currentPitchBend[2] = {0.0f, 0.0f};
+volatile float a3_freq, currentPitchBend[2] = {0.0f, 0.0f};
 int midiVal[2][3][2], cave_freq_midi_value[2][9][2], a3_freq_midi_value[2]; // Channel, Type, (MSB, LSB)
 bool unq_caves_store = false;
 wingie_mpe::State mpe_state;
@@ -269,7 +278,7 @@ TapSequence tapSequence[2];
 
 unsigned long currentMillis, routineReadTimer = 0, sourceChangedMillis = 0, startupMillis = 0, duck_env_init_timer[2] = {0};
 
-bool startup = true, core_print = true; // 启动淡入所用
+volatile bool startup = true, core_print = true; // 启动淡入所用：control 任务写，loop 任务（MIDI decay 门控）读
 
 void setup() {
   Serial.begin(115200);
@@ -380,10 +389,7 @@ void set_mode_led(byte ch) {
   for (int index = 0; index < 2; index++) digitalWrite(ledPin[ch][index], !bitRead(ledColor[Mode[ch]], index));
 }
 
-void mark_cave_changed(byte ch, byte bank) {
-  cave_config_revision[ch][bank]++;
-  cave_config_dirty[ch][bank] = true;
-}
+// mark_cave_changed 已收进 device_state.ino，见 device_state.h（revision 与 dirty 在同一临界区内更新）。
 
 // create an array of the ratios used in this tuning
 // tuning param >= 0 is index into ratios

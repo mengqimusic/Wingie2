@@ -1,3 +1,5 @@
+#include "device_state.h"
+
 void control(void *pvParameters) {
   Serial.print("control running on core ");
   Serial.println(xPortGetCoreID());
@@ -511,18 +513,8 @@ void control(void *pvParameters) {
     //
     for (int ch = 0; ch < 2; ch++) {
 
-      if (modeChangingFromKeys[ch] || modeChangingFromMIDI[ch]) {
-
-        if (modeChangingFromKeys[ch]) {
-          modeChangingFromKeys[ch] = false;
-          if (Mode[ch] < MODE_NUM) Mode[ch] += 1;
-          else Mode[ch] = 0;
-        }
-
-        if (modeChangingFromMIDI[ch]) {
-          modeChangingFromMIDI[ch] = false;
-        }
-
+      // 模式切换标志（keys/MIDI）的读-清-用合并为原子事务，Mode 递增与 MIDI/网页写 Mode 串行化
+      if (consume_mode_change_request(ch)) {
         apply_channel_mode_change(ch);
       }
 
