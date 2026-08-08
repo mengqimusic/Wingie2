@@ -1,4 +1,5 @@
 import base64
+import dataclasses
 import hashlib
 import html
 import importlib.util
@@ -171,6 +172,56 @@ class FirmwareReleaseTest(unittest.TestCase):
                     part["offset"], RELEASE.flash_span_size(part["size"]), 0x9000, 0x5000
                 )
             )
+
+    def test_latest_dir_is_published_with_matching_hashes(self):
+        latest_dir = self.root / "latest"
+        package_dir = RELEASE.build_release(
+            dataclasses.replace(self.inputs(), latest_dir=latest_dir)
+        )
+        manifest = json.loads((latest_dir / "manifest.json").read_text())
+        self.assertEqual(manifest["version"], "9.8.7-test")
+        self.assertEqual(
+            [part["path"] for part in manifest["parts"]],
+            [
+                "Wingie2-9.8.7-test.bootloader.bin",
+                "Wingie2-9.8.7-test.partitions.bin",
+                "Wingie2-9.8.7-test.boot_app0.bin",
+                "Wingie2-9.8.7-test.app.bin",
+            ],
+        )
+        for part in manifest["parts"]:
+            artifact = latest_dir / part["path"]
+            self.assertTrue(artifact.is_file())
+            self.assertEqual(artifact.stat().st_size, part["size"])
+            self.assertEqual(self.sha256(artifact), part["sha256"])
+        for vendor_name in ("esptool-js.bundle.js", "md5.min.js"):
+            self.assertTrue((latest_dir / "vendor" / vendor_name).is_file())
+        self.assertEqual(
+            self.sha256(latest_dir / "vendor" / "esptool-js.bundle.js"),
+            self.sha256(package_dir / "vendor" / "esptool-js.bundle.js"),
+        )
+
+    def test_latest_dir_overwrites_previous_version_and_rejects_corruption(self):
+        package_dir = RELEASE.build_release(
+            dataclasses.replace(self.inputs(version="1.0-test"), latest_dir=self.root / "latest")
+        )
+        second = RELEASE.build_release(
+            dataclasses.replace(self.inputs(version="2.0-test"), latest_dir=self.root / "latest")
+        )
+        manifest = json.loads((self.root / "latest" / "manifest.json").read_text())
+        self.assertEqual(manifest["version"], "2.0-test")
+        for part in manifest["parts"]:
+            artifact = self.root / "latest" / part["path"]
+            self.assertEqual(self.sha256(artifact), part["sha256"])
+        for stale_path in (self.root / "latest").glob("Wingie2-1.0-test*"):
+            self.assertFalse(stale_path.exists(), f"stale image remains: {stale_path.name}")
+
+        app_source = second / "Wingie2-2.0-test.app.bin"
+        original = app_source.read_bytes()
+        app_source.write_bytes(original[:-1] + bytes([original[-1] ^ 0xFF]))
+        with self.assertRaises(RELEASE.ReleaseError):
+            RELEASE.publish_latest_dir(second, self.root / "latest")
+        app_source.write_bytes(original)
 
     def test_flash_ranges_are_checked_at_4k_sector_granularity(self):
         self.assertEqual(RELEASE.flash_span_size(1), 0x1000)

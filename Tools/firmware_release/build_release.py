@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from typing import Optional
 
 
 APP_OFFSET = 0x10000
@@ -92,6 +93,7 @@ class ReleaseInputs:
     esptool: Path
     gen_esp32part: Path
     output_root: Path
+    latest_dir: Optional[Path] = None
 
 
 @dataclass(frozen=True)
@@ -483,6 +485,43 @@ def write_checksums(package_dir):
     (package_dir / "SHA256SUMS.txt").write_text(contents, encoding="utf-8")
 
 
+def publish_latest_dir(package_dir, latest_dir):
+    """把发布包同步填充到产测页的 latest/ 目录（manifest、四段镜像、vendor 依赖）。
+
+    固定路径目录随版本覆盖；每个文件复制后与 manifest 声明的 SHA-256 复核，
+    失败即中止并提示重新同步，避免产测页刷到半更新的固件包。
+    """
+    manifest_path = package_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    latest_dir.mkdir(parents=True, exist_ok=True)
+    (latest_dir / "vendor").mkdir(parents=True, exist_ok=True)
+
+    current_images = {part["path"] for part in manifest["parts"]}
+    for stale in latest_dir.glob("*.bin"):
+        if stale.name not in current_images:
+            stale.unlink()
+
+    copied = []
+    for part in manifest["parts"]:
+        source = package_dir / part["path"]
+        target = latest_dir / part["path"]
+        shutil.copyfile(source, target)
+        actual = sha256_file(target)
+        if actual != part["sha256"]:
+            raise ReleaseError(f"latest 同步后 {part['path']} SHA-256 与 manifest 不符")
+        copied.append(f"{part['name']} -> {target.name}")
+    for vendor_name in ("esptool-js.bundle.js", "md5.min.js"):
+        source = package_dir / "vendor" / vendor_name
+        shutil.copyfile(source, latest_dir / "vendor" / vendor_name)
+        copied.append(f"vendor/{vendor_name}")
+    shutil.copyfile(manifest_path, latest_dir / "manifest.json")
+
+    print("latest/ 已同步：")
+    for item in copied:
+        print(f"  {item}")
+    return latest_dir
+
+
 def build_release(inputs):
     if not VERSION_PATTERN.fullmatch(inputs.version):
         raise ReleaseError("version 只能包含字母、数字、点、加号、减号和下划线")
@@ -642,6 +681,9 @@ def build_release(inputs):
         write_checksums(package_dir)
         package_dir.rename(destination)
 
+    if inputs.latest_dir is not None:
+        publish_latest_dir(destination, inputs.latest_dir)
+
     return destination
 
 
@@ -670,6 +712,11 @@ def parse_arguments(argv=None):
         type=Path,
         default=Path(__file__).resolve().parents[2] / "dist",
     )
+    parser.add_argument(
+        "--latest-dir",
+        type=Path,
+        help="发布包生成后同步填充的产测 latest/ 目录（manifest、四段镜像与 vendor 依赖）",
+    )
     arguments = parser.parse_args(argv)
     if arguments.esptool is None:
         arguments.esptool = default_core_tool(arguments.boot_app0, "esptool.py")
@@ -688,7 +735,6 @@ def main(argv=None):
         return 1
     print(f"发布包已生成：{destination}")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())
