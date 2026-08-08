@@ -91,6 +91,10 @@ struct MySettings : public midi::DefaultSettings
 #define MIDI_DIAGNOSTICS 0
 #endif
 
+#ifndef WINGIE_FW_VERSION
+#define WINGIE_FW_VERSION "dev"
+#endif
+
 struct MpeMonoState {
   bool active;
   byte channel;

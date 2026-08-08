@@ -2,6 +2,13 @@
 
 `build_release.py` validates the four flash images, the exact 4 MB partition layout, the fixed Arduino Core 2.0.4-cn `boot_app0.bin`, and every published checksum before it creates a release directory. It also generates `Wingie2-VERSION.standalone.html`, containing the manifest, all four images, `esptool-js`, and MD5 implementation in one file. It never opens a serial port and contains no erase or flash operation.
 
+Build the firmware images with the release version injected so devices can report it over the serial `hello` op (`Wingie2.ino` defaults to `dev` when the macro is absent):
+
+```bash
+arduino-cli compile --fqbn esp32:esp32:esp32 --libraries Libraries \
+  --build-property compiler.cpp.extra_flags="-DWINGIE_FW_VERSION=\"VERSION\"" Wingie2
+```
+
 ```bash
 python3 Tools/firmware_release/build_release.py \
   --build-dir /private/tmp/wingie2-two-source-product-build \
