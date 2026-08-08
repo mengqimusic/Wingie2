@@ -1,6 +1,5 @@
-#include <stdarg.h>
-
 #include "device_state.h"
+#include "serial_response.h"
 
 void apply_ratio_profile_to_dsp();
 bool save_all_preferences();
@@ -15,37 +14,6 @@ char serialConfigFrame[wingie_serial::kMaxFrameBytes + 1];
 size_t serialConfigLength = 0;
 bool serialConfigActive = false;
 bool serialConfigOverflow = false;
-
-struct JsonResponse {
-  char data[wingie_serial::kMaxFrameBytes + 1];
-  size_t length;
-  bool valid;
-
-  JsonResponse() : length(0), valid(true) {
-    data[0] = '\0';
-  }
-
-  void append(const char *format, ...) __attribute__((format(printf, 2, 3))) {
-    if (!valid || length >= wingie_serial::kMaxFrameBytes) return;
-    va_list arguments;
-    va_start(arguments, format);
-    const int written = vsnprintf(data + length, sizeof(data) - length, format, arguments);
-    va_end(arguments);
-    if (written < 0 || static_cast<size_t>(written) >= sizeof(data) - length) {
-      valid = false;
-      return;
-    }
-    length += static_cast<size_t>(written);
-  }
-};
-
-struct CaveBankSnapshot {
-  float frequencies[wingie_config::kRatioCount];
-  bool mute[wingie_config::kRatioCount];
-  uint32_t revision;
-  bool dirty;
-  bool active;
-};
 
 const char *parseErrorCode(wingie_serial::ParseErrorCode code) {
   switch (code) {
@@ -68,47 +36,20 @@ void writeProtocolLine(const char *data, size_t length) {
   Serial.write(reinterpret_cast<const uint8_t *>(frame), length + 2);
 }
 
-void sendJson(JsonResponse &response) {
+void sendJson(wingie_serial::JsonResponse &response) {
   if (!response.valid) {
-    const char fallback[] = "{\"v\":1,\"id\":0,\"ok\":false,\"error\":{\"code\":\"response_too_large\"}}";
-    writeProtocolLine(fallback, sizeof(fallback) - 1);
+    char fallback[80];
+    const size_t length = wingie_serial::encodeResponseTooLarge(fallback, sizeof(fallback));
+    writeProtocolLine(fallback, length);
     return;
   }
   writeProtocolLine(response.data, response.length);
 }
 
 void sendError(uint32_t id, const char *code, const char *field, const char *message) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":false,\"error\":{\"code\":\"%s\"",
-                  static_cast<unsigned long>(id), code);
-  if (field) response.append(",\"field\":\"%s\"", field);
-  if (message) response.append(",\"message\":\"%s\"", message);
-  response.append("}}");
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeError(response, id, code, field, message);
   sendJson(response);
-}
-
-void appendRatioArray(JsonResponse &response, const float *ratios) {
-  response.append("[");
-  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    response.append(index ? ",%.3f" : "%.3f", ratios[index]);
-  }
-  response.append("]");
-}
-
-void appendCaveFrequencyArray(JsonResponse &response, const float *frequencies) {
-  response.append("[");
-  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    response.append(index ? ",%.2f" : "%.2f", frequencies[index]);
-  }
-  response.append("]");
-}
-
-void appendCaveMuteArray(JsonResponse &response, const bool *mute) {
-  response.append("[");
-  for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
-    response.append(index ? ",%s" : "%s", mute[index] ? "true" : "false");
-  }
-  response.append("]");
 }
 
 byte caveSideIndex(const char *side) {
@@ -357,146 +298,117 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
   return false;
 }
 
-void appendChannelSettings(JsonResponse &response, byte ch) {
-  response.append("{\"mode\":%d,\"mix\":%.4f,\"decay\":%.4f,\"volume\":%.4f,\"threshold\":%.4f}",
-                  Mode[ch], dsp.getParamValue(ch ? "mix1" : "mix0"),
-                  dsp.getParamValue(ch ? "/Wingie/right/decay" : "/Wingie/left/decay"),
-                  dsp.getParamValue(ch ? "volume1" : "volume0"), ch ? right_thresh : left_thresh);
-}
-
 void sendSettings(uint32_t id) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_settings\","
-                  "\"source\":\"%s\",\"dirty\":%s,\"left\":",
-                  static_cast<unsigned long>(id), source ? "line" : "mic",
-                  generalSettingsAreDirty() ? "true" : "false");
-  appendChannelSettings(response, 0);
-  response.append(",\"right\":");
-  appendChannelSettings(response, 1);
-  response.append(",\"shared\":{\"a3_hz\":%.2f,\"tuning\":%d,"
-                  "\"pre_clip_gain\":%.4f,\"post_clip_gain\":%.4f,"
-                  "\"midi\":{\"left\":%d,\"right\":%d,\"both\":%d},\"mpe_enabled\":%s}}",
-                  a3_freq, use_alt_tuning ? alt_tuning_index : -1,
-                  pre_clip_gain, post_clip_gain, midi_ch_l, midi_ch_r, midi_ch_both,
-                  mpe_enabled ? "true" : "false");
+  wingie_serial::ChannelSettings left;
+  left.mode = Mode[0];
+  left.mix = dsp.getParamValue("mix0");
+  left.decay = dsp.getParamValue("/Wingie/left/decay");
+  left.volume = dsp.getParamValue("volume0");
+  left.threshold = left_thresh;
+
+  wingie_serial::ChannelSettings right;
+  right.mode = Mode[1];
+  right.mix = dsp.getParamValue("mix1");
+  right.decay = dsp.getParamValue("/Wingie/right/decay");
+  right.volume = dsp.getParamValue("volume1");
+  right.threshold = right_thresh;
+
+  wingie_serial::SharedSettings shared;
+  shared.a3Hz = a3_freq;
+  shared.tuning = use_alt_tuning ? alt_tuning_index : -1;
+  shared.preClipGain = pre_clip_gain;
+  shared.postClipGain = post_clip_gain;
+  shared.midiLeft = midi_ch_l;
+  shared.midiRight = midi_ch_r;
+  shared.midiBoth = midi_ch_both;
+  shared.mpeEnabled = mpe_enabled;
+
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeSettings(response, id, source, generalSettingsAreDirty(), left, right, shared);
   sendJson(response);
 }
 
 void sendParameterResponse(uint32_t id, float value, bool cavesChanged) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"set_param\","
-                  "\"value\":%.4f,\"dirty\":%s,\"caves_changed\":%s}",
-                  static_cast<unsigned long>(id), value,
-                  generalSettingsAreDirty() ? "true" : "false", cavesChanged ? "true" : "false");
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeParameterResponse(response, id, value, generalSettingsAreDirty(), cavesChanged);
   sendJson(response);
 }
 
 void sendHello(uint32_t id) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"hello\","
-                  "\"device\":\"Wingie2\","
-                  "\"firmware\":\"%s\","
-                  "\"capabilities\":[\"settings\",\"ratio_mode\",\"cave_config\",\"mpe\"],"
-                  "\"config_schema\":5,\"transport\":{\"baud\":115200,\"max_frame\":%u}}",
-                  static_cast<unsigned long>(id), WINGIE_FW_VERSION,
-                  static_cast<unsigned>(wingie_serial::kMaxFrameBytes));
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeHello(response, id, WINGIE_FW_VERSION);
   sendJson(response);
 }
 
 void sendRatioProfile(uint32_t id) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get\",\"profile\":{\"ratios\":",
-                  static_cast<unsigned long>(id));
-  appendRatioArray(response, ratio_profile.ratios);
-  response.append(",\"revision\":%lu,\"dirty\":%s},\"factory_profile\":{\"ratios\":",
-                  static_cast<unsigned long>(ratio_profile.revision), ratio_profile.dirty ? "true" : "false");
-  appendRatioArray(response, wingie_config::kDefaultRatios);
-  response.append("},\"limits\":{\"min\":%.3f,\"max\":%.3f,\"step\":%.3f,"
-                  "\"frequency_min\":%u,\"frequency_max\":%u}}",
-                  wingie_config::kRatioMin, wingie_config::kRatioMax, wingie_config::kRatioStep,
-                  wingie_config::kRatioFrequencyMin, wingie_config::kRatioFrequencyMax);
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeRatioProfile(response, id, ratio_profile.ratios,
+                                    ratio_profile.revision, ratio_profile.dirty);
   sendJson(response);
 }
 
 void sendCaveBank(uint32_t id, byte ch, byte bank) {
-  CaveBankSnapshot snapshot;
-  snapshot_cave_bank(ch, bank, snapshot.frequencies, snapshot.mute,
-                     &snapshot.revision, &snapshot.dirty);
-  snapshot.active = activeCaveBank(ch) == bank;
+  float frequencies[wingie_config::kRatioCount];
+  bool mute[wingie_config::kRatioCount];
+  uint32_t revision = 0;
+  bool dirty = false;
+  snapshot_cave_bank(ch, bank, frequencies, mute, &revision, &dirty);
 
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_cave\","
-                  "\"side\":\"%s\",\"bank\":%u,\"active\":%s,\"frequencies\":",
-                  static_cast<unsigned long>(id), ch ? "right" : "left", bank,
-                  snapshot.active ? "true" : "false");
-  appendCaveFrequencyArray(response, snapshot.frequencies);
-  response.append(",\"mute\":");
-  appendCaveMuteArray(response, snapshot.mute);
-  response.append(",\"revision\":%lu,\"dirty\":%s,\"limits\":{\"min\":%.2f,\"max\":%.2f,\"step\":%.2f}}",
-                  static_cast<unsigned long>(snapshot.revision), snapshot.dirty ? "true" : "false",
-                  wingie_config::kCaveFrequencyMin, wingie_config::kCaveFrequencyMax,
-                  wingie_config::kCaveFrequencyStep);
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeCaveBank(response, id, ch ? "right" : "left", bank,
+                                activeCaveBank(ch) == bank, frequencies, mute, revision, dirty);
   sendJson(response);
 }
 
 void sendStatus(uint32_t id) {
-  const int leftNote = currentNote[0];
-  const int rightNote = currentNote[1];
-  uint32_t caveRevision[2][wingie_config::kCaveBankCount];
-  snapshot_cave_revisions(caveRevision);
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"status\","
-                  "\"mode\":{\"left\":%d,\"right\":%d},"
-                  "\"note\":{\"left\":%d,\"right\":%d},"
-                  "\"fundamental_hz\":{\"left\":%.3f,\"right\":%.3f},"
-                  "\"midi_rx\":%lu,"
-                  "\"profile_revision\":%lu,\"cave_active_bank\":{\"left\":%u,\"right\":%u},"
-                  "\"cave_revision\":{\"left\":[%lu,%lu,%lu],\"right\":[%lu,%lu,%lu]}}",
-                  static_cast<unsigned long>(id), Mode[0], Mode[1], leftNote, rightNote,
-                  configured_note_frequency(leftNote), configured_note_frequency(rightNote),
-                  static_cast<unsigned long>(midi_rx_count),
-                  static_cast<unsigned long>(ratio_profile.revision), activeCaveBank(0), activeCaveBank(1),
-                  static_cast<unsigned long>(caveRevision[0][0]), static_cast<unsigned long>(caveRevision[0][1]),
-                  static_cast<unsigned long>(caveRevision[0][2]), static_cast<unsigned long>(caveRevision[1][0]),
-                  static_cast<unsigned long>(caveRevision[1][1]), static_cast<unsigned long>(caveRevision[1][2]));
-  sendJson(response);
-}
+  wingie_serial::StatusSnapshot snapshot;
+  snapshot.mode[0] = Mode[0];
+  snapshot.mode[1] = Mode[1];
+  snapshot.note[0] = currentNote[0];
+  snapshot.note[1] = currentNote[1];
+  snapshot.fundamentalHz[0] = configured_note_frequency(snapshot.note[0]);
+  snapshot.fundamentalHz[1] = configured_note_frequency(snapshot.note[1]);
+  snapshot.midiRx = midi_rx_count;
+  snapshot.profileRevision = ratio_profile.revision;
+  snapshot.activeBank[0] = activeCaveBank(0);
+  snapshot.activeBank[1] = activeCaveBank(1);
+  snapshot_cave_revisions(snapshot.caveRevision);
 
-void appendControlCounterArray(JsonResponse &response, const volatile uint16_t *values, size_t count) {
-  for (size_t i = 0; i < count; i++) {
-    if (i) response.append(",");
-    response.append("%u", static_cast<unsigned>(values[i]));
-  }
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeStatus(response, id, snapshot);
+  sendJson(response);
 }
 
 void sendControlCounts(uint32_t id, bool reset) {
   if (reset) const_cast<ControlActivity &>(controlActivity) = ControlActivity{};
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_controls\","
-                  "\"midi_rx\":%lu,\"note\":{\"left\":%d,\"right\":%d},"
-                  "\"counts\":{\"key\":{\"left\":[",
-                  static_cast<unsigned long>(id), static_cast<unsigned long>(midi_rx_count),
-                  currentNote[0], currentNote[1]);
-  appendControlCounterArray(response, controlActivity.key[0], 12);
-  response.append("],\"right\":[");
-  appendControlCounterArray(response, controlActivity.key[1], 12);
-  response.append("]},\"mode_button\":[");
-  appendControlCounterArray(response, controlActivity.modeButton, 2);
-  response.append("],\"oct_button\":{\"left\":[");
-  appendControlCounterArray(response, controlActivity.octButton[0], 2);
-  response.append("],\"right\":[");
-  appendControlCounterArray(response, controlActivity.octButton[1], 2);
-  response.append("]},\"source_switch\":%u,\"pot\":[",
-                  static_cast<unsigned>(controlActivity.sourceSwitch));
-  appendControlCounterArray(response, controlActivity.pot, 3);
-  response.append("]}}");
+
+  wingie_serial::ControlCountsSnapshot snapshot;
+  snapshot.midiRx = midi_rx_count;
+  snapshot.note[0] = currentNote[0];
+  snapshot.note[1] = currentNote[1];
+  for (uint8_t keyIndex = 0; keyIndex < 12; keyIndex++) {
+    snapshot.key[0][keyIndex] = controlActivity.key[0][keyIndex];
+    snapshot.key[1][keyIndex] = controlActivity.key[1][keyIndex];
+  }
+  snapshot.modeButton[0] = controlActivity.modeButton[0];
+  snapshot.modeButton[1] = controlActivity.modeButton[1];
+  snapshot.octButton[0][0] = controlActivity.octButton[0][0];
+  snapshot.octButton[0][1] = controlActivity.octButton[0][1];
+  snapshot.octButton[1][0] = controlActivity.octButton[1][0];
+  snapshot.octButton[1][1] = controlActivity.octButton[1][1];
+  snapshot.sourceSwitch = controlActivity.sourceSwitch;
+  snapshot.pot[0] = controlActivity.pot[0];
+  snapshot.pot[1] = controlActivity.pot[1];
+  snapshot.pot[2] = controlActivity.pot[2];
+
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeControlCounts(response, id, snapshot);
   sendJson(response);
 }
 
 void sendQueued(uint32_t id, const char *operation, uint32_t revision) {
-  JsonResponse response;
-  response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"%s\",\"state\":\"queued\",\"revision\":%lu}",
-                  static_cast<unsigned long>(id), operation, static_cast<unsigned long>(revision));
+  wingie_serial::JsonResponse response;
+  wingie_serial::encodeQueued(response, id, operation, revision);
   sendJson(response);
 }
 
@@ -602,9 +514,8 @@ void processSerialConfigFrame() {
         sendError(request.id, "save_failed", nullptr, nullptr);
         return;
       }
-      JsonResponse response;
-      response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"save\",\"state\":\"saved\"}",
-                      static_cast<unsigned long>(request.id));
+      wingie_serial::JsonResponse response;
+      wingie_serial::encodeSaveOk(response, request.id);
       sendJson(response);
       led_blink = 5;
       led_flash_timer = millis();

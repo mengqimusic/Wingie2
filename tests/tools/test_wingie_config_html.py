@@ -39,6 +39,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         cls.source = HTML_PATH.read_text(encoding="utf-8")
         cls.mock_source = MOCK_PATH.read_text(encoding="utf-8")
         cls.firmware_source = (REPO_ROOT / "Wingie2/serial_config.ino").read_text(encoding="utf-8")
+        cls.response_source = (REPO_ROOT / "Wingie2/serial_response.h").read_text(encoding="utf-8")
         cls.protocol_source = (REPO_ROOT / "Wingie2/serial_config_protocol.h").read_text(encoding="utf-8")
         cls.control_source = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
         cls.midi_source = (REPO_ROOT / "Wingie2/MIDI.ino").read_text(encoding="utf-8")
@@ -296,6 +297,19 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("await refreshDependentCaves();", self.source)
         self.assertIn("await acknowledge(response", self.source)
 
+    def test_unsaved_changes_red_flag(self):
+        # 有未保存改动时状态行与保存按钮标红
+        self.assertIn("#wingie-config .wg-button.wg-dirty", self.source)
+        self.assertIn("background: #a33a3a", self.source)
+        self.assertIn("#wingie-config #wg-state-summary.wg-dirty", self.source)
+        self.assertIn("background: #e6c6c0", self.source)
+        update_controls = re.search(r"function updateControls\(\) \{(.*?)\n      \}", self.source, re.DOTALL)
+        self.assertIsNotNone(update_controls)
+        block = update_controls.group(1)
+        self.assertIn("const dirty = dirtyCount() > 0;", block)
+        self.assertIn('elements.stateSummary.classList.toggle("wg-dirty", dirty);', block)
+        self.assertIn('elements.save.classList.toggle("wg-dirty", dirty);', block)
+
     def test_write_poll_race_guards(self):
         enqueue = re.search(
             r"function enqueueWrite\(key, version, execute, acknowledge, rollback\) \{(.*?)\n      \}",
@@ -423,12 +437,12 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("window.confirm", save_block)
 
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
-        self.assertIn('"config_schema\\":5', self.firmware_source)
+        self.assertIn('"config_schema\\":5', self.response_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
         self.assertIn("kOperationSetParam", self.protocol_source)
         self.assertIn("void sendSettings(uint32_t id)", self.firmware_source)
         self.assertIn("bool applyScalarParameter", self.firmware_source)
-        self.assertIn('"caves_changed\\":%s', self.firmware_source)
+        self.assertIn('"caves_changed\\":%s', self.response_source)
         self.assertIn("generalSettingsAreDirty()", self.firmware_source)
         self.assertIn("cavesChanged = tune_caves();", self.firmware_source)
         self.assertRegex(
@@ -438,7 +452,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("bool tune_caves()", self.main_source)
         self.assertIn("> 0.0051f", self.main_source)
         self.assertIn("dsp.getParamValue", self.firmware_source)
-        self.assertIn("struct CaveBankSnapshot", self.firmware_source)
+        self.assertIn("encodeCaveBank(", self.response_source)
         self.assertIn("#include \"device_state.h\"", self.firmware_source)
         self.assertIn("snapshot_cave_revision(ch, request.bank, &currentRevision);", self.firmware_source)
         self.assertIn("if (!set_cave_bank_atomic(", self.firmware_source)
@@ -457,9 +471,9 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn('"mpe_enabled"', self.storage_source)
         self.assertIn("kDirtyMpeEnabled", self.storage_source)
         self.assertIn("store.putBool", self.storage_source)
-        self.assertIn('"mpe_enabled\\":%s', self.firmware_source)
-        self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.firmware_source)
-        self.assertIn('"config_schema\\\":5', self.firmware_source)
+        self.assertIn('"mpe_enabled\\":%s', self.response_source)
+        self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.response_source)
+        self.assertIn('"config_schema\\":5', self.response_source)
         self.assertRegex(
             self.storage_source,
             r"if \(unq_caves_store\) \{\s*if \(!save_general_preferences\(prefs\)\)",
