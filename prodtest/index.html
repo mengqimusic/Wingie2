@@ -341,17 +341,15 @@
 
     <section class="wpt-section">
       <h2 data-i18n-zh="4 · 控件监视" data-i18n-en="4 · Control monitor"></h2>
-      <p data-i18n-zh="打开开关后，逐一操作下列 34 个控件，计数实时累加。全部操作完后点“完成检查”。" data-i18n-en="Turn the monitor on, then operate each of the 34 controls below; counts accumulate live. Press “Finish check” when all are operated."></p>
+      <p data-i18n-zh="打开开关后清零计数，格子全部为红；逐一操作下列 34 个控件，每格获得计数即实时变绿。全部变绿即通过。" data-i18n-en="Turn the monitor on and reset counts: every cell turns red. Operate each of the 34 controls below; a cell turns green as soon as it receives a count. All green means pass."></p>
       <div class="wpt-row">
         <label class="wpt-field">
           <input id="wpt-monitor-toggle" type="checkbox">
           <span data-i18n-zh="打开控件监视" data-i18n-en="Enable control monitor"></span>
         </label>
         <button id="wpt-counts-reset" type="button" data-i18n-zh="清零计数" data-i18n-en="Reset counts" disabled></button>
-        <button id="wpt-counts-finish" type="button" data-i18n-zh="完成检查" data-i18n-en="Finish check" disabled></button>
         <span id="wpt-counts-status" class="wpt-status" data-state="idle"></span>
       </div>
-      <div id="wpt-counts-result" class="wpt-field"></div>
       <div id="wpt-controls">
         <div class="wpt-field">
           <span class="wpt-label" data-i18n-zh="左键（12）" data-i18n-en="Left keys (12)"></span>
@@ -535,9 +533,7 @@
         audioPan: root.querySelector("#wpt-audio-pan"),
         monitorToggle: root.querySelector("#wpt-monitor-toggle"),
         countsReset: root.querySelector("#wpt-counts-reset"),
-        countsFinish: root.querySelector("#wpt-counts-finish"),
-        countsStatus: root.querySelector("#wpt-counts-status"),
-        countsResult: root.querySelector("#wpt-counts-result")
+        countsStatus: root.querySelector("#wpt-counts-status")
       };
 
       const state = {
@@ -573,7 +569,6 @@
         audioNoteIndex: 0,
         protocolSupported: true,
         monitorActive: false,
-        checkFinished: false,
         busy: false,
         language: localStorage.getItem("wpt-lang") || (navigator.language && navigator.language.indexOf("zh") === 0 ? "zh" : "en"),
         versionStatusLabel: null,
@@ -1381,11 +1376,7 @@
         root.querySelectorAll(".wpt-cell").forEach((cell) => {
           const count = countValue(cell.dataset.control, state.counts);
           cell.querySelector(".wpt-cell-count").textContent = String(count);
-          if (state.checkFinished) {
-            cell.dataset.state = count >= 1 ? "pass" : "fail";
-          } else {
-            delete cell.dataset.state;
-          }
+          cell.dataset.state = count >= 1 ? "pass" : "fail";
         });
       }
 
@@ -1393,34 +1384,11 @@
         try {
           await request("get_controls", {reset: true});
           state.counts = null;
-          state.checkFinished = false;
           renderCounts();
-          elements.countsResult.textContent = "";
           setStatus(elements.countsStatus, "idle", languageText("计数已清零", "Counts reset"));
           appendLog("控件计数已清零");
         } catch (error) {
           showAlert(copy(`清零失败：${error.message}`, `Reset failed: ${error.message}`), "error");
-        }
-      }
-
-      function finishCheck() {
-        if (!state.counts) {
-          showAlert(copy("尚未收到任何计数，请先打开控件监视。", "No counts received yet; enable the control monitor first."), "warning");
-          return;
-        }
-        state.checkFinished = true;
-        const missing = [];
-        root.querySelectorAll(".wpt-cell").forEach((cell) => {
-          const count = countValue(cell.dataset.control, state.counts);
-          if (count < 1) missing.push(cell.querySelector(".wpt-cell-name").textContent + "(" + cell.dataset.control + ")");
-        });
-        renderCounts();
-        if (missing.length === 0) {
-          setStatus(elements.countsStatus, "pass", languageText("全部通过", "All passed"));
-          elements.countsResult.textContent = languageText("34 个控件均已操作，硬件控件检查通过。", "All 34 controls were operated; the hardware control check passed.");
-        } else {
-          setStatus(elements.countsStatus, "fail", languageText(`未操作 ${missing.length} 个控件`, `${missing.length} controls not operated`));
-          elements.countsResult.textContent = languageText(`以下控件计数为 0：${missing.join("，")}`, `Controls with zero counts: ${missing.join(", ")}`);
         }
       }
 
@@ -1621,7 +1589,6 @@
         elements.audioPan.disabled = state.busy;
         elements.monitorToggle.disabled = !state.connected || state.busy || !state.protocolSupported;
         elements.countsReset.disabled = !state.connected || state.busy || !state.monitorActive;
-        elements.countsFinish.disabled = !state.connected || state.busy || !state.monitorActive;
       }
 
       // ---- events ----
@@ -1650,8 +1617,6 @@
       });
       elements.monitorToggle.addEventListener("change", () => {
         state.monitorActive = elements.monitorToggle.checked;
-        state.checkFinished = false;
-        elements.countsResult.textContent = "";
         if (state.monitorActive) {
           state.counts = null;
           setStatus(elements.countsStatus, "working", languageText("监视中：请逐一操作控件…", "Monitoring: operate each control…"));
@@ -1662,7 +1627,6 @@
         renderCounts();
       });
       elements.countsReset.addEventListener("click", resetCounts);
-      elements.countsFinish.addEventListener("click", finishCheck);
       if (navigator.serial && typeof navigator.serial.addEventListener === "function") {
         navigator.serial.addEventListener("disconnect", event => {
           if (state.port && event.target === state.port) {
@@ -1695,7 +1659,6 @@
             elements.monitorToggle.dispatchEvent(new Event("change", {bubbles: true}));
           },
           resetCounts,
-          finishCheck,
           pollTick,
           snapshot() {
             return {
@@ -1713,7 +1676,6 @@
               audioPlaying: state.audioPlaying,
               audioDeviceCount: state.audioDevices.length,
               monitorActive: state.monitorActive,
-              checkFinished: state.checkFinished,
               counts: state.counts ? JSON.parse(JSON.stringify(state.counts)) : null
             };
           }
