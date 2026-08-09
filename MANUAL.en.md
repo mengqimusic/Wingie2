@@ -240,9 +240,11 @@ One Lower Zone claims every channel: **Manager = Channel 1, Member = Channels 2�
 
 With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).
 
-### Not Mapped
+### Per-Note Pressure Expression (0xD0)
 
-The current MPE scope is the zone, per-note ownership, and Pitch Bend. **Channel Pressure and CC 74 are not mapped.** Both zones of a dual-zone controller merge into Wingie2's single zone.
+With MPE on, Member Channel Pressure (0xD0) is a per-note expression: each note's decay is boosted linearly on top of the Decay slider setting, with boost = 3 s × pressure / 127. Heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with the pressure and drops to the slider-set base decay at zero. In Poly and Ratio Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it applies to the whole side (single owner). Osmose-style controllers send a pressure onset burst before Note On; Wingie2 latches the value per channel so the note sounds with the expression already established. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, following the Pitch Bend routing precedent.
+
+Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
 See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 

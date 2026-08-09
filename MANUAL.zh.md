@@ -240,9 +240,11 @@ MPE（MIDI Polyphonic Expression）让支持 MPE 的控制器对小羽的每个�
 
 开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。
 
-### 不映射
+### 逐音压力表情（0xD0）
 
-当前 MPE 实现范围是 Zone、逐音归属和 Pitch Bend，**不映射 Channel Pressure 和 CC 74**。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。
+打开 MPE 后，Member 通道的 Channel Pressure（0xD0）成为逐音表情：每个音的衰减在 Decay 推杆设定的基础上线性叠加，衰减增量 = 3 秒 × 压力 / 127。按得越重，这个音的衰减越长（最多叠加 3 秒）；抬键过程中衰减增量随压力动态回落，压力归零时回到推杆设定的基础衰减。复音 / 比例模式下只作用于该音所属的共鸣器组，弦 / 梁模式下作用于整侧（单音归属）。Osmose 风格控制器会在 Note On 前发送压力突发，小羽按通道锁存该值，音发声时表情已就位。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。
+
+Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。
 
 详见 [`MPE.md`](MPE.md) 与 [`ALT_TUNING.md`](ALT_TUNING.md)。
 
