@@ -785,6 +785,7 @@ void control(void *pvParameters) {
       }
       if (currentMillis - save_routine_timer > SAVE_DELAY) {
         led_blink = 5;
+        led_blink_color = ledColor[POLY_MODE];
         led_flash_timer = currentMillis;
         save_routine_flag = false;
         stuff_saved = true;
@@ -796,7 +797,7 @@ void control(void *pvParameters) {
       if (currentMillis - led_flash_timer > 125) {
         led_flash_timer = currentMillis;
         for (int ch = 0; ch < 2; ch++) {
-          for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], led_blink % 2);
+          for (int i = 0; i < 2; i++) digitalWrite(ledPin[ch][i], !bitRead(led_blink_color, i));
         }
         led_blink -= 1;
         if (!led_blink) {

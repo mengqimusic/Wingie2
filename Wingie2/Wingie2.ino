@@ -262,7 +262,7 @@ float frequencies[NUM_NOTES+6];
 float pre_clip_gain, post_clip_gain, left_thresh, right_thresh;
 bool save_routine_flag = false, stuff_saved = false, dirty[kDirtyCount], tuning_preferences_dirty = false;
 volatile bool preferences_save_requested = false;
-byte led_flash_color = 0, led_blink = 0;;
+byte led_flash_color = 0, led_blink = 0, led_blink_color = ledColor[POLY_MODE];
 #define LED_FLASH_INTERVAL 250
 #define RATIO_LED_INTERVAL 500
 #define SAVE_DELAY 3000

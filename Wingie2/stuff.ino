@@ -117,9 +117,13 @@ bool save_all_preferences() {
   return saved;
 }
 
-void save_stuff() {
+bool save_stuff() {
   Serial.printf("Saving prefs\n");
-  if (!save_all_preferences()) Serial.println("Failed to save one or more preferences");
+  if (!save_all_preferences()) {
+    Serial.println("Failed to save one or more preferences");
+    return false;
+  }
+  return true;
 }
 
 void request_preferences_save() {
@@ -131,7 +135,13 @@ void service_preferences_save() {
   // preferences_save_requested 是 volatile bool，单字节读写在 ESP32 上天然原子，
   // noInterrupts() 无法屏蔽 FreeRTOS 任务级抢占，移除无效临界区。
   preferences_save_requested = false;
-  save_stuff();
+  if (!save_stuff()) {
+    // 保存失败：从头 5 拍红色闪烁，区别于成功的白色；led_blink_color 单字节原子，
+    // control 任务下一拍即读到新颜色。
+    led_blink = 5;
+    led_blink_color = ledColor[2];
+    led_flash_timer = millis();
+  }
 }
 
 bool store_unq_caves_to_prefs(bool prefs_prepped) {

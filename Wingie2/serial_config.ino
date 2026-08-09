@@ -530,6 +530,7 @@ void processSerialConfigFrame() {
       wingie_serial::encodeSaveOk(response, request.id);
       sendJson(response);
       led_blink = 5;
+      led_blink_color = ledColor[POLY_MODE];
       led_flash_timer = millis();
       return;
     }
