@@ -167,13 +167,16 @@ inline void encodeHello(JsonResponse &response, uint32_t id, const char *firmwar
                   static_cast<unsigned>(kMaxFrameBytes));
 }
 
+// dirty 只反映 general settings（midi/调律/增益/阈值/模式/MPE 开关）；
+// dirtyAll 反映全量配置（另含 ratio 与 cave），供只读 get_settings 的消费方判断是否真正全部落盘。
 inline void encodeSettings(JsonResponse &response, uint32_t id, bool sourceLine, bool dirty,
+                           bool dirtyAll,
                            const ChannelSettings &left, const ChannelSettings &right,
                            const SharedSettings &shared) {
   response.append("{\"v\":1,\"id\":%lu,\"ok\":true,\"op\":\"get_settings\","
-                  "\"source\":\"%s\",\"dirty\":%s,\"left\":",
+                  "\"source\":\"%s\",\"dirty\":%s,\"dirty_all\":%s,\"left\":",
                   static_cast<unsigned long>(id), sourceLine ? "line" : "mic",
-                  dirty ? "true" : "false");
+                  dirty ? "true" : "false", dirtyAll ? "true" : "false");
   appendChannelSettings(response, left);
   response.append(",\"right\":");
   appendChannelSettings(response, right);

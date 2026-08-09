@@ -97,10 +97,10 @@ static void testSettings() {
   shared.mpeEnabled = false;
 
   JsonResponse response;
-  encodeSettings(response, 2, true, true, left, right, shared);
+  encodeSettings(response, 2, true, true, true, left, right, shared);
   checkResponse(response,
       "{\"v\":1,\"id\":2,\"ok\":true,\"op\":\"get_settings\",\"source\":\"line\",\"dirty\":true,"
-      "\"left\":{\"mode\":1,\"mix\":0.5000,\"decay\":2.5000,\"volume\":0.7500,\"threshold\":0.4125},"
+      "\"dirty_all\":true,\"left\":{\"mode\":1,\"mix\":0.5000,\"decay\":2.5000,\"volume\":0.7500,\"threshold\":0.4125},"
       "\"right\":{\"mode\":2,\"mix\":0.2500,\"decay\":1.0000,\"volume\":0.5000,\"threshold\":0.9900},"
       "\"shared\":{\"a3_hz\":440.00,\"tuning\":-1,\"pre_clip_gain\":0.2475,\"post_clip_gain\":0.8250,"
       "\"midi\":{\"left\":1,\"right\":2,\"both\":3},\"mpe_enabled\":false},"
@@ -115,8 +115,9 @@ static void testSettings() {
 
   shared.mpeEnabled = true;
   JsonResponse micResponse;
-  encodeSettings(micResponse, 3, false, false, left, right, shared);
+  encodeSettings(micResponse, 3, false, false, false, left, right, shared);
   assert(strstr(micResponse.data, "\"source\":\"mic\",\"dirty\":false") != nullptr);
+  assert(strstr(micResponse.data, "\"dirty_all\":false") != nullptr);
   assert(strstr(micResponse.data, "\"mpe_enabled\":true},\"limits\":{") != nullptr);
 }
 

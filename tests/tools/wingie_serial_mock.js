@@ -136,7 +136,9 @@
       return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 5, transport: {baud: 115200, max_frame: 1024}};
     }
     if (request.op === "get_settings") {
-      const response = {v: 1, id: request.id, ok: true, op: "get_settings", source: settings.source, dirty: settingsDirty, left: clone(settings.left), right: clone(settings.right), shared: clone(settings.shared)};
+      const dirtyAll = settingsDirty || ratioDirty ||
+        cave.left.some((bank) => bank.dirty) || cave.right.some((bank) => bank.dirty);
+      const response = {v: 1, id: request.id, ok: true, op: "get_settings", source: settings.source, dirty: settingsDirty, dirty_all: dirtyAll, left: clone(settings.left), right: clone(settings.right), shared: clone(settings.shared)};
       if (!legacyFirmware) response.limits = buildLimits();
       return response;
     }

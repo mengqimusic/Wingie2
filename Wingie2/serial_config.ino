@@ -335,7 +335,8 @@ void sendSettings(uint32_t id) {
   shared.mpeEnabled = mpe_enabled;
 
   wingie_serial::JsonResponse response;
-  wingie_serial::encodeSettings(response, id, source, generalSettingsAreDirty(), left, right, shared);
+  wingie_serial::encodeSettings(response, id, source, generalSettingsAreDirty(),
+                                configurationIsDirty(), left, right, shared);
   sendJson(response);
 }
 
