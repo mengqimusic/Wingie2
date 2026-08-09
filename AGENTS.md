@@ -20,6 +20,12 @@ Flashing always uses `UploadSpeed=460800`; the default 921600 fails intermittent
 arduino-cli upload --fqbn esp32:esp32:esp32:UploadSpeed=460800 -p /dev/cu.usbserial-11410 Wingie2
 ```
 
+If you bypass arduino-cli and drive esptool directly (e.g. writing a release package's
+four images), always pass `--flash_mode dio`. The released bootloader carries a QIO header;
+writing it as-is puts the device in a ROM boot loop (`load:0xa0c263a0` garbage on GD25Q32
+flash), while the web flasher (manifest `"mode": "dio"`) and arduino-cli rewrite the header
+to DIO automatically. Verified on hardware during the v4.10 gate run.
+
 After changing `Wingie2.dsp`, run `faust2esp32 -ac101 -lib Wingie2.dsp`, replace the generated sketch outputs together, and review the generated diff.
 
 ## Coding Style & Naming Conventions
