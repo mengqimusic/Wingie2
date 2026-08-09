@@ -252,6 +252,22 @@
       border-color: #333 #999 #999 #333;
     }
 
+    /* ---- unsaved changes: red flag ---- */
+    #wingie-config .wg-button.wg-dirty {
+      border-color: #c66 #6b2a2a #6b2a2a #c66;
+      color: #fff;
+      background: #a33a3a;
+    }
+
+    #wingie-config .wg-button.wg-dirty:hover:not(:disabled) {
+      background: #933131;
+      border-color: #d77 #6b2a2a #6b2a2a #d77;
+    }
+
+    #wingie-config .wg-button.wg-dirty:active:not(:disabled) {
+      border-color: #6b2a2a #c66 #c66 #6b2a2a;
+    }
+
     #wingie-config .wg-button:disabled,
     #wingie-config input:disabled,
     #wingie-config select:disabled {
@@ -484,6 +500,13 @@
       justify-content: flex-end;
     }
 
+    #wingie-config #wg-state-summary.wg-dirty {
+      padding: 3px 8px;
+      border: 2px outset #6b2a2a;
+      color: #3d1414;
+      background: #e6c6c0;
+    }
+
     #wingie-config .wg-footer {
       padding: 6px 0 14px;
       font-size: 12px;
@@ -581,7 +604,7 @@
             <div class="wg-field">
               <label for="wg-left-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
               <select id="wg-left-mode" class="wg-select" data-value-key="param:left:mode" disabled>
-                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="琴弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="音块" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
               </select>
             </div>
             <div class="wg-field">
@@ -612,7 +635,7 @@
             <div class="wg-field">
               <label for="wg-right-mode" data-i18n-zh="模式" data-i18n-en="Mode"></label>
               <select id="wg-right-mode" class="wg-select" data-value-key="param:right:mode" disabled>
-                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="梁" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
+                <option value="0" data-i18n-zh="复音" data-i18n-en="Poly"></option><option value="1" data-i18n-zh="琴弦" data-i18n-en="String"></option><option value="2" data-i18n-zh="音块" data-i18n-en="Bar"></option><option value="3">Cave</option><option value="4" data-i18n-zh="比率" data-i18n-en="Ratio"></option>
               </select>
             </div>
             <div class="wg-field">
@@ -1050,7 +1073,25 @@
         return state.lightPolling === false ? pollFullSnapshot() : pollLightSnapshot();
       }
 
+      // 固件 get_settings 下发性能参数 limits（named 扁平数组 [min,max,step]）；
+      // 旧固件无 limits 时保留 parameterSpecs 硬编码默认值（渐进增强，不回退校验逻辑）
+      function applyParameterLimits(limits) {
+        if (!limits || typeof limits !== "object") return;
+        for (const spec of Object.values(parameterSpecs)) {
+          const limit = limits[spec.name];
+          if (!Array.isArray(limit) || limit.length < 3) continue;
+          const min = Number(limit[0]);
+          const max = Number(limit[1]);
+          const step = Number(limit[2]);
+          if (![min, max, step].every(Number.isFinite) || !(step > 0) || min > max) continue;
+          spec.min = min;
+          spec.max = max;
+          spec.step = step;
+        }
+      }
+
       function normalizeSettings(response) {
+        applyParameterLimits(response.limits);
         return {
           dirty: Boolean(response.dirty),
           left: clone(response.left),
@@ -1692,6 +1733,9 @@
         else if (state.pollError) elements.stateSummary.textContent = languageText(`后台同步失败：${state.pollError}；请点刷新。`, `Background sync failed: ${state.pollError}; click Refresh.`);
         else if (dirtyCount()) elements.stateSummary.textContent = languageText(`${dirtyCount()} 组运行配置尚未写入闪存。`, `${dirtyCount()} running configuration group(s) are not saved to flash.`);
         else elements.stateSummary.textContent = languageText("配置与闪存已同步。", "Configuration matches flash.");
+        const dirty = dirtyCount() > 0;
+        elements.stateSummary.classList.toggle("wg-dirty", dirty);
+        elements.save.classList.toggle("wg-dirty", dirty);
       }
 
       function renderAll() {

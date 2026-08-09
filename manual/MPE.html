@@ -88,8 +88,8 @@
 <h1 id="wingie2-mpe">Wingie2 MPE</h1>
 <p>Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. This scope does not map Channel Pressure or CC 74 to
-synthesis parameters.</p>
+left/right alternating engine assignment. Member Channel Pressure (0xD0) increases the owning
+note's decay; member CC 74 is consumed but not mapped.</p>
 <h2 id="the-mpe-switch">The MPE Switch</h2>
 <p>MPE is governed by a single switch, exposed as <code>mpe_enabled</code> in the USB configuration page
 (config schema 5) and stored in flash. Factory default: <strong>off</strong>. The switch is the only zone
@@ -131,6 +131,29 @@ is treated as Note Off.</li>
 is accepted on Manager and Member Channels; a Member range received on one channel applies to
 every Member. Pitch Bend state is tracked before Note On so an MPE source can establish a note's
 initial microtonal offset.</p>
+<h2 id="per-note-expression-0xd0">Per-note Expression (0xD0)</h2>
+<p>Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
+before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
+expression already established.</p>
+<ul>
+<li><strong>Channel Pressure (0xD0) adds decay</strong>: effective decay per voice = base decay + depth ×
+pressure / 127 seconds (additive, linear, depth 3 s hardcoded in <code>MPE.ino</code>). In Poly and Ratio
+Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it
+applies to all resonators of the side (one owner). The mapping is directly pressure-driven: the
+boost follows the channel pressure in real time, including after Note Off — a released tail
+keeps following the pressure release (the &quot;key-up&quot; gesture shortens the tail as pressure falls),
+and drops to the base decay when pressure reaches 0. It is latched only in the sense that the
+onset burst value is established before the note sounds.</li>
+<li>Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters. The
+DSP keeps the poly-stretch structure (<code>poly_stretch_*</code>, default 0) that was added for the
+rejected CC 74 stretch mapping: removing it changes the Faust 2.59.6-generated signal layout and
+triggers a DSP-task watchdog reset, so it stays in place unused.</li>
+<li>Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
+following the Pitch Bend routing precedent.</li>
+<li>Note: the anti-feedback rho guard (<code>anti_feedback_rho_guard</code>) caps the effective decay to about
+0.1 s T60 whenever the mode energy exceeds <code>anti_feedback_energy_limit</code>; long pressure-boosted
+tails are audible in quiet playing and may be clamped in loud sustained playing.</li>
+</ul>
 <h2 id="tuning">Tuning</h2>
 <p>Pitch Bend is applied after the base note has been resolved through Wingie2's current A3 and
 tuning. An MPE source can therefore provide alternate tuning by sending per-note Pitch Bend before

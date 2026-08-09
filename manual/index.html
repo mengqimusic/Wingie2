@@ -395,8 +395,9 @@
 <li><strong>外部替代调律</strong>：MPE 源可以在每个音的 Note On 之前发送 Pitch Bend，为该音建立初始的微音分偏移。此时建议把小羽内部调律设为&quot;标准&quot;，让 MPE 源成为唯一调律权威；若内部仍开着替代律制，内部音程与 MPE 偏移会叠加。</li>
 </ul>
 <p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
-<h3 id="不映射">不映射</h3>
-<p>当前 MPE 实现范围是 Zone、逐音归属和 Pitch Bend，<strong>不映射 Channel Pressure 和 CC 74</strong>。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
+<h3 id="逐音压力表情0xd0">逐音压力表情（0xD0）</h3>
+<p>打开 MPE 后，Member 通道的 Channel Pressure（0xD0）成为逐音表情：每个音的衰减在 Decay 推杆设定的基础上线性叠加，衰减增量 = 3 秒 × 压力 / 127。按得越重，这个音的衰减越长（最多叠加 3 秒）；抬键过程中衰减增量随压力动态回落，压力归零时回到推杆设定的基础衰减。复音 / 比例模式下只作用于该音所属的共鸣器组，琴弦 / 音块模式下作用于整侧（单音归属）。Osmose 风格控制器会在 Note On 前发送压力突发，小羽按通道锁存该值，音发声时表情已就位。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
+<p>Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
 <p><a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> 打开后选择&quot;固件安装&quot;，即可安装或升级小羽固件。刷机页直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。</p>
@@ -687,13 +688,19 @@
 <p>感谢 Roy Parvin 撰写英文介绍及校对说明书，安琪撰写小羽背面赠言，Dave Seidel 为小羽写了替代律制功能。</p>
 <h3 id="在哪里找到我">在哪里找到我</h3>
 <ul>
-<li>网站：<a href="http://mengqimusic.com" target="_blank" rel="noopener">mengqimusic.com</a></li>
-<li>B 站：<a href="http://space.bilibili.com/4485929" target="_blank" rel="noopener">space.bilibili.com/4485929</a></li>
-<li>微博：<a href="http://weibo.com/mengqimusic" target="_blank" rel="noopener">weibo.com/mengqimusic</a></li>
-<li>Instagram：<a href="http://instagram.com/mengqimusic" target="_blank" rel="noopener">instagram.com/mengqimusic</a></li>
+<li>网站：mengqimusic.com</li>
+<li>B 站：space.bilibili.com/4485929</li>
+<li>微博：weibo.com/mengqimusic</li>
+<li>Instagram：instagram.com/mengqimusic</li>
 <li>微信扫码，关注个人公众号「合成少数派」</li>
 </ul>
 <h2 id="17-版本说明">17. 版本说明</h2>
+<p><strong>v4.10</strong> 相对 v4.02 的变化：</p>
+<ul>
+<li><strong>MPE 逐音压力表情</strong>：打开 MPE 之后，0xD0 通道压力被用作每个音符独立的表情控制。在 Decay 推杆设定的衰减基础上，按得越重，这个音的衰减就拉得越长，最多叠加 3 秒；抬键阶段随压力动态回落，实现自然的尾音消退效果。非 MPE 模式保持原有行为不变。</li>
+<li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
+<li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
+</ul>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
 <li><strong>比例模式 LED 指示调整</strong>：由四色快速循环改为白色、黄色交替闪烁（每 0.5 秒切换），观感更柔和。</li>
@@ -1011,8 +1018,9 @@
 <li><strong>External alternate tuning</strong>: An MPE source can send Pitch Bend before each note's Note On to establish an initial microtonal offset. In this case, set Wingie2's internal tuning to &quot;Standard&quot; so the MPE source is the sole tuning authority; if an internal alternate tuning remains enabled, the internal intervals and the MPE offset are both applied.</li>
 </ul>
 <p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
-<h3 id="not-mapped">Not Mapped</h3>
-<p>The current MPE scope is the zone, per-note ownership, and Pitch Bend. <strong>Channel Pressure and CC 74 are not mapped.</strong> Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
+<h3 id="per-note-pressure-expression-0xd0">Per-Note Pressure Expression (0xD0)</h3>
+<p>With MPE on, Member Channel Pressure (0xD0) is a per-note expression: each note's decay is boosted linearly on top of the Decay slider setting, with boost = 3 s × pressure / 127. Heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with the pressure and drops to the slider-set base decay at zero. In Poly and Ratio Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it applies to the whole side (single owner). Osmose-style controllers send a pressure onset burst before Note On; Wingie2 latches the value per channel so the note sounds with the expression already established. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, following the Pitch Bend routing precedent.</p>
+<p>Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
 <p>Open <a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> and choose &quot;Firmware Installer&quot; to install or upgrade Wingie2 firmware. The flasher connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.</p>
@@ -1303,12 +1311,18 @@
 <p>Thanks to Roy Parvin for writing the English introduction and proofreading the manual, to Anqi for the inscription on the back of Wingie2, and to Dave Seidel for writing the alternate tuning feature.</p>
 <h3 id="where-to-find-me">Where to find me</h3>
 <ul>
-<li>Website: <a href="http://mengqimusic.com" target="_blank" rel="noopener">mengqimusic.com</a></li>
-<li>Bilibili: <a href="http://space.bilibili.com/4485929" target="_blank" rel="noopener">space.bilibili.com/4485929</a></li>
-<li>Weibo: <a href="http://weibo.com/mengqimusic" target="_blank" rel="noopener">weibo.com/mengqimusic</a></li>
-<li>Instagram: <a href="http://instagram.com/mengqimusic" target="_blank" rel="noopener">instagram.com/mengqimusic</a></li>
+<li>Website: mengqimusic.com</li>
+<li>Bilibili: space.bilibili.com/4485929</li>
+<li>Weibo: weibo.com/mengqimusic</li>
+<li>Instagram: instagram.com/mengqimusic</li>
 </ul>
 <h2 id="17-version-notes">17. Version Notes</h2>
+<p>Changes in <strong>v4.10</strong> compared to v4.02:</p>
+<ul>
+<li><strong>MPE per-note pressure expression</strong>: with MPE on, 0xD0 Channel Pressure controls expression per note. On top of the decay set by the Decay slider, heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with pressure for a natural tail. Behavior outside MPE mode is unchanged.</li>
+<li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
+<li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
+</ul>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>
 <li><strong>Ratio Mode LED indication adjusted</strong>: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.</li>
