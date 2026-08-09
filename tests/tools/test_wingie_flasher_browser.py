@@ -168,7 +168,9 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const chinese = [
                         "更新内容",
                         "操作说明",
-                        "比例模式的 LED 指示改为白色、黄色交替闪烁",
+                        "MPE 逐音压力表情：0xD0 在 Decay 推杆设定的衰减基础上",
+                        "配置页新增未保存警示：有改动未写入闪存时",
+                        "按键保存失败时 LED 红色闪烁提示",
                         "银色 Wingie2 需要使用 USB A–C 线",
                         "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
                         "连接 Wingie2"
@@ -177,7 +179,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                         if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
                       // English must not be visible until toggled.
-                      const english = ["Changelog", "Instructions", "Ratio Mode LED"];
+                      const english = ["Changelog", "Instructions", "MPE per-note pressure expression"];
                       english.forEach(text => {
                         if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
                       });
@@ -221,7 +223,9 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const english = [
                         "Changelog",
                         "Instructions",
-                        "Ratio Mode LED indication changed to alternating white and yellow",
+                        "MPE per-note pressure expression: 0xD0 adds up to 3 s of decay per note",
+                        "The configuration page now flags unsaved changes in red",
+                        "LED flashes red when the button-combo save fails",
                         "Silver Wingie2 units require a USB-A-to-USB-C cable",
                         "Connect Wingie2, and close serial monitors",
                         "Connect Wingie2"

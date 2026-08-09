@@ -396,6 +396,12 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
+Changes in **v4.10** compared to v4.02:
+
+- **MPE per-note pressure expression**: with MPE on, 0xD0 Channel Pressure controls expression per note. On top of the decay set by the Decay slider, heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with pressure for a natural tail. Behavior outside MPE mode is unchanged.
+- **Unsaved-change warning on the configuration page**: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.
+- **Save-failure LED**: the two-button save flashes the LED red on failure (white on success), with failure details on serial.
+
 Changes in **v4.01** compared to v4:
 
 - **Ratio Mode LED indication adjusted**: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.
