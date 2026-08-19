@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-With MPE on, Member Channel Pressure (0xD0) lengthens decay: up to 2 s per note, shallow at light pressure and approaching the ceiling only when pressed hard (n=5 curve), easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side. String and Bar have one owner, so that note adds at most 2 s. The summed result clamps at the Decay slider's 10 s ceiling: with the fader already at 10 s, pressure adds nothing. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole.
+With MPE on, Member Channel Pressure (0xD0) increases the decay time: the harder the press, the longer the tail, easing back as the key lifts. In Poly / Ratio each note adds up to 2s; boosts from multiple notes on the same side add together, up to 6s extra for the side. String and Bar are single-note modes, where the single note adds up to 6s. The sum can go past the Decay fader's ceiling (for example, with the fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, also adding 6s.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
@@ -400,7 +400,7 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 Changes in **v4.20** compared to v4.10:
 
-- **MPE channel-pressure expression**: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. Each note adds up to 2 s on top of the Decay fader, easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side, with the sum clamped at the Decay slider's 10 s ceiling. Outside MPE, Channel Pressure on a routed channel applies to that side as a whole.
+- **MPE channel-pressure expression**: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s per side); String and Bar add 6s for the single note, easing back as the key lifts. The sum can go past the fader's ceiling (with the fader at 10s, the sum can reach 16s). Outside MPE, Channel Pressure on a routed channel applies to that side as a whole (+6s).
 
 Changes in **v4.10** compared to v4.03:
 

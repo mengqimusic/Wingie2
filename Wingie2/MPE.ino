@@ -7,14 +7,13 @@ float mpe_manager_bend() {
   return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
 
-// MPE 0xD0 映射常量：深度与曲线硬编码，真机听调定值。
-const float kPressureDecayDepthSeconds = wingie_decay::kPressureDepthSeconds;
-
+// MPE 0xD0 映射常量：深度分两档（poly/ratio 每音 2 秒；string/bar 与常规整侧
+// 单音 6 秒），n=5 曲线，真机听调定值。
 static float fader_decay[2] = {wingie_decay::kFaderMin, wingie_decay::kFaderMin};
 static float decay_boost_seconds[2][wingie_mpe::kVoiceCount];
 
-float mpe_pressure_decay_delta(byte channel) {
-  return wingie_decay::pressure_boost(mpe_state.pressure(channel), kPressureDecayDepthSeconds);
+float mpe_pressure_decay_delta(byte channel, float depth) {
+  return wingie_decay::pressure_boost(mpe_state.pressure(channel), depth);
 }
 
 void set_fader_decay(byte ch, float seconds) {
@@ -30,7 +29,7 @@ void set_fader_decay(byte ch, float seconds) {
 
 void set_decay_boost(byte ch, byte voice, float seconds) {
   if (ch > 1 || voice >= wingie_mpe::kVoiceCount) return;
-  const float clamped = wingie_decay::clamp(seconds, 0.0f, kPressureDecayDepthSeconds);
+  const float clamped = wingie_decay::clamp(seconds, 0.0f, wingie_decay::kPressureDepthPerVoiceSeconds);
   taskENTER_CRITICAL(&g_deviceMux);
   decay_boost_seconds[ch][voice] = clamped;
   const float fader = fader_decay[ch];
@@ -48,9 +47,9 @@ float voice_decay_boost(byte ch, byte voice) {
 }
 
 void set_side_decay_boost(byte ch, float seconds) {
-  // 整侧只有一条增量：写入槽 0，其余清零。三个槽都写成同一个值再相加，单音满压会变成 +6 秒。
+  // 整侧只有一条增量：写入槽 0，其余清零。三个槽都写成同一个值再相加，单音满压会变成 +18 秒。
   if (ch > 1) return;
-  const float clamped = wingie_decay::clamp(seconds, 0.0f, kPressureDecayDepthSeconds);
+  const float clamped = wingie_decay::clamp(seconds, 0.0f, wingie_decay::kPressureDepthMonoSeconds);
   taskENTER_CRITICAL(&g_deviceMux);
   decay_boost_seconds[ch][0] = clamped;
   for (byte voice = 1; voice < wingie_mpe::kVoiceCount; voice++) decay_boost_seconds[ch][voice] = 0.0f;
@@ -164,7 +163,8 @@ void cycle_ratio_voice_note(byte ch, byte noteValue) {
 // 按 Mode[ch] 分发的复音声部入口（POLY / RATIO 共用声部分配与弯音语义）。
 // 顺带按声部表情源通道重写 decay boost，保证任何 refresh/重分配路径值一致。
 void apply_voice_pitch(byte ch, byte voice) {
-  set_decay_boost(ch, voice, mpe_pressure_decay_delta(voice_expression_channel(ch, voice)));
+  set_decay_boost(ch, voice, mpe_pressure_decay_delta(voice_expression_channel(ch, voice),
+                                                      wingie_decay::kPressureDepthPerVoiceSeconds));
   if (Mode[ch] == RATIO_MODE) apply_ratio_voice_pitch(ch, voice);
   else apply_poly_voice_pitch(ch, voice);
 }
@@ -428,10 +428,10 @@ void handleChannelPressure(byte channel, byte value) {
     refresh_mpe_member_expression(channel);
     return;
   }
-  if (channel == midi_ch_l) set_side_decay_boost(0, mpe_pressure_decay_delta(channel));
-  if (channel == midi_ch_r) set_side_decay_boost(1, mpe_pressure_decay_delta(channel));
+  if (channel == midi_ch_l) set_side_decay_boost(0, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
+  if (channel == midi_ch_r) set_side_decay_boost(1, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
   if (channel == midi_ch_both) {
-    set_side_decay_boost(0, mpe_pressure_decay_delta(channel));
-    set_side_decay_boost(1, mpe_pressure_decay_delta(channel));
+    set_side_decay_boost(0, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
+    set_side_decay_boost(1, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
   }
 }

@@ -3,15 +3,18 @@
 
 #include <stdint.h>
 
-// 把多声部 0xD0 衰减增量折成一侧一根 decay：相加，每音最多 2 秒，一侧最多 6 秒。
-// 写入 Faust 现有 decay 滑条（0.1–10），不新增热路径参数。
-// 0xD0 用 n=5 前慢后快曲线：round(127·(p/127)⁵)，满压仍是 +2 秒。
+// 把多声部 0xD0 衰减增量折成一侧一根 decay：相加。深度分两档（调用方传入）：
+// poly/ratio 每音 2 秒（一侧三音最多 6 秒）；string/bar 与常规整侧单音 6 秒。
+// 写入 Faust 现有 decay 滑条；推杆本身 0.1–10，压力可越过推杆满位，
+// 总和钳制在 20 秒上限内。不新增热路径参数。
+// 0xD0 用 n=5 前慢后快曲线：round(127·(p/127)⁵)，满压仍取满深度。
 
 namespace wingie_decay {
 
 static const float kFaderMin = 0.1f;
-static const float kFaderMax = 10.0f;
-static const float kPressureDepthSeconds = 2.0f;
+static const float kFaderMax = 20.0f;
+static const float kPressureDepthPerVoiceSeconds = 2.0f;
+static const float kPressureDepthMonoSeconds = 6.0f;
 static const float kPressureSumMax = 6.0f;
 static const float kPressureMax = 127.0f;
 

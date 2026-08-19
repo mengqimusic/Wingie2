@@ -3,8 +3,8 @@
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
 left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
-the owning side by summing per-note boosts (2 s each, 6 s cap); member CC 74 is consumed but
-not mapped.
+the owning side by summing per-note boosts (Poly/Ratio 2s each, up to 6s per side;
+String/Bar 6s for the single owner); member CC 74 is consumed but not mapped.
 
 ## The MPE Switch
 
@@ -62,22 +62,24 @@ before Note On; Wingie2 latches the pressure value per channel, so a note sounds
 expression already established.
 
 - **Channel Pressure (0xD0) adds decay, summed per side**: raw 0xD0 is first mapped with
-  n=5 (`round(127 · (p/127)⁵)`), then boost per voice = 2 s × curved / 127. Light pressure
-  stays shallow; only heavy pressure approaches the 2 s ceiling. Each voice tracks its
+  n=5 (`round(127 · (p/127)⁵)`), then boost per voice = depth × curved / 127 with depth
+  2s per voice in Poly/Ratio (three voices add, capped at 6s per side). Light pressure
+  stays shallow; only heavy pressure approaches the ceiling. Each voice tracks its
   owner channel's pressure, including after Note Off, so the tail follows the key as it
   lifts. Because the Faust graph has one `decay` slider per side, the three voice boosts
-  are added (capped at 6 s) and written into that slider, clamped to the slider's 0.1–10 s
-  range: with the fader at 10 s, pressure adds nothing. One key at 127 is +2 s; three keys
-  at 127 are +6 s. String and Bar have one owner, which occupies a single slot, so that
-  note adds at most 2 s.
+  are added and written into that slider, clamped to a 20s overall ceiling (the Decay
+  fader itself spans 0.1–10s): with the fader at 10s, pressure can still add its full
+  6s. One key at 127 is +2s; three keys at 127 are +6s.
+  String and Bar have one owner, which occupies a single slot at 6s depth, so that note
+  adds up to 6s.
 - **Why not per-voice t60 in the Faust graph**: `decay_boost_*` per-voice sliders watchdog-reset
-  at boot (~10.5 s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
+  at boot (~10.5s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
   the revert: `-Os` still watchdog-resets, `-O2` overflows IRAM0 by 80 bytes. The budget is
   at the edge, so pressure widens the existing per-side `decay` slider instead; the DSP graph
   stays unchanged.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
 - Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole
-  (single slot, same 2 s depth).
+  (single slot, 6s depth like String/Bar).
 
 ## Tuning
 

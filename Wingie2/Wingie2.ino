@@ -28,6 +28,7 @@
 #include <Wire.h>
 #include "Wingie2.h"
 #include "config_profiles.h"
+#include "decay_expression.h"
 #include "device_state.h"
 #include "mpe_state.h"
 #include "serial_config_protocol.h"
@@ -506,7 +507,8 @@ float pitched_mode_ratio(byte mode, uint8_t index) {
 
 void apply_pitched_mode_channel(byte ch, int midiNote) {
   const float fundamental = configured_note_frequency(midiNote) * wingie_mpe::pitchRatio(currentPitchBend[ch]);
-  set_side_decay_boost(ch, mpe_pressure_decay_delta(mono_expression_source(ch)));
+  set_side_decay_boost(ch, mpe_pressure_decay_delta(mono_expression_source(ch),
+                                                    wingie_decay::kPressureDepthMonoSeconds));
   for (uint8_t index = 0; index < wingie_config::kRatioCount; index++) {
     const float frequency = max(static_cast<float>(wingie_config::kRatioFrequencyMin),
                                 min(static_cast<float>(wingie_config::kRatioFrequencyMax),
