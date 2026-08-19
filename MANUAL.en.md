@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-With MPE on, Member Channel Pressure (0xD0) is a per-note expression: each note's decay is boosted linearly on top of the Decay slider setting, with boost = 3 s × pressure / 127. Heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with the pressure and drops to the slider-set base decay at zero. In Poly and Ratio Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it applies to the whole side (single owner). Osmose-style controllers send a pressure onset burst before Note On; Wingie2 latches the value per channel so the note sounds with the expression already established. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, following the Pitch Bend routing precedent.
+v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and **v4.11 withdraws it from the audio core**: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
@@ -398,9 +398,14 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
-Changes in **v4.10** compared to v4.02:
+Changes in **v4.11** compared to v4.10:
 
-- **MPE per-note pressure expression**: with MPE on, 0xD0 Channel Pressure controls expression per note. On top of the decay set by the Decay slider, heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with pressure for a natural tail. Behavior outside MPE mode is unchanged. **This hot path was withdrawn from the DSP after a ~10 s boot watchdog; a cheaper implementation is pending. Current recommended firmware is v4.02.**
+- **Boot watchdog fix**: v4.10 put per-note decay boost on the Faust hot path, so the audio core overran and the unit reset after about 10 seconds. v4.11 restores the v4.02 DSP graph. The configuration-page unsaved warning and the save-failure red LED remain.
+- **MPE per-note pressure expression withdrawn**: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation.
+
+Changes in **v4.10** compared to v4.02 (this build is withdrawn; use v4.11):
+
+- **MPE per-note pressure expression**: with MPE on, 0xD0 Channel Pressure controls expression per note. On top of the decay set by the Decay slider, heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with pressure for a natural tail. Behavior outside MPE mode is unchanged. This hot path triggers a ~10 s boot watchdog and is withdrawn in v4.11.
 - **Unsaved-change warning on the configuration page**: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.
 - **Save-failure LED**: the two-button save flashes the LED red on failure (white on success), with failure details on serial.
 

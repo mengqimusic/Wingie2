@@ -2,8 +2,9 @@
 
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) increases the owning
-note's decay; member CC 74 is consumed but not mapped.
+left/right alternating engine assignment. Member Channel Pressure (0xD0) is consumed but does
+not change decay in v4.11 (the v4.10 Faust hot path watchdog-reset); member CC 74 is consumed
+but not mapped.
 
 ## The MPE Switch
 
@@ -57,26 +58,17 @@ initial microtonal offset.
 ## Per-note Expression (0xD0)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
-expression already established.
+before Note On; Wingie2 still latches pressure per channel, but **v4.11 does not write it into
+the audio core**.
 
-- **Channel Pressure (0xD0) adds decay**: effective decay per voice = base decay + depth ×
-  pressure / 127 seconds (additive, linear, depth 3 s hardcoded in `MPE.ino`). In Poly and Ratio
-  Modes the boost applies only to the owning voice's resonator group; in String and Bar Modes it
-  applies to all resonators of the side (one owner). The mapping is directly pressure-driven: the
-  boost follows the channel pressure in real time, including after Note Off — a released tail
-  keeps following the pressure release (the "key-up" gesture shortens the tail as pressure falls),
-  and drops to the base decay when pressure reaches 0. It is latched only in the sense that the
-  onset burst value is established before the note sounds.
-- Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters. The
-  DSP keeps the poly-stretch structure (`poly_stretch_*`, default 0) that was added for the
-  rejected CC 74 stretch mapping: removing it changes the Faust 2.59.6-generated signal layout and
-  triggers a DSP-task watchdog reset, so it stays in place unused.
-- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
-  following the Pitch Bend routing precedent.
-- Note: the anti-feedback rho guard (`anti_feedback_rho_guard`) caps the effective decay to about
-  0.1 s T60 whenever the mode energy exceeds `anti_feedback_energy_limit`; long pressure-boosted
-  tails are audible in quiet playing and may be clamped in loud sustained playing.
+- **Channel Pressure (0xD0) is consumed, decay is unchanged**: v4.10 added `decay_boost_*` sliders
+  and a live `poly_stretch_*` Faust graph so per-voice decay could follow pressure. That compute
+  overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE (~10.5 s WDT). v4.11 restores
+  the v4.02 DSP graph (`a, a*2, a*3` partials, no stretch, no per-voice boost). `set_decay_boost`
+  is a no-op until a cheaper path exists. Depth 3 s remains in `MPE.ino` as unused mapping math.
+- Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
+- Conventional (non-MPE) Channel Pressure on a routed channel still follows the Pitch Bend
+  routing precedent at the MIDI layer; with the boost no-op it also does not change decay.
 
 ## Tuning
 

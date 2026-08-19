@@ -168,7 +168,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const chinese = [
                         "更新内容",
                         "操作说明",
-                        "MPE 逐音压力表情：打开 MPE 之后，0xD0 通道压力被用作每个音符独立的表情控制",
+                        "修复 v4.10 开机约 10 秒后看门狗复位",
                         "配置页新增未保存警示：有改动未写入闪存时",
                         "按键保存失败时 LED 红色闪烁提示",
                         "银色 Wingie2 需要使用 USB A–C 线",
@@ -179,7 +179,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                         if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
                       // English must not be visible until toggled.
-                      const english = ["Changelog", "Instructions", "MPE per-note pressure expression"];
+                      const english = ["Changelog", "Instructions", "Fixes the v4.10 watchdog reset"];
                       english.forEach(text => {
                         if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
                       });
@@ -223,7 +223,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const english = [
                         "Changelog",
                         "Instructions",
-                        "MPE per-note pressure expression: with MPE on, 0xD0 Channel Pressure controls expression per note",
+                        "Fixes the v4.10 watchdog reset about 10 seconds after boot",
                         "The configuration page now flags unsaved changes in red",
                         "LED flashes red when the button-combo save fails",
                         "Silver Wingie2 units require a USB-A-to-USB-C cable",
