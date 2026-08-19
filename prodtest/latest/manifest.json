@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "name": "Wingie2",
-  "version": "v4.10",
+  "version": "v4.02",
   "chipFamily": "ESP32",
   "esptoolJs": "0.6.0",
   "flash": {
@@ -20,31 +20,31 @@
   "parts": [
     {
       "name": "bootloader",
-      "path": "Wingie2-v4.10.bootloader.bin",
+      "path": "Wingie2-v4.02.bootloader.bin",
       "offset": 4096,
       "size": 18880,
       "sha256": "045f6e4915a6e6bbe6a44a55c59bc8f69d2be0a59b82b27bf3499dca5d0dc92c"
     },
     {
       "name": "partitions",
-      "path": "Wingie2-v4.10.partitions.bin",
+      "path": "Wingie2-v4.02.partitions.bin",
       "offset": 32768,
       "size": 3072,
       "sha256": "efba4421982bd177695a2e2091828fe3b6aa42076be3844a84f0fb08085cead4"
     },
     {
       "name": "boot_app0",
-      "path": "Wingie2-v4.10.boot_app0.bin",
+      "path": "Wingie2-v4.02.boot_app0.bin",
       "offset": 57344,
       "size": 8192,
       "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
     },
     {
       "name": "app",
-      "path": "Wingie2-v4.10.app.bin",
+      "path": "Wingie2-v4.02.app.bin",
       "offset": 65536,
-      "size": 1217616,
-      "sha256": "c6e48273c71f9a0c802e138d9b5c06d08be9b2ec964dfedd568723416162bbd8"
+      "size": 1213808,
+      "sha256": "50acc01b3f10760374e209113db24129b68b22efefff5cb647b388c582d7ae68"
     }
   ]
 }
