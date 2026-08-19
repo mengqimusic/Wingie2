@@ -2,9 +2,9 @@
 
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) is consumed but does
-not change decay (a withdrawn Faust hot path watchdog-reset); member CC 74 is consumed
-but not mapped.
+left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
+the owning side by summing per-note boosts (2 s each, 6 s cap); member CC 74 is consumed but
+not mapped.
 
 ## The MPE Switch
 
@@ -58,18 +58,26 @@ initial microtonal offset.
 ## Per-note Expression (0xD0)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 still latches pressure per channel, but **does not write it into
-the audio core**.
+before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
+expression already established.
 
-- **Channel Pressure (0xD0) is consumed, decay is unchanged**: an earlier withdrawn build added
-  `decay_boost_*` sliders and a live `poly_stretch_*` Faust graph so per-voice decay could follow
-  pressure. That compute overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE
-  (~10.5 s WDT). The current DSP graph matches v4.02 (`a, a*2, a*3` partials, no stretch, no
-  per-voice boost). `set_decay_boost` is a no-op until a cheaper path exists. Depth 3 s remains
-  in `MPE.ino` as unused mapping math.
+- **Channel Pressure (0xD0) adds decay, summed per side**: raw 0xD0 is first mapped with
+  n=5 (`round(127 · (p/127)⁵)`), then boost per voice = 2 s × curved / 127. Light pressure
+  stays shallow; only heavy pressure approaches the 2 s ceiling. Each voice tracks its
+  owner channel's pressure, including after Note Off, so the tail follows the key as it
+  lifts. Because the Faust graph has one `decay` slider per side, the three voice boosts
+  are added (capped at 6 s) and written into that slider, clamped to the slider's 0.1–10 s
+  range: with the fader at 10 s, pressure adds nothing. One key at 127 is +2 s; three keys
+  at 127 are +6 s. String and Bar have one owner, which occupies a single slot, so that
+  note adds at most 2 s.
+- **Why not per-voice t60 in the Faust graph**: `decay_boost_*` per-voice sliders watchdog-reset
+  at boot (~10.5 s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
+  the revert: `-Os` still watchdog-resets, `-O2` overflows IRAM0 by 80 bytes. The budget is
+  at the edge, so pressure widens the existing per-side `decay` slider instead; the DSP graph
+  stays unchanged.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
-- Conventional (non-MPE) Channel Pressure on a routed channel still follows the Pitch Bend
-  routing precedent at the MIDI layer; with the boost no-op it also does not change decay.
+- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole
+  (single slot, same 2 s depth).
 
 ## Tuning
 

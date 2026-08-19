@@ -168,7 +168,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const chinese = [
                         "更新内容",
                         "操作说明",
-                        "新增单声道线路输入模式：在此模式下，线路输入的左右声道混在一起",
+                        "MPE 通道压力表情：打开 MPE 后，每个音的通道压力（0xD0）会增加衰减时间",
                         "银色 Wingie2 需要使用 USB A–C 线",
                         "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
                         "连接 Wingie2"
@@ -177,7 +177,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                         if (!visible.includes(text)) throw new Error(`Missing Chinese copy: ${text}`);
                       });
                       // English must not be visible until toggled.
-                      const english = ["Changelog", "Instructions", "Adds a mono line-input mode"];
+                      const english = ["Changelog", "Instructions", "MPE channel-pressure expression"];
                       english.forEach(text => {
                         if (visible.includes(text)) throw new Error(`English leaked before toggle: ${text}`);
                       });
@@ -221,7 +221,7 @@ class WingieFlasherBrowserTest(unittest.TestCase):
                       const english = [
                         "Changelog",
                         "Instructions",
-                        "Adds a mono line-input mode: in this mode, the left and right line-input channels are mixed together",
+                        "MPE channel-pressure expression: with MPE on, each note's Channel Pressure (0xD0) lengthens decay",
                         "Silver Wingie2 units require a USB-A-to-USB-C cable",
                         "Connect Wingie2, and close serial monitors",
                         "Connect Wingie2"

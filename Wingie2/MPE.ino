@@ -1,3 +1,6 @@
+#include <string.h>
+
+#include "decay_expression.h"
 #include "device_state.h"
 
 float mpe_manager_bend() {
@@ -5,23 +8,59 @@ float mpe_manager_bend() {
 }
 
 // MPE 0xD0 映射常量：深度与曲线硬编码，真机听调定值。
-const float kPressureDecayDepthSeconds = 3.0f; // pressure=127 → decay +3s
+const float kPressureDecayDepthSeconds = wingie_decay::kPressureDepthSeconds;
+
+static float fader_decay[2] = {wingie_decay::kFaderMin, wingie_decay::kFaderMin};
+static float decay_boost_seconds[2][wingie_mpe::kVoiceCount];
 
 float mpe_pressure_decay_delta(byte channel) {
-  return kPressureDecayDepthSeconds * mpe_state.pressure(channel) / 127.0f;
+  return wingie_decay::pressure_boost(mpe_state.pressure(channel), kPressureDecayDepthSeconds);
+}
+
+void set_fader_decay(byte ch, float seconds) {
+  taskENTER_CRITICAL(&g_deviceMux);
+  fader_decay[ch] = seconds;
+  float boosts[wingie_mpe::kVoiceCount];
+  memcpy(boosts, decay_boost_seconds[ch], sizeof(boosts));
+  taskEXIT_CRITICAL(&g_deviceMux);
+  const float effective = wingie_decay::effective_t60(seconds,
+      wingie_decay::side_boost(boosts, wingie_mpe::kVoiceCount));
+  dsp.setParamValue(ch ? "/Wingie/right/decay" : "/Wingie/left/decay", effective);
 }
 
 void set_decay_boost(byte ch, byte voice, float seconds) {
-  // 4.10 把 per-voice decay_boost 放进 Faust 热路径后，compute 越 44.1 kHz /
-  // 32-sample 期限，CPU0 Faust DSP Task 饿死 IDLE，约 10.5 s WDT。DSP 图已退回
-  // 4.02；0xD0 深度暂不写进音频核，等更便宜的实现再接回。
-  (void)ch;
-  (void)voice;
-  (void)seconds;
+  if (ch > 1 || voice >= wingie_mpe::kVoiceCount) return;
+  const float clamped = wingie_decay::clamp(seconds, 0.0f, kPressureDecayDepthSeconds);
+  taskENTER_CRITICAL(&g_deviceMux);
+  decay_boost_seconds[ch][voice] = clamped;
+  const float fader = fader_decay[ch];
+  float boosts[wingie_mpe::kVoiceCount];
+  memcpy(boosts, decay_boost_seconds[ch], sizeof(boosts));
+  taskEXIT_CRITICAL(&g_deviceMux);
+  const float effective = wingie_decay::effective_t60(fader,
+      wingie_decay::side_boost(boosts, wingie_mpe::kVoiceCount));
+  dsp.setParamValue(ch ? "/Wingie/right/decay" : "/Wingie/left/decay", effective);
+}
+
+float voice_decay_boost(byte ch, byte voice) {
+  if (ch > 1 || voice >= wingie_mpe::kVoiceCount) return 0.0f;
+  return decay_boost_seconds[ch][voice];
 }
 
 void set_side_decay_boost(byte ch, float seconds) {
-  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) set_decay_boost(ch, voice, seconds);
+  // 整侧只有一条增量：写入槽 0，其余清零。三个槽都写成同一个值再相加，单音满压会变成 +6 秒。
+  if (ch > 1) return;
+  const float clamped = wingie_decay::clamp(seconds, 0.0f, kPressureDecayDepthSeconds);
+  taskENTER_CRITICAL(&g_deviceMux);
+  decay_boost_seconds[ch][0] = clamped;
+  for (byte voice = 1; voice < wingie_mpe::kVoiceCount; voice++) decay_boost_seconds[ch][voice] = 0.0f;
+  const float fader = fader_decay[ch];
+  float boosts[wingie_mpe::kVoiceCount];
+  memcpy(boosts, decay_boost_seconds[ch], sizeof(boosts));
+  taskEXIT_CRITICAL(&g_deviceMux);
+  const float effective = wingie_decay::effective_t60(fader,
+      wingie_decay::side_boost(boosts, wingie_mpe::kVoiceCount));
+  dsp.setParamValue(ch ? "/Wingie/right/decay" : "/Wingie/left/decay", effective);
 }
 
 void reset_voice_expressions(byte ch) {

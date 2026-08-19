@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-An earlier build mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and it has been withdrawn from the audio core: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
+With MPE on, Member Channel Pressure (0xD0) lengthens decay: up to 2 s per note, shallow at light pressure and approaching the ceiling only when pressed hard (n=5 curve), easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side. String and Bar have one owner, so that note adds at most 2 s. The summed result clamps at the Decay slider's 10 s ceiling: with the fader already at 10 s, pressure adds nothing. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
@@ -397,6 +397,10 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 - Instagram: instagram.com/mengqimusic
 
 ## 17. Version Notes
+
+Changes in **v4.20** compared to v4.10:
+
+- **MPE channel-pressure expression**: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. Each note adds up to 2 s on top of the Decay fader, easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side, with the sum clamped at the Decay slider's 10 s ceiling. Outside MPE, Channel Pressure on a routed channel applies to that side as a whole.
 
 Changes in **v4.10** compared to v4.03:
 

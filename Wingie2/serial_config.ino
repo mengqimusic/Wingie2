@@ -217,7 +217,12 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
       canonical = clampParameter(request.value, minimum, maximum);
       potValSampled[performanceIndex] = potValRealtime[performanceIndex];
       realtime_value_valid[performanceIndex] = false;
-      dsp.setParamValue(parameterName, canonical);
+      if (performanceIndex == DECAY) {
+        // 走压力基线路径：直写 DSP 会丢 fader_decay 基线，下一次 0xD0 boost 会用旧基线覆盖。
+        set_fader_decay(ch, canonical);
+      } else {
+        dsp.setParamValue(parameterName, canonical);
+      }
       return true;
     }
 

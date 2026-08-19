@@ -96,12 +96,10 @@ void printMidiDiagnostics() {
                   mpeMonoState[ch].active, mpeMonoState[ch].memberBendSemitones);
     for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) {
       const wingie_mpe::VoiceState &state = mpe_state.voices[ch][voice];
-      char boostPath[40];
-      snprintf(boostPath, sizeof(boostPath), ch ? "/Wingie/right/decay_boost_%u" : "/Wingie/left/decay_boost_%u", voice);
       Serial.printf("MPE side=%u voice=%u note=%u ch=%u active=%d member_pb=%.3f total_pb=%.3f boost=%.2f\n",
                     ch, voice, state.note, state.channel, state.active,
                     state.memberBendSemitones, poly_total_bend(ch, voice),
-                    dsp.getParamValue(boostPath));
+                    voice_decay_boost(ch, voice));
     }
   }
   Serial.printf("EXPR ch2 pressure=%u ch3 pressure=%u\n",

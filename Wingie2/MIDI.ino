@@ -167,8 +167,8 @@ void MIDISetParam(int ch, byte number, byte value) {
       int midiVal14Bit = (midiVal[ch][DECAY][MSB] << 7) | midiVal[ch][DECAY][LSB];
       float v = (midiVal14Bit / 16383.) * 9.9 + 0.1;
       v = fscale(0.1, 10., 0.1, 10., v, -3.25);
-      if (!ch && !startup) dsp.setParamValue("/Wingie/left/decay", v);
-      if (ch && !startup) dsp.setParamValue("/Wingie/right/decay", v);
+      if (!ch && !startup) set_fader_decay(0, v);
+      if (ch && !startup) set_fader_decay(1, v);
     }
   }
 
