@@ -91,7 +91,7 @@ Manager Pitch Bend/CC 全局（两侧），Member Pitch Bend 逐音；此时常�
 唯一权威：MCM（RPN 6）仅在开启时可调整 Zone，关闭时被忽略。RPN 0 支持 Manager/Member
 弯音量程（默认 ±2 / ±48）。MPE 来源可在 Note On 前发送逐音 Pitch Bend 实现外部
 alternate tuning，详见 [`MPE.md`](MPE.md) 与 [`ALT_TUNING.md`](ALT_TUNING.md)。当前实现
-范围是 Zone、逐音 ownership、Pitch Bend，以及 Channel Pressure（0xD0）衰减（同侧取最大，不累加）；CC 74 不映射。
+范围是 Zone、逐音 ownership、Pitch Bend，以及 Channel Pressure（0xD0）衰减（每音最多 2 秒，同侧相加最多 6 秒）；CC 74 不映射。
 
 MPE is controlled by a switch in the USB configuration page (config schema 6, factory default
 off, persisted in flash). Off: no zone — Channels 1–16 all follow the configurable conventional
@@ -104,8 +104,8 @@ zone (use per-note Pitch Bend for tuning and the configuration page for Cave/glo
 The switch is the only zone authority: MCM (RPN 6) may resize the zone only while on and is
 ignored while off. RPN 0 sets Manager/Member bend ranges (±2/±48 default). An MPE source can
 provide alternate tuning via per-note Pitch Bend before Note On — see [`MPE.md`](MPE.md) and
-[`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure (0xD0) lengthens decay (heaviest boost per
-side, not summed); CC 74 is not mapped.
+[`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure (0xD0) lengthens decay (up to 2 s per note,
+6 s added per side); CC 74 is not mapped.
 
 ## 网页刷机 / Web Flasher
 

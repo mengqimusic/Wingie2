@@ -47,7 +47,19 @@ float voice_decay_boost(byte ch, byte voice) {
 }
 
 void set_side_decay_boost(byte ch, float seconds) {
-  for (byte voice = 0; voice < wingie_mpe::kVoiceCount; voice++) set_decay_boost(ch, voice, seconds);
+  // 整侧只有一条增量：写入槽 0，其余清零。三个槽都写成同一个值再相加，单音满压会变成 +6 秒。
+  if (ch > 1) return;
+  const float clamped = wingie_decay::clamp(seconds, 0.0f, kPressureDecayDepthSeconds);
+  taskENTER_CRITICAL(&g_deviceMux);
+  decay_boost_seconds[ch][0] = clamped;
+  for (byte voice = 1; voice < wingie_mpe::kVoiceCount; voice++) decay_boost_seconds[ch][voice] = 0.0f;
+  const float fader = fader_decay[ch];
+  float boosts[wingie_mpe::kVoiceCount];
+  memcpy(boosts, decay_boost_seconds[ch], sizeof(boosts));
+  taskEXIT_CRITICAL(&g_deviceMux);
+  const float effective = wingie_decay::effective_t60(fader,
+      wingie_decay::side_boost(boosts, wingie_mpe::kVoiceCount));
+  dsp.setParamValue(ch ? "/Wingie/right/decay" : "/Wingie/left/decay", effective);
 }
 
 void reset_voice_expressions(byte ch) {

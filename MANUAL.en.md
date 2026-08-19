@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-With MPE on, Member Channel Pressure (0xD0) lengthens decay: boost = 3 s × pressure / 127, up to +3 s, easing back as the key lifts. If several notes share a side, the heaviest pressure wins; they do not add. String and Bar have one owner, so that note's pressure is used. When the Decay slider is already at 10 s, pressure cannot add more. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
+With MPE on, Member Channel Pressure (0xD0) lengthens decay: up to 2 s per note, shallow at light pressure and approaching the ceiling only when pressed hard (n=5 curve), easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side. String and Bar have one owner, so that note adds at most 2 s. Pressure can take decay past the Decay slider's 10 s ceiling. Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
@@ -400,10 +400,8 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 Changes in **v4.10** compared to v4.03:
 
-- **Line-input mono mix**: mix left and right line into one signal that feeds both resonators; the microphone is unaffected. Toggle from the web "Line Input" control or by holding both C keys at startup; the startup gesture writes flash immediately.
-- **MPE channel-pressure decay**: with MPE on, 0xD0 lengthens decay by up to 3 s using the heaviest pressure on that side (not summed). The audio core is unchanged; pressure cannot add more when the Decay slider is already at 10 s.
-
-This number was briefly published as v4.04 and has been corrected. An earlier build of the same number put per-note pressure on the Faust hot path and watchdog-reset about 10 seconds after boot; it was withdrawn. This build replaces it.
+- **New mono line-input mode**: in this mode the left and right line channels are mixed together and fed to both resonators, for use with a mono source. Hold both C keys at startup to toggle the mode and store it, or set it on the configuration page. This setting does not affect the built-in microphone.
+- **MPE channel-pressure expression**: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. Each note adds up to 2 s on top of the Decay fader, easing back as the key lifts. Boosts on the same side add, up to 6 s extra for the side. Pressure can take decay past the Decay slider's 10 s ceiling. Outside MPE, Channel Pressure on a routed channel still applies to that side as a whole.
 
 Changes in **v4.03** compared to v4.02:
 

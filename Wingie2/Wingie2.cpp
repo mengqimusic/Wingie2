@@ -13291,7 +13291,7 @@ class mydsp : public dsp {
 		ui_interface->addVerticalSlider("cave_freq_6", &fVslider11, FAUSTFLOAT(2.8e+03f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("cave_freq_7", &fVslider13, FAUSTFLOAT(5.2e+03f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("cave_freq_8", &fVslider14, FAUSTFLOAT(1.1e+04f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
-		ui_interface->addHorizontalSlider("decay", &fHslider3, FAUSTFLOAT(5.0f), FAUSTFLOAT(0.1f), FAUSTFLOAT(1e+01f), FAUSTFLOAT(0.01f));
+		ui_interface->addHorizontalSlider("decay", &fHslider3, FAUSTFLOAT(5.0f), FAUSTFLOAT(0.1f), FAUSTFLOAT(2e+01f), FAUSTFLOAT(0.01f));
 		ui_interface->addHorizontalSlider("env_mode_change_decay", &fHslider25, FAUSTFLOAT(0.05f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->addHorizontalSlider("mode0", &fHslider7, FAUSTFLOAT(0.0f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addButton("mode_changed", &fButton1);
@@ -13330,7 +13330,7 @@ class mydsp : public dsp {
 		ui_interface->addVerticalSlider("cave_freq_6", &fVslider28, FAUSTFLOAT(2.8e+03f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("cave_freq_7", &fVslider27, FAUSTFLOAT(5.2e+03f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
 		ui_interface->addVerticalSlider("cave_freq_8", &fVslider29, FAUSTFLOAT(1.1e+04f), FAUSTFLOAT(5e+01f), FAUSTFLOAT(1.6e+04f), FAUSTFLOAT(1.0f));
-		ui_interface->addHorizontalSlider("decay", &fHslider27, FAUSTFLOAT(5.0f), FAUSTFLOAT(0.1f), FAUSTFLOAT(1e+01f), FAUSTFLOAT(0.01f));
+		ui_interface->addHorizontalSlider("decay", &fHslider27, FAUSTFLOAT(5.0f), FAUSTFLOAT(0.1f), FAUSTFLOAT(2e+01f), FAUSTFLOAT(0.01f));
 		ui_interface->addHorizontalSlider("env_mode_change_decay", &fHslider31, FAUSTFLOAT(0.05f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(0.01f));
 		ui_interface->addHorizontalSlider("mode1", &fHslider28, FAUSTFLOAT(0.0f), FAUSTFLOAT(0.0f), FAUSTFLOAT(1.0f), FAUSTFLOAT(1.0f));
 		ui_interface->addButton("mode_changed", &fButton11);

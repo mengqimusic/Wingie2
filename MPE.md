@@ -3,7 +3,7 @@
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
 left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
-the owning side using the heaviest active boost (not summed); member CC 74 is consumed but
+the owning side by summing per-note boosts (2 s each, 6 s cap); member CC 74 is consumed but
 not mapped.
 
 ## The MPE Switch
@@ -61,16 +61,17 @@ Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then 
 before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
 expression already established.
 
-- **Channel Pressure (0xD0) adds decay, folded per side by max**: boost = 3 s × pressure / 127.
-  Each voice still tracks its owner channel's pressure, including after Note Off. Because the
-  Faust graph has one `decay` per side, the three voice boosts on a side are reduced by maximum
-  (not summed) and added to the Decay fader. One key at 127 is +3 s; three keys at 127 are still
-  +3 s. The Faust slider tops out at 10 s, so a fader already at 10 s cannot take more boost.
-  Putting per-voice t60 into Faust watchdog-resets (~10.5 s); this path does not change the DSP
-  graph. String and Bar have one owner, so max is that owner's boost.
+- **Channel Pressure (0xD0) adds decay, summed per side**: raw 0xD0 is first mapped with
+  n=5 (`round(127 · (p/127)⁵)`), then boost per voice = 2 s × curved / 127. Light pressure
+  stays shallow; only heavy pressure approaches the 2 s ceiling. Each voice still tracks its
+  owner channel's pressure, including after Note Off. Because
+  the Faust graph has one `decay` per side, the three voice boosts are added (capped at 6 s) and
+  written into that slider. One key at 127 is +2 s; three keys at 127 are +6 s. The Faust slider
+  range is 0.1–20 s, so a fader at 10 s can still take the full 6 s of pressure. Putting
+  per-voice t60 into Faust watchdog-resets (~10.5 s); this path only widens the existing decay
+  slider. String and Bar have one owner, so that note adds at most 2 s.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
-- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
-  following the Pitch Bend routing precedent.
+- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole.
 
 ## Tuning
 
