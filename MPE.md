@@ -2,9 +2,9 @@
 
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) is consumed but does
-not change decay in v4.03 (the v4.10 Faust hot path watchdog-reset); member CC 74 is consumed
-but not mapped.
+left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
+the owning side using the heaviest active boost (not summed); member CC 74 is consumed but
+not mapped.
 
 ## The MPE Switch
 
@@ -58,17 +58,19 @@ initial microtonal offset.
 ## Per-note Expression (0xD0)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 still latches pressure per channel, but **v4.03 does not write it into
-the audio core**.
+before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
+expression already established.
 
-- **Channel Pressure (0xD0) is consumed, decay is unchanged**: v4.10 added `decay_boost_*` sliders
-  and a live `poly_stretch_*` Faust graph so per-voice decay could follow pressure. That compute
-  overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE (~10.5 s WDT). v4.03 restores
-  the v4.02 DSP graph (`a, a*2, a*3` partials, no stretch, no per-voice boost). `set_decay_boost`
-  is a no-op until a cheaper path exists. Depth 3 s remains in `MPE.ino` as unused mapping math.
+- **Channel Pressure (0xD0) adds decay, folded per side by max**: boost = 3 s × pressure / 127.
+  Each voice still tracks its owner channel's pressure, including after Note Off. Because the
+  Faust graph has one `decay` per side, the three voice boosts on a side are reduced by maximum
+  (not summed) and added to the Decay fader. One key at 127 is +3 s; three keys at 127 are still
+  +3 s. The Faust slider tops out at 10 s, so a fader already at 10 s cannot take more boost.
+  Putting per-voice t60 into Faust watchdog-resets (~10.5 s); this path does not change the DSP
+  graph. String and Bar have one owner, so max is that owner's boost.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
-- Conventional (non-MPE) Channel Pressure on a routed channel still follows the Pitch Bend
-  routing precedent at the MIDI layer; with the boost no-op it also does not change decay.
+- Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
+  following the Pitch Bend routing precedent.
 
 ## Tuning
 

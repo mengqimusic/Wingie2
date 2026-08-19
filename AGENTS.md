@@ -36,7 +36,7 @@ There is no enforced formatter. Match the surrounding file: Arduino tabs general
 
 The repository has two automated test layers. Run them before considering a change verified:
 
-- **Host unit tests** (`tests/host/*.cpp`, 4 files) cover the header-only modules `tap_sequence.h`, `mpe_state.h`, `config_profiles.h`, and `serial_config_protocol.h`. These headers are intentionally Arduino-free (only standard C headers), so compile each test directly:
+- **Host unit tests** (`tests/host/*.cpp`, 5 files) cover the header-only modules `tap_sequence.h`, `mpe_state.h`, `config_profiles.h`, `serial_config_protocol.h`, and `decay_expression.h`. These headers are intentionally Arduino-free (only standard C headers), so compile each test directly:
   ```bash
   g++ -std=c++17 -I. tests/host/<name>_test.cpp -o /tmp/<name>_test && /tmp/<name>_test
   ```

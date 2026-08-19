@@ -97,6 +97,8 @@ class RatioModeReferenceTest(unittest.TestCase):
         generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
         mpe = (REPO_ROOT / "Wingie2/MPE.ino").read_text(encoding="utf-8")
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+        midi = (REPO_ROOT / "Wingie2/MIDI.ino").read_text(encoding="utf-8")
 
         self.assertNotIn('hslider("decay_boost_0"', source)
         self.assertNotIn("decay_boost_", source)
@@ -111,7 +113,12 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertNotIn("mpe_cc74", mpe)
         self.assertNotIn("setCc74", mpe)
         self.assertNotIn('addHorizontalSlider("decay_boost_0"', generated)
-        self.assertIn("(void)seconds;", mpe)
+        self.assertNotIn("(void)seconds;", mpe)
+        self.assertIn("set_fader_decay", mpe)
+        self.assertIn("wingie_decay::side_boost", mpe)
+        self.assertIn("wingie_decay::effective_t60", mpe)
+        self.assertIn("set_fader_decay(0, Decay);", control)
+        self.assertIn("set_fader_decay(0, v);", midi)
 
         self.assertIn("voice_expression_channel(ch, voice)", mpe)
         self.assertIn("mpe_pressure_decay_delta(voice_expression_channel(ch, voice))", mpe)

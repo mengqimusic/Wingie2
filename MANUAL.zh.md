@@ -242,7 +242,7 @@ MPE（MIDI Polyphonic Expression）让支持 MPE 的控制器对小羽的每个�
 
 ### 逐音压力表情（0xD0）
 
-v4.10 曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，**v4.03 已从音频核撤回**：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。
+打开 MPE 后，Member 通道的 Channel Pressure（0xD0）拉长衰减：增量 = 3 秒 × 压力 / 127，按得越重尾音越长，最多 +3 秒；抬键随压力回落。同一侧若有多个音，取其中最重的压力，不累加。琴弦 / 音块只有一个归属音，就是那个音的压力。Decay 推杆已到 10 秒时，压力加不上去。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。
 
 Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。
 

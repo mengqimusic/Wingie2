@@ -374,8 +374,8 @@ void control(void *pvParameters) {
     }
   }
 
-  dsp.setParamValue("/Wingie/left/decay", 0.1);  // 最小 Startup Decay 避免开机声音过大
-  dsp.setParamValue("/Wingie/right/decay", 0.1);
+  set_fader_decay(0, 0.1f);  // 最小 Startup Decay 避免开机声音过大
+  set_fader_decay(1, 0.1f);
 
   serial_config_ready = true;
 
@@ -437,8 +437,8 @@ void control(void *pvParameters) {
     float Decay = (potValRealtime[1] / 4095.) * 9.9 + 0.1;
     Decay = fscale(0.1, 10., 0.1, 10., Decay, -3.25);
     if (realtime_value_valid[DECAY] && !startup) {
-      dsp.setParamValue("/Wingie/left/decay", Decay);
-      dsp.setParamValue("/Wingie/right/decay", Decay);
+      set_fader_decay(0, Decay);
+      set_fader_decay(1, Decay);
     }
 
     float Volume = potValRealtime[2] / 4095.;

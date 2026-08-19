@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and **v4.03 withdraws it from the audio core**: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
+With MPE on, Member Channel Pressure (0xD0) lengthens decay: boost = 3 s × pressure / 127, up to +3 s, easing back as the key lifts. If several notes share a side, the heaviest pressure wins; they do not add. String and Bar have one owner, so that note's pressure is used. When the Decay slider is already at 10 s, pressure cannot add more. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
