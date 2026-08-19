@@ -98,21 +98,20 @@ class RatioModeReferenceTest(unittest.TestCase):
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
         mpe = (REPO_ROOT / "Wingie2/MPE.ino").read_text(encoding="utf-8")
 
-        self.assertIn('hslider("decay_boost_0"', source)
-        self.assertIn('hslider("decay_boost_1"', source)
-        self.assertIn('hslider("decay_boost_2"', source)
-        self.assertIn("select2(index >= 6, select2(index >= 3, decay_boost_0, decay_boost_1), decay_boost_2)", source)
+        self.assertNotIn('hslider("decay_boost_0"', source)
+        self.assertNotIn("decay_boost_", source)
         self.assertNotIn("ba.selectn(3, index / 3)", source)
         self.assertNotIn("partial_gain", source)
         self.assertNotIn("partial_gain", generated)
-        # dsp 保留 partial2/3 与 poly_stretch 结构（faust 2.59.6 稳定性约束：
-        # 删除该结构会触发 DSP WDT）；固件不映射 CC74，stretch 恒 0。
-        self.assertIn("partial2(a, ps0)", source)
-        self.assertIn("partial3(a, ps0)", source)
+        # 4.10 的 poly_stretch 活 slider 与 decay_boost 热路径都会把 compute
+        # 推过 44.1 kHz / 32-sample 期限，导致 CPU0 Faust DSP Task WDT。
+        self.assertNotIn("poly_stretch_", source)
+        self.assertNotIn("partial2(a, ps0)", source)
+        self.assertIn("a, a * 2, a * 3, b, b * 2, b * 3, c, c * 2, c * 3", source)
         self.assertNotIn("mpe_cc74", mpe)
         self.assertNotIn("setCc74", mpe)
-        self.assertIn('addHorizontalSlider("decay_boost_0"', generated)
-        self.assertIn('addHorizontalSlider("decay_boost_2"', generated)
+        self.assertNotIn('addHorizontalSlider("decay_boost_0"', generated)
+        self.assertIn("(void)seconds;", mpe)
 
         self.assertIn("voice_expression_channel(ch, voice)", mpe)
         self.assertIn("mpe_pressure_decay_delta(voice_expression_channel(ch, voice))", mpe)

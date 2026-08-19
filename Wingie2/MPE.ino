@@ -12,9 +12,12 @@ float mpe_pressure_decay_delta(byte channel) {
 }
 
 void set_decay_boost(byte ch, byte voice, float seconds) {
-  char path[40];
-  snprintf(path, sizeof(path), ch ? "/Wingie/right/decay_boost_%u" : "/Wingie/left/decay_boost_%u", voice);
-  dsp.setParamValue(path, seconds);
+  // 4.10 把 per-voice decay_boost 放进 Faust 热路径后，compute 越 44.1 kHz /
+  // 32-sample 期限，CPU0 Faust DSP Task 饿死 IDLE，约 10.5 s WDT。DSP 图已退回
+  // 4.02；0xD0 深度暂不写进音频核，等更便宜的实现再接回。
+  (void)ch;
+  (void)voice;
+  (void)seconds;
 }
 
 void set_side_decay_boost(byte ch, float seconds) {
