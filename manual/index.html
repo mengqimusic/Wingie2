@@ -396,7 +396,7 @@
 </ul>
 <p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
 <h3 id="逐音压力表情0xd0">逐音压力表情（0xD0）</h3>
-<p>打开 MPE 后，Member 通道的 Channel Pressure（0xD0）拉长衰减：增量 = 3 秒 × 压力 / 127，按得越重尾音越长，最多 +3 秒；抬键随压力回落。同一侧若有多个音，取其中最重的压力，不累加。琴弦 / 音块只有一个归属音，就是那个音的压力。Decay 推杆已到 10 秒时，压力加不上去。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
+<p>此前一版曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，已从音频核撤回：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
 <p>Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
@@ -697,15 +697,13 @@
 <h2 id="17-版本说明">17. 版本说明</h2>
 <p><strong>v4.10</strong> 相对 v4.03 的变化：</p>
 <ul>
-<li><strong>线路输入单声道</strong>：可将左右线路混成一轨后送入两个共鸣器；麦克风不受影响。网页「线路输入」或开机同时按住左右 C 切换；开机手势立刻写入闪存。</li>
-<li><strong>MPE 通道压力拉长衰减</strong>：打开 MPE 后，0xD0 按侧取最重的压力，在 Decay 推杆上最多叠加 3 秒，不累加。音频核未改；Decay 已到 10 秒时压力加不上去。</li>
+<li>新增单声道线路输入模式：在此模式下，线路输入的左右声道混在一起，进入两个共鸣器，方便使用单声道声源。开机时同时按住左右 C 键以切换模式并存储，也可以在配置网页上设定。本设置不影响内置麦克风。</li>
 </ul>
-<p>本号曾短暂以 v4.04 发布，已更正。更早一版同号把逐音压力放进 Faust 热路径，开机约 10 秒看门狗复位，已从安装入口撤下；本版取而代之。</p>
 <p><strong>v4.03</strong> 相对 v4.02 的变化：</p>
 <ul>
 <li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
 <li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
-<li>当时的 v4.10 曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位。v4.03 音频核与 v4.02 相同；0xD0 在 v4.03 仍被消费，但不改变衰减。</li>
+<li>此前一版曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被消费，但不改变衰减。</li>
 </ul>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
@@ -1025,7 +1023,7 @@
 </ul>
 <p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
 <h3 id="per-note-pressure-expression-0xd0">Per-Note Pressure Expression (0xD0)</h3>
-<p>With MPE on, Member Channel Pressure (0xD0) lengthens decay: boost = 3 s × pressure / 127, up to +3 s, easing back as the key lifts. If several notes share a side, the heaviest pressure wins; they do not add. String and Bar have one owner, so that note's pressure is used. When the Decay slider is already at 10 s, pressure cannot add more. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
+<p>An earlier build mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and it has been withdrawn from the audio core: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
 <p>Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
@@ -1325,15 +1323,13 @@
 <h2 id="17-version-notes">17. Version Notes</h2>
 <p>Changes in <strong>v4.10</strong> compared to v4.03:</p>
 <ul>
-<li><strong>Line-input mono mix</strong>: mix left and right line into one signal that feeds both resonators; the microphone is unaffected. Toggle from the web &quot;Line Input&quot; control or by holding both C keys at startup; the startup gesture writes flash immediately.</li>
-<li><strong>MPE channel-pressure decay</strong>: with MPE on, 0xD0 lengthens decay by up to 3 s using the heaviest pressure on that side (not summed). The audio core is unchanged; pressure cannot add more when the Decay slider is already at 10 s.</li>
+<li>Adds a mono line-input mode: in this mode, the left and right line-input channels are mixed together and fed into both resonators, for use with a mono source. Hold both left and right C keys at startup to toggle the mode and store it, or set it on the configuration page. This setting does not affect the built-in microphone.</li>
 </ul>
-<p>This number was briefly published as v4.04 and has been corrected. An earlier build of the same number put per-note pressure on the Faust hot path and watchdog-reset about 10 seconds after boot; it was withdrawn. This build replaces it.</p>
 <p>Changes in <strong>v4.03</strong> compared to v4.02:</p>
 <ul>
 <li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
 <li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
-<li>The earlier v4.10 put MPE per-note pressure on the DSP hot path and watchdog-reset about 10 seconds after boot. v4.03 uses the same audio core as v4.02; 0xD0 is still consumed in v4.03, but it does not change decay.</li>
+<li>An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.</li>
 </ul>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>
