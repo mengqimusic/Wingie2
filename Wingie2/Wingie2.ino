@@ -104,7 +104,10 @@ struct MpeMonoState {
 };
 
 
-Wingie2 dsp(44100, 32);
+// 32 样本块时音频任务热循环（i2s_read/compute/i2s_write，位于 flash XIP）与
+// core 1 控制循环争 flash cache，贴边到开机 ~10.5 s task WDT（IDLE0 饿死）。
+// 64 样本块：块率减半、每块期限翻倍，延迟仅 +0.73 ms，换出稳定余量。
+Wingie2 dsp(44100, 64);
 AC101 ac;
 Adafruit_AW9523 aw0; // left channel
 Adafruit_AW9523 aw1; // right channel
