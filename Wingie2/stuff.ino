@@ -28,6 +28,7 @@ static const GeneralSettingEntry kGeneralSettings[kDirtyCount] = {
   {"left_mode", kSettingUChar, kDirtyLeftMode, "%s is saved, value is %d.\n", &Mode[0]},
   {"right_mode", kSettingUChar, kDirtyRightMode, "%s is saved, value is %d.\n", &Mode[1]},
   {"mpe_enabled", kSettingBool, kDirtyMpeEnabled, "%s is saved, value is %d.\n", &mpe_enabled},
+  {"line_input_mono", kSettingBool, kDirtyLineInputMono, "%s is saved, value is %d.\n", &line_input_mono},
 };
 
 bool save_general_preferences(Preferences &store) {

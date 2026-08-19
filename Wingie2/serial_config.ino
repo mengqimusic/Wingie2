@@ -306,6 +306,19 @@ bool applyScalarParameter(const wingie_serial::Request &request, float &canonica
     canonical = mpe_enabled ? 1.0f : 0.0f;
     return true;
   }
+  if (strcmp(request.name, "line_input_mono") == 0) {
+    int enabled = wingie_config::kLineInputMonoMin;
+    if (!quantizeIntegerParameter(request.value, wingie_config::kLineInputMonoMin,
+                                  wingie_config::kLineInputMonoMax, enabled))
+      return false;
+    if (line_input_mono != static_cast<bool>(enabled)) {
+      line_input_mono = enabled;
+      apply_line_input_mono();
+      dirty[kDirtyLineInputMono] = true;
+    }
+    canonical = line_input_mono ? 1.0f : 0.0f;
+    return true;
+  }
   return false;
 }
 
@@ -333,6 +346,7 @@ void sendSettings(uint32_t id) {
   shared.midiRight = midi_ch_r;
   shared.midiBoth = midi_ch_both;
   shared.mpeEnabled = mpe_enabled;
+  shared.lineInputMono = line_input_mono;
 
   wingie_serial::JsonResponse response;
   wingie_serial::encodeSettings(response, id, source, generalSettingsAreDirty(),

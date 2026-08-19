@@ -43,6 +43,7 @@ enum SettingsDirtyIndex {
   kDirtyLeftMode,
   kDirtyRightMode,
   kDirtyMpeEnabled,
+  kDirtyLineInputMono,
   kDirtyCount
 };
 

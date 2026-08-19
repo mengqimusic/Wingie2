@@ -131,6 +131,21 @@ class RatioModeReferenceTest(unittest.TestCase):
         self.assertIn('#include "esp_attr.h"', generated)
         self.assertIn("virtual void IRAM_ATTR compute", generated)
 
+    def test_line_input_mono_mix_is_after_dcblocker(self):
+        source = (REPO_ROOT / "Wingie2.dsp").read_text(encoding="utf-8")
+        generated = (REPO_ROOT / "Wingie2/Wingie2.cpp").read_text(encoding="utf-8")
+        firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
+        control = (REPO_ROOT / "Wingie2/control.ino").read_text(encoding="utf-8")
+        self.assertIn('hslider("line_mono", 0, 0, 1, 1)', source)
+        self.assertIn("stereo_or_mono", source)
+        self.assertLess(source.index("fi.dcblocker, fi.dcblocker"), source.index(": stereo_or_mono"))
+        self.assertIn('addHorizontalSlider("line_mono"', generated)
+        self.assertNotIn("audio_input_mix.h", generated)
+        self.assertIn('dsp.setParamValue("line_mono", line_input_mono_active ? 1.0f : 0.0f);', firmware)
+        self.assertIn("line_input_mono_active = line_input_mono && source;", firmware)
+        self.assertIn("!key[0][0] && !key[1][0]", control)
+        self.assertIn("persist_line_input_mono_now();", control)
+
     def test_only_cave_mode_applies_cave_mutes(self):
         firmware = (REPO_ROOT / "Wingie2/Wingie2.ino").read_text(encoding="utf-8")
         cave_block = extract_braced_block(firmware, "void apply_cave_bank_to_dsp")

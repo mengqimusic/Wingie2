@@ -27,7 +27,8 @@
       pre_clip_gain: 0.495,
       post_clip_gain: 0.55,
       midi: {left: 13, right: 14, both: 15},
-      mpe_enabled: false
+      mpe_enabled: false,
+      line_input_mono: false
     }
   };
 
@@ -78,7 +79,8 @@
       a3_hz: [358.08, 521.91, 0.01, true], tuning: [-1, 7, 1, true],
       pre_clip_gain: [0.0825, 0.99, 0.0825, true], post_clip_gain: [0.385, 0.99, 0.055, true],
       midi_left: [1, 16, 1, true], midi_right: [1, 16, 1, true], midi_both: [1, 16, 1, true],
-      mpe_enabled: [0, 1, 1, true]
+      mpe_enabled: [0, 1, 1, true],
+      line_input_mono: [0, 1, 1, true]
     }
   };
 
@@ -133,7 +135,7 @@
     const failed = failIfRequested(request);
     if (failed) return failed;
     if (request.op === "hello") {
-      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 5, transport: {baud: 115200, max_frame: 1024}};
+      return {v: 1, id: request.id, ok: true, op: "hello", device: "Wingie2", capabilities: ["ratio_mode", "cave_config", "settings", "mpe"], config_schema: 6, transport: {baud: 115200, max_frame: 1024}};
     }
     if (request.op === "get_settings") {
       const dirtyAll = settingsDirty || ratioDirty ||

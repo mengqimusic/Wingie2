@@ -206,8 +206,18 @@ with
   c = env_mute(button("mute_%index"));
 };
 
+// 线路单声道：dcblocker 之后、共鸣器之前把 (L+R)/2 送入双通道。
+// firmware 仅在音源为线路时把 line_mono 置 1；麦克风保持立体声。
+line_mono = hslider("line_mono", 0, 0, 1, 1);
+stereo_or_mono(l, r) = l * (1 - m) + mix * m, r * (1 - m) + mix * m
+with {
+  m = line_mono;
+  mix = (l + r) * 0.5;
+};
+
 process = _,_
     : fi.dcblocker, fi.dcblocker
+    : stereo_or_mono
     : (_ <: attach(_, _ : an.amp_follower(amp_follower_decay) : _ > left_thresh : hbargraph("left_trig", 0, 1))),
       (_ <: attach(_, _ : an.amp_follower(amp_follower_decay) : _ > right_thresh : hbargraph("right_trig", 0, 1)))
         : hgroup("left", _ * env_mode_change(button("mode_changed")) * volume0),

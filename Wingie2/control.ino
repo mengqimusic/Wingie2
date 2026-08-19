@@ -112,6 +112,7 @@ void control(void *pvParameters) {
     prefs.putUChar("use_alt_tuning", 0);
     prefs.putChar("alt_tuning_idx", -1);
     prefs.putBool("mpe_enabled", false);
+    prefs.putBool("line_input_mono", false);
     prefs.putBool("unq_caves_store", false);
     for (int ch = 0; ch < 2; ch++) {
       for (int cave = 0; cave < 3; cave++) {
@@ -146,6 +147,9 @@ void control(void *pvParameters) {
   mpe_enabled = prefs.getBool("mpe_enabled", false);
   configure_mpe_startup();
   Serial.printf("mpe_enabled = %d, mpe zone claimed = 0x%04x\n", mpe_enabled, mpe_state.claimedChannels());
+  line_input_mono = prefs.getBool("line_input_mono", false);
+  apply_line_input_mono();
+  Serial.printf("line_input_mono = %d, active = %d\n", line_input_mono, line_input_mono_active);
   float a3_freq_offset = prefs.getFloat("a3_freq_offset", 0);
   a3_freq = 440. + a3_freq_offset;
   dsp.setParamValue("a3_freq", a3_freq);
@@ -332,6 +336,14 @@ void control(void *pvParameters) {
 
   if ((use_alt_tuning ? alt_tuning_index : -1) != loadedTuning) tuning_preferences_dirty = true;
 
+  // 开机双 C：切换线路立体声/单声道并立刻写入 NVS。音符键按下为低。
+  if (!key[0][0] && !key[1][0]) {
+    line_input_mono = !line_input_mono;
+    apply_line_input_mono();
+    persist_line_input_mono_now();
+    Serial.printf("Boot C+C toggled line_input_mono = %d\n", line_input_mono);
+  }
+
   if (modeButtonState[0] && modeButtonState[1]) {
     // 无模式键按下：恢复 prefs 中的调律状态（按键路径已由 set_alt_tuning 处理，跳过）
     if (use_alt_tuning != 0 && alt_tuning_index != -1) {
@@ -456,6 +468,7 @@ void control(void *pvParameters) {
         sourceChanged = false;
         sourceChanged2 = true;
         acWriteReg(ADC_SRC, sources[source]);
+        apply_line_input_mono();
         sourceChangedMillis = currentMillis;
       }
     }

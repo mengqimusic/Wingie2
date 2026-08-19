@@ -60,8 +60,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertNotIn("fetch(", self.source)
         self.assertNotIn("WebSocket", self.source)
 
-    def test_uses_schema_five_snapshot_protocol(self):
-        self.assertIn("Number(hello.config_schema) !== 5", self.source)
+    def test_uses_schema_six_snapshot_protocol(self):
+        self.assertIn("Number(hello.config_schema) !== 6", self.source)
         for operation in (
             "hello",
             "get_settings",
@@ -206,10 +206,12 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "midi_right",
             "midi_both",
             "mpe_enabled",
+            "line_input_mono",
         ):
             self.assertIn(f'param:shared:{name}', self.source)
         self.assertIn("wg-mpe-enabled", self.source)
-        self.assertIn("config_schema) !== 5", self.source)
+        self.assertIn("wg-line-input-mono", self.source)
+        self.assertIn("config_schema) !== 6", self.source)
         for stale_item in ("Source", "Note", "Fundamental", "Active Cave", "mix", "decay", "volume"):
             self.assertNotIn(stale_item, self.source)
         for runtime_key in (
@@ -276,7 +278,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("grid-template-columns: repeat(6, minmax(0, 1fr))", self.source)
         self.assertEqual(self.source.count('class="wg-field wg-field-half"'), 4)
         self.assertEqual(self.source.count('class="wg-field wg-field-third"'), 3)
-        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 1)
+        self.assertEqual(self.source.count('class="wg-field wg-field-full"'), 2)
         self.assertIn("@media (max-width: 760px)", self.source)
         self.assertIn('data-mobile-side="left"', self.source)
         self.assertIn("overflow-x: auto", self.source)
@@ -395,8 +397,8 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIsNotNone(reset_mock)
         self.assertIn('error: {code: "revision_conflict", field: "expected_revision"}', reset_mock.group(1))
 
-    def test_mock_matches_schema_five_without_events(self):
-        self.assertIn("config_schema: 5", self.mock_source)
+    def test_mock_matches_schema_six_without_events(self):
+        self.assertIn("config_schema: 6", self.mock_source)
         for operation in (
             "get_settings",
             "status",
@@ -437,7 +439,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("window.confirm", save_block)
 
     def test_firmware_uses_snapshot_settings_without_runtime_sync(self):
-        self.assertIn('"config_schema\\":5', self.response_source)
+        self.assertIn('"config_schema\\":6', self.response_source)
         self.assertIn("kOperationGetSettings", self.protocol_source)
         self.assertIn("kOperationSetParam", self.protocol_source)
         self.assertIn("void sendSettings(uint32_t id)", self.firmware_source)
@@ -470,10 +472,13 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("tuning_preferences_dirty", self.storage_source)
         self.assertIn('"mpe_enabled"', self.storage_source)
         self.assertIn("kDirtyMpeEnabled", self.storage_source)
+        self.assertIn('"line_input_mono"', self.storage_source)
+        self.assertIn("kDirtyLineInputMono", self.storage_source)
         self.assertIn("store.putBool", self.storage_source)
         self.assertIn('"mpe_enabled\\":%s', self.response_source)
+        self.assertIn('"line_input_mono\\":%s', self.response_source)
         self.assertIn('"capabilities\\\":[\\\"settings\\\",\\\"ratio_mode\\\",\\\"cave_config\\\",\\\"mpe\\\"]', self.response_source)
-        self.assertIn('"config_schema\\":5', self.response_source)
+        self.assertIn('"config_schema\\":6', self.response_source)
         self.assertRegex(
             self.storage_source,
             r"if \(unq_caves_store\) \{\s*if \(!save_general_preferences\(prefs\)\)",
@@ -510,11 +515,13 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn('"post_clip_gain\\":[%g,%g,%g]', self.response_source)
         self.assertIn('"midi_left\\":[%g,%g,1]', self.response_source)
         self.assertIn('"mpe_enabled\\":[%g,%g,1]', self.response_source)
+        self.assertIn('"line_input_mono\\":[%g,%g,1]', self.response_source)
         # 量化范围收拢为单一常量源，serial_config.ino 与编码端共用
         self.assertIn("kModeMin", self.firmware_source)
         self.assertIn("kModeMax", self.firmware_source)
         self.assertIn("kMidiChannelMin", self.firmware_source)
         self.assertIn("kMpeEnabledMin", self.firmware_source)
+        self.assertIn("kLineInputMonoMin", self.firmware_source)
         self.assertIn("kClipGainMax", self.firmware_source)
         # mock 与固件一致地下发 limits；legacy 模式省略（回退路径由浏览器测试覆盖）
         self.assertIn("if (!legacyFirmware) response.limits = buildLimits();", self.mock_source)

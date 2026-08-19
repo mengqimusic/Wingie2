@@ -9,7 +9,7 @@ but not mapped.
 ## The MPE Switch
 
 MPE is governed by a single switch, exposed as `mpe_enabled` in the USB configuration page
-(config schema 5) and stored in flash. Factory default: **off**. The switch is the only zone
+(config schema 6) and stored in flash. Factory default: **off**. The switch is the only zone
 authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
 but ignored while the switch is off. A restart restores the switched layout.
 
@@ -80,7 +80,7 @@ applied.
 
 ## Migrating from the always-on firmware
 
-- The MPE switch is back as `mpe_enabled` in the USB configuration page (config schema 5),
+- The MPE switch is back as `mpe_enabled` in the USB configuration page (config schema 6),
   persisted in flash, factory default off.
 - With the switch on, the zone covers Channels 2–16 instead of the previous startup layout
   (Channels 2–7): the earlier silent drop on Channels 11–15 no longer exists.

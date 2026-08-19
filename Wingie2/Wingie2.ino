@@ -173,6 +173,8 @@ bool unq_caves_store = false;
 wingie_mpe::State mpe_state;
 MpeMonoState mpeMonoState[2];
 bool mpe_enabled = false; // 网页开关：OFF = 三通道常规路由（midi_ch_l/r/both）；ON = 标准 Lower Zone（Ch1 manager + Ch2–16 members）
+bool line_input_mono = false; // 线路 L+R 混合后进入左右共鸣器；麦克风始终立体声
+volatile bool line_input_mono_active = false; // 设定开启且当前音源为线路时为 true
 float conventionalPitchBend[2] = {0.0f, 0.0f};
 byte conventionalPitchChannel[2] = {0, 0};
 
@@ -389,6 +391,28 @@ void set_mode_led(byte ch) {
 }
 
 // mark_cave_changed 已收进 device_state.ino，见 device_state.h（revision 与 dirty 在同一临界区内更新）。
+
+void apply_line_input_mono() {
+  line_input_mono_active = line_input_mono && source;
+  dsp.setParamValue("line_mono", line_input_mono_active ? 1.0f : 0.0f);
+}
+
+void persist_line_input_mono_now() {
+  if (!prefs.begin("settings", RW_MODE)) {
+    dirty[kDirtyLineInputMono] = true;
+    Serial.println("Failed to save line_input_mono");
+    return;
+  }
+  const bool saved = prefs.putBool("line_input_mono", line_input_mono);
+  prefs.end();
+  if (saved) {
+    dirty[kDirtyLineInputMono] = false;
+    Serial.printf("line_input_mono is saved, value is %d.\n", line_input_mono);
+  } else {
+    dirty[kDirtyLineInputMono] = true;
+    Serial.println("Failed to save line_input_mono");
+  }
+}
 
 // 单一入口：启用/禁用 alternate tuning 的完整状态机
 // index >= 0 启用（选择 0-7 调律），index < 0 禁用并恢复未量化 cave

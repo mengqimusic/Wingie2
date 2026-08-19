@@ -10,8 +10,8 @@
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) 是可直接部署或植入现有网站的单文件
 配置页。CSS 与 JavaScript 全部内联，不需要 SoftAP、Wi‑Fi、CDN、Node 或 Python；浏览器
-通过 USB Web Serial 与 Wingie2 通信。当前页面要求设备运行 `config schema 4` 固件，不兼容
-旧的 schema 1、2、3 配置固件。
+通过 USB Web Serial 与 Wingie2 通信。当前页面要求设备运行 `config schema 6` 固件，不兼容
+旧的 schema 1–5 配置固件。
 
 1. 使用桌面版 Chrome、Edge 或其他支持 Web Serial 的 Chromium 浏览器，通过 HTTPS 打开页面；
 2. 关闭 Arduino Serial Monitor 等占用 Wingie2 串口的软件；
@@ -31,7 +31,7 @@
 运行的共享实体旋钮参数，直接由 Wingie2 面板控制，不写入 flash。
 
 Save 会持久化 A3、Tuning、Pre/Post Clip Gain、三个 MIDI 通道路由、左右 Mode 与 Input
-Threshold、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
+Threshold、MPE 开关、线路输入立体声/单声道、共享 Ratio profile，以及左右各 3 个 Cave bank 的频率和 mute。Ratio profile 由
 左右声道共用，9 个 ratio 按每 3 个一组分为槽 1/2/3；Ratio 复音模式下声部 1/2/3 分别使用
 槽 1/2/3 的比例，页面提供“复制槽 1 到槽 2、3”按钮将槽 1 的比例复制到另外两个槽。
 Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频率范围为
@@ -45,8 +45,8 @@ Factory Ratio 和导入配置都先改变运行状态，仍需 Save。Cave 频�
 
 [`Tools/wingie_config.html`](Tools/wingie_config.html) is a self-contained page that can be deployed
 or embedded directly. It uses USB Web Serial and has no SoftAP, Wi-Fi, CDN, Node, or Python
-dependency. The current page requires firmware that reports `config schema 4`; older schema 1, 2, and
-3 configuration firmware is not compatible.
+dependency. The current page requires firmware that reports `config schema 6`; older schema 1–5
+configuration firmware is not compatible.
 
 Open it from an HTTPS origin in a desktop Chromium browser, close any other software using the serial
 port, and connect the Wingie2 port. The page reads one complete device snapshot when it connects, then
@@ -69,8 +69,8 @@ not display or edit Mix, Decay, or Volume: those are runtime-only shared physica
 and are not written to flash.
 
 Save persists A3, Tuning, Pre/Post Clip Gain, all three MIDI channel routes, left/right Mode and Input
-Threshold, the shared Ratio profile, and all three Cave banks for each channel, including frequency
-and mute. The shared Ratio profile's nine ratios are grouped into Slots 1/2/3, three ratios per
+Threshold, the MPE switch, line-input stereo/mono, the shared Ratio profile, and all three Cave banks
+for each channel, including frequency and mute. The shared Ratio profile's nine ratios are grouped into Slots 1/2/3, three ratios per
 slot; in Ratio polyphonic mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively, and the
 “Copy Slot 1 to Slots 2&3” button copies Slot 1's ratios into the other two slots. Factory Ratio
 and imported settings first change the running state and still require Save.
@@ -82,7 +82,7 @@ origins are not supported.
 
 ## MPE
 
-MPE 由网页配置的开关控制（config schema 5，出厂默认关闭，闪存持久）。关闭时无 Zone，
+MPE 由网页配置的开关控制（config schema 6，出厂默认关闭，闪存持久）。关闭时无 Zone，
 Channel 1–16 全部走可配置常规 Left/Right/Both 路由（出厂默认 1/2/3），Channel 13 调律、
 14/15 Cave 频率、16 全局设置 CC 均可用。开启时为标准 Lower Zone（Manager Channel 1 +
 Member Channels 2–16）：每个 Note On 按到达顺序在左右引擎间交替分配（Cave 侧跳过），
@@ -93,7 +93,7 @@ Manager Pitch Bend/CC 全局（两侧），Member Pitch Bend 逐音；此时常�
 alternate tuning，详见 [`MPE.md`](MPE.md) 与 [`ALT_TUNING.md`](ALT_TUNING.md)。当前实现
 范围是 Zone、逐音 ownership 与 Pitch Bend，不映射 Channel Pressure 或 CC 74。
 
-MPE is controlled by a switch in the USB configuration page (config schema 5, factory default
+MPE is controlled by a switch in the USB configuration page (config schema 6, factory default
 off, persisted in flash). Off: no zone — Channels 1–16 all follow the configurable conventional
 Left/Right/Both routing (factory defaults 1/2/3); Channel 13 tuning, 14/15 Cave-frequency and
 16 global-settings CCs remain reachable. On: a standard Lower Zone (Manager Channel 1, Member

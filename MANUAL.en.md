@@ -50,7 +50,7 @@ Wingie2's sensitive microphone picks up airborne sound and easily produces feedb
 
 You can use Wingie2 to listen to nearby sounds, treat it as a percussion instrument, or use it to turn any object into an instrument. Experiment freely.
 
-Wingie2's audio input is a stereo 3.5mm jack (TRS).
+Wingie2's audio input is a stereo 3.5mm jack (TRS). Line input can be stereo or mono: in mono, the left and right line signals are mixed into one track and fed to both resonators. The microphone is unaffected and stays stereo. Hold C on both note keyboards at startup to toggle stereo/mono; the change is written to flash immediately. The same setting is available as "Line Input" in [USB Web Configuration](#9-usb-web-configuration) (live change; Save writes flash). Factory default is stereo.
 
 > **Note**: Avoid excessive input signals. An overly large input signal causes the overloaded acoustic sound to appear in the output. If you can still hear the line-input signal when the source switch is set to microphone, or when the dry/wet ratio is set to 100%, the line-input signal is too high. Turn down the input signal level (not the faders on Wingie2).
 
@@ -203,7 +203,7 @@ Open [https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingi
 On connection, the page reads one complete device snapshot. You can modify the following; **every valid edit takes effect on the running sound immediately, with no Apply step**:
 
 - **Left/right channels**: Mode (Poly / String / Bar / Cave / Ratio), Input Threshold
-- **Shared settings**: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch
+- **Shared settings**: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch, line-input stereo/mono
 - **Ratio Mode profile**: 9 resonator ratios (grouped into 3 slots), with "Copy Slot 1 to Slots 2 & 3" and factory-reset buttons
 - **Caves**: 3 banks per channel, each with 9 resonator frequencies and mute states
 
@@ -354,7 +354,7 @@ There are two ways to write current settings to flash so they persist after rest
 1. **Panel dual-button save**: Hold both Mode buttons simultaneously for three seconds. During the countdown, the LED cycles through the four colors and flashes when the countdown ends to indicate completion. This operation may cause a brief noise and is not recommended during recording or live performance.
 2. **Web Save to Flash**: Click "Save to Flash" and confirm in [USB Web Configuration](#9-usb-web-configuration).
 
-Saved settings include: A3 frequency, tuning, Pre/Post Clip Gain, three MIDI channel routes, left/right Mode and Input Threshold, the shared Ratio profile, all three Cave banks per channel (frequencies and mute), and the MPE switch.
+Saved settings include: A3 frequency, tuning, Pre/Post Clip Gain, three MIDI channel routes, left/right Mode and Input Threshold, the shared Ratio profile, all three Cave banks per channel (frequencies and mute), the MPE switch, and line-input stereo/mono. Toggling line mono by holding both C keys at startup writes flash immediately and does not require the dual-button save.
 
 ## 15. Caves Mode and Alternate Tunings
 
