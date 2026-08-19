@@ -3,7 +3,7 @@
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
 left/right alternating engine assignment. Member Channel Pressure (0xD0) is consumed but does
-not change decay in v4.11 (the v4.10 Faust hot path watchdog-reset); member CC 74 is consumed
+not change decay in v4.03 (the v4.10 Faust hot path watchdog-reset); member CC 74 is consumed
 but not mapped.
 
 ## The MPE Switch
@@ -58,12 +58,12 @@ initial microtonal offset.
 ## Per-note Expression (0xD0)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 still latches pressure per channel, but **v4.11 does not write it into
+before Note On; Wingie2 still latches pressure per channel, but **v4.03 does not write it into
 the audio core**.
 
 - **Channel Pressure (0xD0) is consumed, decay is unchanged**: v4.10 added `decay_boost_*` sliders
   and a live `poly_stretch_*` Faust graph so per-voice decay could follow pressure. That compute
-  overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE (~10.5 s WDT). v4.11 restores
+  overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE (~10.5 s WDT). v4.03 restores
   the v4.02 DSP graph (`a, a*2, a*3` partials, no stretch, no per-voice boost). `set_decay_boost`
   is a no-op until a cheaper path exists. Depth 3 s remains in `MPE.ino` as unused mapping math.
 - Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
