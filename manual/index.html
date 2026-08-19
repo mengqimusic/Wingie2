@@ -396,7 +396,7 @@
 </ul>
 <p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
 <h3 id="逐音压力表情0xd0">逐音压力表情（0xD0）</h3>
-<p>v4.10 曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，<strong>v4.11 已从音频核撤回</strong>：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
+<p>v4.10 曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，<strong>v4.03 已从音频核撤回</strong>：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
 <p>Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
@@ -695,17 +695,13 @@
 <li>微信扫码，关注个人公众号「合成少数派」</li>
 </ul>
 <h2 id="17-版本说明">17. 版本说明</h2>
-<p><strong>v4.11</strong> 相对 v4.10 的变化：</p>
+<p><strong>v4.03</strong> 相对 v4.02 的变化：</p>
 <ul>
-<li><strong>修复开机看门狗复位</strong>：v4.10 把逐音衰减叠加放进 Faust 热路径后，音频核超时，约 10 秒后整机复位。v4.11 把 DSP 图退回 v4.02；配置页未保存警示和按键保存失败红闪仍保留。</li>
-<li><strong>MPE 逐音压力表情暂撤</strong>：0xD0 仍被消费，但不再改衰减，待更轻实现再接回。</li>
-</ul>
-<p><strong>v4.10</strong> 相对 v4.02 的变化（该版本已下架，请改用 v4.11）：</p>
-<ul>
-<li><strong>MPE 逐音压力表情</strong>：打开 MPE 之后，0xD0 通道压力被用作每个音符独立的表情控制。在 Decay 推杆设定的衰减基础上，按得越重，这个音的衰减就拉得越长，最多叠加 3 秒；抬键阶段随压力动态回落，实现自然的尾音消退效果。非 MPE 模式保持原有行为不变。此热路径会触发开机约 10 秒 WDT，已从 v4.11 撤回。</li>
 <li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
 <li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
+<li>v4.10 曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位，已下架。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被消费，但不改变衰减。</li>
 </ul>
+<p><strong>v4.10</strong> 已下架，请使用 v4.03。</p>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
 <li><strong>比例模式 LED 指示调整</strong>：由四色快速循环改为白色、黄色交替闪烁（每 0.5 秒切换），观感更柔和。</li>
@@ -1024,7 +1020,7 @@
 </ul>
 <p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
 <h3 id="per-note-pressure-expression-0xd0">Per-Note Pressure Expression (0xD0)</h3>
-<p>v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and <strong>v4.11 withdraws it from the audio core</strong>: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
+<p>v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and <strong>v4.03 withdraws it from the audio core</strong>: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
 <p>Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
@@ -1322,17 +1318,13 @@
 <li>Instagram: instagram.com/mengqimusic</li>
 </ul>
 <h2 id="17-version-notes">17. Version Notes</h2>
-<p>Changes in <strong>v4.11</strong> compared to v4.10:</p>
+<p>Changes in <strong>v4.03</strong> compared to v4.02:</p>
 <ul>
-<li><strong>Boot watchdog fix</strong>: v4.10 put per-note decay boost on the Faust hot path, so the audio core overran and the unit reset after about 10 seconds. v4.11 restores the v4.02 DSP graph. The configuration-page unsaved warning and the save-failure red LED remain.</li>
-<li><strong>MPE per-note pressure expression withdrawn</strong>: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation.</li>
-</ul>
-<p>Changes in <strong>v4.10</strong> compared to v4.02 (this build is withdrawn; use v4.11):</p>
-<ul>
-<li><strong>MPE per-note pressure expression</strong>: with MPE on, 0xD0 Channel Pressure controls expression per note. On top of the decay set by the Decay slider, heavier pressure lengthens that note's decay by up to 3 seconds; as the key lifts, the boost eases back with pressure for a natural tail. Behavior outside MPE mode is unchanged. This hot path triggers a ~10 s boot watchdog and is withdrawn in v4.11.</li>
 <li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
 <li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
+<li>v4.10 put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and is withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.</li>
 </ul>
+<p><strong>v4.10</strong> is withdrawn; use v4.03.</p>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>
 <li><strong>Ratio Mode LED indication adjusted</strong>: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.</li>
