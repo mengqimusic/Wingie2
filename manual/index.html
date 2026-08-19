@@ -695,18 +695,18 @@
 <li>微信扫码，关注个人公众号「合成少数派」</li>
 </ul>
 <h2 id="17-版本说明">17. 版本说明</h2>
-<p><strong>v4.04</strong> 相对 v4.03 的变化：</p>
+<p><strong>v4.10</strong> 相对 v4.03 的变化：</p>
 <ul>
 <li><strong>线路输入单声道</strong>：可将左右线路混成一轨后送入两个共鸣器；麦克风不受影响。网页「线路输入」或开机同时按住左右 C 切换；开机手势立刻写入闪存。</li>
 <li><strong>MPE 通道压力拉长衰减</strong>：打开 MPE 后，0xD0 按侧取最重的压力，在 Decay 推杆上最多叠加 3 秒，不累加。音频核未改；Decay 已到 10 秒时压力加不上去。</li>
 </ul>
+<p>本号曾短暂以 v4.04 发布，已更正。更早一版同号把逐音压力放进 Faust 热路径，开机约 10 秒看门狗复位，已从安装入口撤下；本版取而代之。</p>
 <p><strong>v4.03</strong> 相对 v4.02 的变化：</p>
 <ul>
 <li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
 <li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
-<li>v4.10 曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位，已下架。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被消费，但不改变衰减。</li>
+<li>当时的 v4.10 曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位。v4.03 音频核与 v4.02 相同；0xD0 在 v4.03 仍被消费，但不改变衰减。</li>
 </ul>
-<p><strong>v4.10</strong> 已下架，请使用 v4.04。</p>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
 <li><strong>比例模式 LED 指示调整</strong>：由四色快速循环改为白色、黄色交替闪烁（每 0.5 秒切换），观感更柔和。</li>
@@ -1323,18 +1323,18 @@
 <li>Instagram: instagram.com/mengqimusic</li>
 </ul>
 <h2 id="17-version-notes">17. Version Notes</h2>
-<p>Changes in <strong>v4.04</strong> compared to v4.03:</p>
+<p>Changes in <strong>v4.10</strong> compared to v4.03:</p>
 <ul>
 <li><strong>Line-input mono mix</strong>: mix left and right line into one signal that feeds both resonators; the microphone is unaffected. Toggle from the web &quot;Line Input&quot; control or by holding both C keys at startup; the startup gesture writes flash immediately.</li>
 <li><strong>MPE channel-pressure decay</strong>: with MPE on, 0xD0 lengthens decay by up to 3 s using the heaviest pressure on that side (not summed). The audio core is unchanged; pressure cannot add more when the Decay slider is already at 10 s.</li>
 </ul>
+<p>This number was briefly published as v4.04 and has been corrected. An earlier build of the same number put per-note pressure on the Faust hot path and watchdog-reset about 10 seconds after boot; it was withdrawn. This build replaces it.</p>
 <p>Changes in <strong>v4.03</strong> compared to v4.02:</p>
 <ul>
 <li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
 <li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
-<li>v4.10 put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and is withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.</li>
+<li>The earlier v4.10 put MPE per-note pressure on the DSP hot path and watchdog-reset about 10 seconds after boot. v4.03 uses the same audio core as v4.02; 0xD0 is still consumed in v4.03, but it does not change decay.</li>
 </ul>
-<p><strong>v4.10</strong> is withdrawn; use v4.04.</p>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>
 <li><strong>Ratio Mode LED indication adjusted</strong>: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.</li>
