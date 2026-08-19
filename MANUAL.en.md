@@ -242,7 +242,7 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0)
 
-v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and **v4.03 withdraws it from the audio core**: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
+An earlier build mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and it has been withdrawn from the audio core: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.
 
 Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
@@ -398,13 +398,15 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
+Changes in **v4.10** compared to v4.03:
+
+- Adds a mono line-input mode: in this mode, the left and right line-input channels are mixed together and fed into both resonators, for use with a mono source. Hold both left and right C keys at startup to toggle the mode and store it, or set it on the configuration page. This setting does not affect the built-in microphone.
+
 Changes in **v4.03** compared to v4.02:
 
 - **Unsaved-change warning on the configuration page**: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.
 - **Save-failure LED**: the two-button save flashes the LED red on failure (white on success), with failure details on serial.
-- v4.10 put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and is withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.
-
-**v4.10** is withdrawn; use v4.03.
+- An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.
 
 Changes in **v4.01** compared to v4:
 
