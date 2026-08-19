@@ -141,7 +141,7 @@
 <h3 id="音频输入">音频输入</h3>
 <p>小羽灵敏的麦克风拾取空气中的声音，非常容易与扬声器产生回授。你可以演奏回授。v4 版本固件（带有第五种<strong>比例模式</strong>的）拥有抗啸叫功能，回授仍然可以建立，但是会大幅降低失真、得到柔和音质。不想要回授可以使用耳机，注意控制音量以避免与耳机回授。</p>
 <p>你可以使用小羽聆听身边的声音，把小羽当作一个打击乐器来使用，或者用它把任何物体变成一件乐器。开动脑筋，尽情实验。</p>
-<p>小羽的音频输入是立体声 3.5mm 接口（TRS）。</p>
+<p>小羽的音频输入是立体声 3.5mm 接口（TRS）。线路输入可设为立体声或单声道：单声道时左右线路先混合成一轨，再同时进入左右两个共鸣器。麦克风不受此设定影响，始终保持立体声。开机时同时按住左右音符键盘的 C，可在立体声与单声道之间切换，并立刻写入闪存。也可在 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 的「线路输入」中修改（立即改变运行状态，Save 后才写入闪存）。出厂默认为立体声。</p>
 <blockquote>
 <p><strong>注意</strong>：避免过大的输入信号。过大的输入信号会使过载的原声出现在输出中。如果在音源选择切换到麦克风时，或在干湿比设定为 100% 时，仍然可以听到线路输入的声音，就说明线路输入信号过大了。这时请调低输入信号电平（不是小羽上的推子）。</p>
 </blockquote>
@@ -369,7 +369,7 @@
 <p>连接后，页面会读取一次完整设备快照。你可以修改以下设置，<strong>每次有效编辑都立即作用于正在运行的声音，不需要 Apply</strong>：</p>
 <ul>
 <li><strong>左右声道</strong>：模式（复音 / 琴弦 / 音块 / 山洞 / 比例）、输入阈值</li>
-<li><strong>共享设置</strong>：A3 频率（358.08–521.91 Hz）、调律（标准 + 8 种替代律制）、前级 / 后级增益、三个 MIDI 通道路由、MPE 开关</li>
+<li><strong>共享设置</strong>：A3 频率（358.08–521.91 Hz）、调律（标准 + 8 种替代律制）、前级 / 后级增益、三个 MIDI 通道路由、MPE 开关、线路输入立体声 / 单声道</li>
 <li><strong>比例模式设定</strong>：9 个共鸣器比例（分 3 槽），可&quot;复制槽 1 到槽 2、3&quot;，可恢复出厂比例</li>
 <li><strong>山洞</strong>：左右各 3 个 bank，每个 bank 9 个共鸣器的频率和静音</li>
 </ul>
@@ -396,7 +396,7 @@
 </ul>
 <p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
 <h3 id="逐音压力表情0xd0">逐音压力表情（0xD0）</h3>
-<p>v4.10 曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，<strong>v4.03 已从音频核撤回</strong>：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
+<p>打开 MPE 后，Member 通道的 Channel Pressure（0xD0）拉长衰减：增量 = 3 秒 × 压力 / 127，按得越重尾音越长，最多 +3 秒；抬键随压力回落。同一侧若有多个音，取其中最重的压力，不累加。琴弦 / 音块只有一个归属音，就是那个音的压力。Decay 推杆已到 10 秒时，压力加不上去。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
 <p>Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
@@ -662,7 +662,7 @@
 <li><strong>面板双键存储</strong>：同时按住两个模式按钮三秒。计时中 LED 会在四个颜色中循环，并在计时结束后闪动，以示存储完成。这个操作有可能引发短促的杂音，不推荐在录音或现场演出中进行。</li>
 <li><strong>网页 Save to Flash</strong>：在 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 页面点击&quot;Save to Flash&quot;并确认。</li>
 </ol>
-<p>存储的内容包括：A3 频率、调律、前级 / 后级增益、三个 MIDI 通道路由、左右模式与输入阈值、共享比例设定、左右各 3 个山洞 bank 的频率和静音状态，以及 MPE 开关。</p>
+<p>存储的内容包括：A3 频率、调律、前级 / 后级增益、三个 MIDI 通道路由、左右模式与输入阈值、共享比例设定、左右各 3 个山洞 bank 的频率和静音状态、MPE 开关，以及线路输入立体声 / 单声道。开机时同时按住左右 C 切换线路单声道时，会立刻写入闪存，不必再做双键存储。</p>
 <h2 id="15-山洞模式与替代律制">15. 山洞模式与替代律制</h2>
 <p>用替代调弦时，山洞也会被调整以匹配您选择的调弦。</p>
 <p>为了适应所有 12 个音高，在山洞模式中，左声道对应偶数音，覆盖一个又三分之一的八度音程：</p>
@@ -695,13 +695,18 @@
 <li>微信扫码，关注个人公众号「合成少数派」</li>
 </ul>
 <h2 id="17-版本说明">17. 版本说明</h2>
+<p><strong>v4.04</strong> 相对 v4.03 的变化：</p>
+<ul>
+<li><strong>线路输入单声道</strong>：可将左右线路混成一轨后送入两个共鸣器；麦克风不受影响。网页「线路输入」或开机同时按住左右 C 切换；开机手势立刻写入闪存。</li>
+<li><strong>MPE 通道压力拉长衰减</strong>：打开 MPE 后，0xD0 按侧取最重的压力，在 Decay 推杆上最多叠加 3 秒，不累加。音频核未改；Decay 已到 10 秒时压力加不上去。</li>
+</ul>
 <p><strong>v4.03</strong> 相对 v4.02 的变化：</p>
 <ul>
 <li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
 <li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
 <li>v4.10 曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位，已下架。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被消费，但不改变衰减。</li>
 </ul>
-<p><strong>v4.10</strong> 已下架，请使用 v4.03。</p>
+<p><strong>v4.10</strong> 已下架，请使用 v4.04。</p>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
 <li><strong>比例模式 LED 指示调整</strong>：由四色快速循环改为白色、黄色交替闪烁（每 0.5 秒切换），观感更柔和。</li>
@@ -765,7 +770,7 @@
 <h3 id="audio-input">Audio Input</h3>
 <p>Wingie2's sensitive microphone picks up airborne sound and easily produces feedback with speakers. You can play the feedback. The v4 firmware (which includes the fifth <strong>Ratio Mode</strong>) has a built-in anti-feedback function: feedback can still build up, but distortion is greatly reduced, yielding a softer tone. To avoid feedback, use headphones and control the volume to prevent headphone feedback.</p>
 <p>You can use Wingie2 to listen to nearby sounds, treat it as a percussion instrument, or use it to turn any object into an instrument. Experiment freely.</p>
-<p>Wingie2's audio input is a stereo 3.5mm jack (TRS).</p>
+<p>Wingie2's audio input is a stereo 3.5mm jack (TRS). Line input can be stereo or mono: in mono, the left and right line signals are mixed into one track and fed to both resonators. The microphone is unaffected and stays stereo. Hold C on both note keyboards at startup to toggle stereo/mono; the change is written to flash immediately. The same setting is available as &quot;Line Input&quot; in <a href="#9-usb-web-configuration">USB Web Configuration</a> (live change; Save writes flash). Factory default is stereo.</p>
 <blockquote>
 <p><strong>Note</strong>: Avoid excessive input signals. An overly large input signal causes the overloaded acoustic sound to appear in the output. If you can still hear the line-input signal when the source switch is set to microphone, or when the dry/wet ratio is set to 100%, the line-input signal is too high. Turn down the input signal level (not the faders on Wingie2).</p>
 </blockquote>
@@ -993,7 +998,7 @@
 <p>On connection, the page reads one complete device snapshot. You can modify the following; <strong>every valid edit takes effect on the running sound immediately, with no Apply step</strong>:</p>
 <ul>
 <li><strong>Left/right channels</strong>: Mode (Poly / String / Bar / Cave / Ratio), Input Threshold</li>
-<li><strong>Shared settings</strong>: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch</li>
+<li><strong>Shared settings</strong>: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch, line-input stereo/mono</li>
 <li><strong>Ratio Mode profile</strong>: 9 resonator ratios (grouped into 3 slots), with &quot;Copy Slot 1 to Slots 2 &amp; 3&quot; and factory-reset buttons</li>
 <li><strong>Caves</strong>: 3 banks per channel, each with 9 resonator frequencies and mute states</li>
 </ul>
@@ -1020,7 +1025,7 @@
 </ul>
 <p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
 <h3 id="per-note-pressure-expression-0xd0">Per-Note Pressure Expression (0xD0)</h3>
-<p>v4.10 mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and <strong>v4.03 withdraws it from the audio core</strong>: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
+<p>With MPE on, Member Channel Pressure (0xD0) lengthens decay: boost = 3 s × pressure / 127, up to +3 s, easing back as the key lifts. If several notes share a side, the heaviest pressure wins; they do not add. String and Bar have one owner, so that note's pressure is used. When the Decay slider is already at 10 s, pressure cannot add more. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
 <p>Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
@@ -1286,7 +1291,7 @@
 <li><strong>Panel dual-button save</strong>: Hold both Mode buttons simultaneously for three seconds. During the countdown, the LED cycles through the four colors and flashes when the countdown ends to indicate completion. This operation may cause a brief noise and is not recommended during recording or live performance.</li>
 <li><strong>Web Save to Flash</strong>: Click &quot;Save to Flash&quot; and confirm in <a href="#9-usb-web-configuration">USB Web Configuration</a>.</li>
 </ol>
-<p>Saved settings include: A3 frequency, tuning, Pre/Post Clip Gain, three MIDI channel routes, left/right Mode and Input Threshold, the shared Ratio profile, all three Cave banks per channel (frequencies and mute), and the MPE switch.</p>
+<p>Saved settings include: A3 frequency, tuning, Pre/Post Clip Gain, three MIDI channel routes, left/right Mode and Input Threshold, the shared Ratio profile, all three Cave banks per channel (frequencies and mute), the MPE switch, and line-input stereo/mono. Toggling line mono by holding both C keys at startup writes flash immediately and does not require the dual-button save.</p>
 <h2 id="15-caves-mode-and-alternate-tunings">15. Caves Mode and Alternate Tunings</h2>
 <p>When you enable an alternate tuning, the caves are also tuned to match the selected tuning.</p>
 <p>To accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:</p>
@@ -1318,13 +1323,18 @@
 <li>Instagram: instagram.com/mengqimusic</li>
 </ul>
 <h2 id="17-version-notes">17. Version Notes</h2>
+<p>Changes in <strong>v4.04</strong> compared to v4.03:</p>
+<ul>
+<li><strong>Line-input mono mix</strong>: mix left and right line into one signal that feeds both resonators; the microphone is unaffected. Toggle from the web &quot;Line Input&quot; control or by holding both C keys at startup; the startup gesture writes flash immediately.</li>
+<li><strong>MPE channel-pressure decay</strong>: with MPE on, 0xD0 lengthens decay by up to 3 s using the heaviest pressure on that side (not summed). The audio core is unchanged; pressure cannot add more when the Decay slider is already at 10 s.</li>
+</ul>
 <p>Changes in <strong>v4.03</strong> compared to v4.02:</p>
 <ul>
 <li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
 <li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
 <li>v4.10 put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and is withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.</li>
 </ul>
-<p><strong>v4.10</strong> is withdrawn; use v4.03.</p>
+<p><strong>v4.10</strong> is withdrawn; use v4.04.</p>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>
 <li><strong>Ratio Mode LED indication adjusted</strong>: Changed from a fast four-color cycle to alternating white and yellow (switching every 0.5 seconds) for a gentler look.</li>

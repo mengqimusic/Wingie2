@@ -681,6 +681,7 @@
           <div class="wg-field wg-field-third"><label for="wg-midi-right" data-i18n-zh="MIDI 右通道" data-i18n-en="MIDI Right Channel"></label><input id="wg-midi-right" class="wg-number" data-value-key="param:shared:midi_right" type="text" inputmode="numeric" disabled></div>
           <div class="wg-field wg-field-third"><label for="wg-midi-both" data-i18n-zh="MIDI 双通道" data-i18n-en="MIDI Both Channel"></label><input id="wg-midi-both" class="wg-number" data-value-key="param:shared:midi_both" type="text" inputmode="numeric" disabled></div>
           <div class="wg-field wg-field-full"><label for="wg-mpe-enabled" data-i18n-zh="MPE 模式" data-i18n-en="MPE Mode"></label><select id="wg-mpe-enabled" class="wg-select" data-value-key="param:shared:mpe_enabled" disabled><option value="0" data-i18n-zh="关闭：三通道分立路由" data-i18n-en="Off: three-channel routing"></option><option value="1" data-i18n-zh="开启：标准 Lower Zone（Ch1 + Ch2–16，左右交替）" data-i18n-en="On: standard Lower Zone (Ch1 + Ch2-16, L/R alternating)"></option></select></div>
+          <div class="wg-field wg-field-full"><label for="wg-line-input-mono" data-i18n-zh="线路输入" data-i18n-en="Line Input"></label><select id="wg-line-input-mono" class="wg-select" data-value-key="param:shared:line_input_mono" disabled><option value="0" data-i18n-zh="立体声：左右各自进入对应共鸣器" data-i18n-en="Stereo: each side feeds its resonator"></option><option value="1" data-i18n-zh="单声道：L+R 混合后进入左右共鸣器（仅线路；麦克风仍立体声）" data-i18n-en="Mono: L+R summed into both resonators (line only; mic stays stereo)"></option></select></div>
         </div>
       </section>
 
@@ -746,7 +747,8 @@
         "param:shared:midi_left": {target: "shared", name: "midi_left", path: ["shared", "midi", "left"], min: 1, max: 16, step: 1},
         "param:shared:midi_right": {target: "shared", name: "midi_right", path: ["shared", "midi", "right"], min: 1, max: 16, step: 1},
         "param:shared:midi_both": {target: "shared", name: "midi_both", path: ["shared", "midi", "both"], min: 1, max: 16, step: 1},
-        "param:shared:mpe_enabled": {target: "shared", name: "mpe_enabled", path: ["shared", "mpe_enabled"], min: 0, max: 1, step: 1, immediate: true}
+        "param:shared:mpe_enabled": {target: "shared", name: "mpe_enabled", path: ["shared", "mpe_enabled"], min: 0, max: 1, step: 1, immediate: true},
+        "param:shared:line_input_mono": {target: "shared", name: "line_input_mono", path: ["shared", "line_input_mono"], min: 0, max: 1, step: 1, immediate: true}
       };
 
       const state = {
@@ -987,7 +989,7 @@
           state.writer = state.port.writable.getWriter();
           state.readLoop = readSerialLoop();
           const hello = await helloWhenReady();
-          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 5) throw new Error(languageText("需要 Wingie2 配置 schema 5 固件。", "Wingie2 config schema 5 firmware is required."));
+          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 6) throw new Error(languageText("需要 Wingie2 配置 schema 6 固件。", "Wingie2 config schema 6 firmware is required."));
           state.connected = true;
           await refreshAll(false);
           startPolling();

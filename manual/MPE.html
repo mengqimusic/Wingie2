@@ -88,12 +88,12 @@
 <h1 id="wingie2-mpe">Wingie2 MPE</h1>
 <p>Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) is consumed but does
-not change decay in v4.03 (the v4.10 Faust hot path watchdog-reset); member CC 74 is consumed
-but not mapped.</p>
+left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
+the owning side using the heaviest active boost (not summed); member CC 74 is consumed but
+not mapped.</p>
 <h2 id="the-mpe-switch">The MPE Switch</h2>
 <p>MPE is governed by a single switch, exposed as <code>mpe_enabled</code> in the USB configuration page
-(config schema 5) and stored in flash. Factory default: <strong>off</strong>. The switch is the only zone
+(config schema 6) and stored in flash. Factory default: <strong>off</strong>. The switch is the only zone
 authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
 but ignored while the switch is off. A restart restores the switched layout.</p>
 <h3 id="switch-off-—-conventional-routing">Switch off — conventional routing</h3>
@@ -134,17 +134,19 @@ every Member. Pitch Bend state is tracked before Note On so an MPE source can es
 initial microtonal offset.</p>
 <h2 id="per-note-expression-0xd0">Per-note Expression (0xD0)</h2>
 <p>Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 still latches pressure per channel, but <strong>v4.03 does not write it into
-the audio core</strong>.</p>
+before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
+expression already established.</p>
 <ul>
-<li><strong>Channel Pressure (0xD0) is consumed, decay is unchanged</strong>: v4.10 added <code>decay_boost_*</code> sliders
-and a live <code>poly_stretch_*</code> Faust graph so per-voice decay could follow pressure. That compute
-overran the 44.1 kHz / 32-sample deadline and starved CPU0 IDLE (~10.5 s WDT). v4.03 restores
-the v4.02 DSP graph (<code>a, a*2, a*3</code> partials, no stretch, no per-voice boost). <code>set_decay_boost</code>
-is a no-op until a cheaper path exists. Depth 3 s remains in <code>MPE.ino</code> as unused mapping math.</li>
+<li><strong>Channel Pressure (0xD0) adds decay, folded per side by max</strong>: boost = 3 s × pressure / 127.
+Each voice still tracks its owner channel's pressure, including after Note Off. Because the
+Faust graph has one <code>decay</code> per side, the three voice boosts on a side are reduced by maximum
+(not summed) and added to the Decay fader. One key at 127 is +3 s; three keys at 127 are still
++3 s. The Faust slider tops out at 10 s, so a fader already at 10 s cannot take more boost.
+Putting per-voice t60 into Faust watchdog-resets (~10.5 s); this path does not change the DSP
+graph. String and Bar have one owner, so max is that owner's boost.</li>
 <li>Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.</li>
-<li>Conventional (non-MPE) Channel Pressure on a routed channel still follows the Pitch Bend
-routing precedent at the MIDI layer; with the boost no-op it also does not change decay.</li>
+<li>Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole,
+following the Pitch Bend routing precedent.</li>
 </ul>
 <h2 id="tuning">Tuning</h2>
 <p>Pitch Bend is applied after the base note has been resolved through Wingie2's current A3 and
@@ -154,7 +156,7 @@ an internal alternate tuning remains enabled, the internal interval and MPE offs
 applied.</p>
 <h2 id="migrating-from-the-always-on-firmware">Migrating from the always-on firmware</h2>
 <ul>
-<li>The MPE switch is back as <code>mpe_enabled</code> in the USB configuration page (config schema 5),
+<li>The MPE switch is back as <code>mpe_enabled</code> in the USB configuration page (config schema 6),
 persisted in flash, factory default off.</li>
 <li>With the switch on, the zone covers Channels 2–16 instead of the previous startup layout
 (Channels 2–7): the earlier silent drop on Channels 11–15 no longer exists.</li>
