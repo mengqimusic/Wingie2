@@ -20,8 +20,8 @@ Core is pinned `esp32:esp32 2.0.4-cn` (already installed; 2.0.5 and 3.x incompat
 
 ```bash
 ESPTOOL=$(find /Users/mengwu/Library/Arduino15/packages/esp32/tools/esptool_py -name esptool -type f | head -1)
-"$ESPTOOL" --chip esp32 --port /dev/cu.usbserial-11310 write_flash 0x10000 /tmp/wingie2-<tag>-build/Wingie2.ino.bin
-"$ESPTOOL" --chip esp32 --port /dev/cu.usbserial-11310 verify_flash 0x10000 /tmp/wingie2-<tag>-build/Wingie2.ino.bin
+"$ESPTOOL" --chip esp32 --port /dev/cu.usbserial-110 write_flash 0x10000 /tmp/wingie2-<tag>-build/Wingie2.ino.bin
+"$ESPTOOL" --chip esp32 --port /dev/cu.usbserial-110 verify_flash 0x10000 /tmp/wingie2-<tag>-build/Wingie2.ino.bin
 ```
 
 esptool 3.3.0-cn uses underscore subcommands (`write_flash`, not `write-flash`). After testing a
@@ -29,7 +29,8 @@ diagnostics build, reflash the normal build to leave the device as found.
 
 ## Serial (observation surface)
 
-- `/dev/cu.usbserial-11310`, 115200 8N1. **Opening/closing the port resets the ESP32** (auto-reset
+- `/dev/cu.usbserial-110`, 115200 8N1. (Name follows USB enumeration — confirm with
+  `ls /dev/cu.usbserial*` before flashing.) **Opening/closing the port resets the ESP32** (auto-reset
   circuit; DTR/RTS transient at open) — hold the port open in ONE persistent process for a whole
   test session; never open per command. Boot takes ~3 s; MIDI is only serviced after
   `serial_config_ready` (end of control-task init), so MIDI sent during boot is lost.
