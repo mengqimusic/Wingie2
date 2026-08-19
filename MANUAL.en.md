@@ -398,18 +398,18 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
-Changes in **v4.04** compared to v4.03:
+Changes in **v4.10** compared to v4.03:
 
 - **Line-input mono mix**: mix left and right line into one signal that feeds both resonators; the microphone is unaffected. Toggle from the web "Line Input" control or by holding both C keys at startup; the startup gesture writes flash immediately.
 - **MPE channel-pressure decay**: with MPE on, 0xD0 lengthens decay by up to 3 s using the heaviest pressure on that side (not summed). The audio core is unchanged; pressure cannot add more when the Decay slider is already at 10 s.
+
+This number was briefly published as v4.04 and has been corrected. An earlier build of the same number put per-note pressure on the Faust hot path and watchdog-reset about 10 seconds after boot; it was withdrawn. This build replaces it.
 
 Changes in **v4.03** compared to v4.02:
 
 - **Unsaved-change warning on the configuration page**: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.
 - **Save-failure LED**: the two-button save flashes the LED red on failure (white on success), with failure details on serial.
-- v4.10 put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and is withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.
-
-**v4.10** is withdrawn; use v4.04.
+- The earlier v4.10 put MPE per-note pressure on the DSP hot path and watchdog-reset about 10 seconds after boot. v4.03 uses the same audio core as v4.02; 0xD0 is still consumed in v4.03, but it does not change decay.
 
 Changes in **v4.01** compared to v4:
 
