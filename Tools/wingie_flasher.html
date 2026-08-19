@@ -260,9 +260,8 @@
     <section lang="zh-CN">
       <h2 data-i18n-zh="更新内容" data-i18n-en="Changelog">更新内容</h2>
       <ul>
-        <li data-change="wdt-fix" data-i18n-zh="修复 v4.10 开机约 10 秒后看门狗复位。音频处理回到 v4.02 的路径。MPE 逐音压力表情暂不进入音频核，待更轻实现。" data-i18n-en="Fixes the v4.10 watchdog reset about 10 seconds after boot. Audio processing is back on the v4.02 path. MPE per-note pressure expression is withdrawn from the audio core pending a cheaper implementation.">修复 v4.10 开机约 10 秒后看门狗复位。音频处理回到 v4.02 的路径。MPE 逐音压力表情暂不进入音频核，待更轻实现。</li>
-        <li data-change="dirty-flag" data-i18n-zh="配置页新增未保存警示：有改动未写入闪存时，状态行与保存按钮变红，保存成功后恢复。" data-i18n-en="The configuration page now flags unsaved changes in red on the status line and Save button until Save is confirmed.">配置页新增未保存警示：有改动未写入闪存时，状态行与保存按钮变红，保存成功后恢复。</li>
-        <li data-change="save-fail-led" data-i18n-zh="按键保存失败时 LED 红色闪烁提示（成功为白色闪烁）。" data-i18n-en="LED flashes red when the button-combo save fails (white flash on success).">按键保存失败时 LED 红色闪烁提示（成功为白色闪烁）。</li>
+        <li data-change="line-mono" data-i18n-zh="线路输入可设为单声道：L+R 混合后进入左右共鸣器。麦克风仍为立体声。网页「线路输入」即时生效；开机同时按住左右 C 立刻写入闪存。" data-i18n-en="Line input can be mono: L+R is mixed into both resonators. The microphone stays stereo. The web Line Input control applies live; holding both C keys at startup writes flash immediately.">线路输入可设为单声道：L+R 混合后进入左右共鸣器。麦克风仍为立体声。网页「线路输入」即时生效；开机同时按住左右 C 立刻写入闪存。</li>
+        <li data-change="mpe-pressure-max" data-i18n-zh="打开 MPE 后，0xD0 通道压力按侧取最重的一个，在 Decay 推杆上最多拉长 3 秒，同侧不累加。" data-i18n-en="With MPE on, 0xD0 channel pressure lengthens decay by up to 3 s using the heaviest pressure on that side; voices on the same side do not add.">打开 MPE 后，0xD0 通道压力按侧取最重的一个，在 Decay 推杆上最多拉长 3 秒，同侧不累加。</li>
       </ul>
 
       <h2 data-i18n-zh="操作说明" data-i18n-en="Instructions">操作说明</h2>

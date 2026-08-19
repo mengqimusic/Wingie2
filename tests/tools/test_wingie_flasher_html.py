@@ -110,9 +110,8 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "更新内容",
             "操作说明",
-            "修复 v4.10 开机约 10 秒后看门狗复位",
-            "配置页新增未保存警示：有改动未写入闪存时",
-            "按键保存失败时 LED 红色闪烁提示",
+            "线路输入可设为单声道：L+R 混合后进入左右共鸣器",
+            "打开 MPE 后，0xD0 通道压力按侧取最重的一个",
             "银色 Wingie2 需要使用 USB A–C 线",
             "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
         ):
@@ -121,9 +120,8 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "Changelog",
             "Instructions",
-            "Fixes the v4.10 watchdog reset about 10 seconds after boot",
-            "The configuration page now flags unsaved changes in red",
-            "LED flashes red when the button-combo save fails",
+            "Line input can be mono: L+R is mixed into both resonators",
+            "With MPE on, 0xD0 channel pressure lengthens decay by up to 3 s",
             "Silver Wingie2 units require a USB-A-to-USB-C cable",
             "Connect Wingie2, and close serial monitors",
             "choose the Wingie2 USB serial port from the list",
