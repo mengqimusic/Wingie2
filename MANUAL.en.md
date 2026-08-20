@@ -69,7 +69,7 @@ When both channels share the same octave setting, the right channel sounds one o
 | Fader | Function |
 |-------|----------|
 | Mix | Dry/wet ratio |
-| Decay | Resonator decay time, from 0.15 seconds to about 10 seconds |
+| Decay | Resonator decay time, from 0.1s to 10s; MPE pressure can add on top of the fader position (see Chapter 10) |
 | Volume | Input volume |
 
 ## 4. Modes
@@ -366,9 +366,9 @@ To accommodate all 12 pitches, the caves are arranged so that the left channel u
 
 The right channel uses the odd-numbered scale tones, also covering one and one-third octaves:
 
-`C#, D#, F, G, A, B, A#, C#', D#', F'`
+`C#, D#, F, G, A, B, C#', D#', F'`
 
-The three-position toggle switches between three octaves, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave, so all scale pitches are covered across both sides.
+The three octave banks are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave bank, so all scale pitches are covered across both sides.
 
 Dave Seidel wrote Wingie2's alternate tuning feature.
 
@@ -382,7 +382,7 @@ Dave Seidel wrote Wingie2's alternate tuning feature.
 6. Use a drum machine to trigger the sequencer with drum hits and obtain melodies;
 7. In live performance, use an external cardioid mic and line input to avoid feedback;
 8. Use Ratio Mode to explore non-octave resonant relationships;
-9. Use an MPE controller for independent per-note pitch bend and microtuning;
+9. Use an MPE controller for independent per-note pitch bend, pressure expression, and microtuning;
 10. Use the web configuration page to adjust Cave frequencies and ratios in real time without restarting.
 
 … (more for you to discover)

@@ -623,11 +623,10 @@ void build_freq_table() {
   }
 }
 
-// tune caves to match the current alternate tuning (if any)
-// left channel caves gets even-numbered scale tones:
-//    C, D, E, F#, G#, A#, C, D, E
-// left channel caves gets odd-numbered scale tones:
-//    C#, D#, F, G, A, B, A#, C#, D#, F
+// tune caves to match the current alternate tuning (if any).
+// Left channel caves get the even-numbered scale tones, right channel the odd
+// ones (12-TET from C): left C, D, E, F#, G#, A#, C', D', E';
+//                        right C#, D#, F, G, A, B, C#', D#', F'.
 bool tune_caves() {
   if (!use_alt_tuning || alt_tuning_index < 0) {
     return false;
