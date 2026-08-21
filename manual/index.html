@@ -165,7 +165,7 @@
 </tr>
 <tr>
 <td>衰减</td>
-<td>共鸣器的衰减时长，从 0.15 秒到大约 10 秒</td>
+<td>共鸣器的衰减时长，从 0.1 秒到 10 秒；MPE 压力可在此基础上继续叠加（见第 10 章）</td>
 </tr>
 <tr>
 <td>音量</td>
@@ -396,7 +396,7 @@
 </ul>
 <p>开启 MPE 后，常规的左 / 右 / 共用路由不再适用，通道 13–16 的控制 CC 也被 Zone 接管（调律用逐音 Pitch Bend，山洞 / 全局设置走网页配置）。</p>
 <h3 id="逐音压力表情0xd0">逐音压力表情（0xD0）</h3>
-<p>此前一版曾把 Member 通道的 Channel Pressure（0xD0）映射为逐音衰减叠加（最多 +3 秒）。该热路径会在开机约 10 秒后触发看门狗复位，已从音频核撤回：0xD0 仍被消费，但不再改变衰减，待更轻的实现再接回。非 MPE 模式下，路由通道的 Channel Pressure 仍按弯音的既有先例作用于整侧。</p>
+<p>打开 MPE 后，Member 通道的 Channel Pressure（0xD0）增加衰减时间：按得越重，尾音越长。复音、比例模式中，每个音最多在 Decay 推杆基础上叠加 2 秒（一侧最多加 6 秒），琴弦、音块模式中，单音叠加可达 6 秒，抬键随压力回落；叠加可超过推杆上限（推杆打满 10 秒时叠加可达 16 秒）。非 MPE 模式下，路由通道的 Channel Pressure 作用于整侧（可达 6 秒）。</p>
 <p>Member 的 CC 74 与其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
@@ -668,8 +668,8 @@
 <p>为了适应所有 12 个音高，在山洞模式中，左声道对应偶数音，覆盖一个又三分之一的八度音程：</p>
 <p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
 <p>右声道对应奇数音，同样覆盖一个又三分之一的八度音程：</p>
-<p><code>C#, D#, F, G, A, B, A#, C#', D#', F'</code></p>
-<p>三个位置切换开关切换三个八度音程，类似于复音、琴弦和音块模式。然而，左右山洞始终处于同一个八度音程，因此所有音阶音高都覆盖在两侧。</p>
+<p><code>C#, D#, F, G, A, B, C#', D#', F'</code></p>
+<p>三个八度档用八度按键切换，类似于复音、琴弦和音块模式。然而，左右山洞始终处于同一个八度档，因此所有音阶音高都覆盖在两侧。</p>
 <p>Dave Seidel 为小羽写了替代律制功能。</p>
 <h2 id="16-使用窍门">16. 使用窍门</h2>
 <ol>
@@ -681,7 +681,7 @@
 <li>与鼓机合用，用鼓声触发音序器，获得旋律；</li>
 <li>在现场演出时，使用外部心形拾音话筒和线路输入以避免回授；</li>
 <li>用比例模式探索非八度音程的共鸣关系；</li>
-<li>用 MPE 控制器对每个音做独立的弯音和微调律；</li>
+<li>用 MPE 控制器对每个音做独立的弯音、压力表情和微调律；</li>
 <li>用网页配置页实时调整山洞频率和比例，无需重启。</li>
 </ol>
 <p>……（更多玩法由你探索）</p>
@@ -695,6 +695,10 @@
 <li>微信扫码，关注个人公众号「合成少数派」</li>
 </ul>
 <h2 id="17-版本说明">17. 版本说明</h2>
+<p><strong>v4.20</strong> 相对 v4.10 的变化：</p>
+<ul>
+<li><strong>MPE 通道压力表情</strong>：打开 MPE 后，每个音的通道压力（0xD0）会增加衰减时间：按得越重，尾音越长。复音、比例模式中，每个音最多在 Decay 推杆基础上叠加 2 秒（一侧最多加 6 秒），琴弦、音块模式中，单音叠加可达 6 秒，抬键随压力回落；叠加可超过推杆上限（推杆打满 10 秒时叠加可达 16 秒）。非 MPE 时，路由通道的通道压力作用于整侧（可达 6 秒）。</li>
+</ul>
 <p><strong>v4.10</strong> 相对 v4.03 的变化：</p>
 <ul>
 <li>新增单声道线路输入模式：在此模式下，线路输入的左右声道混在一起，进入两个共鸣器，方便使用单声道声源。开机时同时按住左右 C 键以切换模式并存储，也可以在配置网页上设定。本设置不影响内置麦克风。</li>
@@ -792,7 +796,7 @@
 </tr>
 <tr>
 <td>Decay</td>
-<td>Resonator decay time, from 0.15 seconds to about 10 seconds</td>
+<td>Resonator decay time, from 0.1s to 10s; MPE pressure can add on top of the fader position (see Chapter 10)</td>
 </tr>
 <tr>
 <td>Volume</td>
@@ -1023,7 +1027,7 @@
 </ul>
 <p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
 <h3 id="per-note-pressure-expression-0xd0">Per-Note Pressure Expression (0xD0)</h3>
-<p>An earlier build mapped Member Channel Pressure (0xD0) to a per-note decay boost (up to +3 s). That hot path watchdog-resets about 10 seconds after boot, and it has been withdrawn from the audio core: 0xD0 is still consumed, but it no longer changes decay, pending a cheaper implementation. Outside MPE mode, Channel Pressure on a routed channel still applies to that side as a whole, following the Pitch Bend routing precedent.</p>
+<p>With MPE on, Member Channel Pressure (0xD0) increases the decay time: the harder the press, the longer the tail, easing back as the key lifts. In Poly / Ratio each note adds up to 2s; boosts from multiple notes on the same side add together, up to 6s extra for the side. String and Bar are single-note modes, where the single note adds up to 6s. The sum can go past the Decay fader's ceiling (for example, with the fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, also adding up to 6s.</p>
 <p>Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
@@ -1295,8 +1299,8 @@
 <p>To accommodate all 12 pitches, the caves are arranged so that the left channel uses the even-numbered scale tones, covering one and one-third octaves:</p>
 <p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
 <p>The right channel uses the odd-numbered scale tones, also covering one and one-third octaves:</p>
-<p><code>C#, D#, F, G, A, B, A#, C#', D#', F'</code></p>
-<p>The three-position toggle switches between three octaves, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave, so all scale pitches are covered across both sides.</p>
+<p><code>C#, D#, F, G, A, B, C#', D#', F'</code></p>
+<p>The three octave banks are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave bank, so all scale pitches are covered across both sides.</p>
 <p>Dave Seidel wrote Wingie2's alternate tuning feature.</p>
 <h2 id="16-tips">16. Tips</h2>
 <ol>
@@ -1308,7 +1312,7 @@
 <li>Use a drum machine to trigger the sequencer with drum hits and obtain melodies;</li>
 <li>In live performance, use an external cardioid mic and line input to avoid feedback;</li>
 <li>Use Ratio Mode to explore non-octave resonant relationships;</li>
-<li>Use an MPE controller for independent per-note pitch bend and microtuning;</li>
+<li>Use an MPE controller for independent per-note pitch bend, pressure expression, and microtuning;</li>
 <li>Use the web configuration page to adjust Cave frequencies and ratios in real time without restarting.</li>
 </ol>
 <p>… (more for you to discover)</p>
@@ -1321,6 +1325,10 @@
 <li>Instagram: instagram.com/mengqimusic</li>
 </ul>
 <h2 id="17-version-notes">17. Version Notes</h2>
+<p>Changes in <strong>v4.20</strong> compared to v4.10:</p>
+<ul>
+<li><strong>MPE channel-pressure expression</strong>: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s per side); String and Bar can add up to 6s for the single note, easing back as the key lifts. The sum can go past the fader's ceiling (with the fader at 10s, the sum can reach 16s). Outside MPE, Channel Pressure on a routed channel applies to that side as a whole (up to 6s).</li>
+</ul>
 <p>Changes in <strong>v4.10</strong> compared to v4.03:</p>
 <ul>
 <li>Adds a mono line-input mode: in this mode, the left and right line-input channels are mixed together and fed into both resonators, for use with a mono source. Hold both left and right C keys at startup to toggle the mode and store it, or set it on the configuration page. This setting does not affect the built-in microphone.</li>
