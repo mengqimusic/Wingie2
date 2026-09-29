@@ -696,7 +696,7 @@
         </div>
       </section>
 
-      <footer class="wg-footer" data-i18n-zh="桌面 Chrome / Edge · Web Serial · HTTPS · 无网络请求 · 每秒后台同步" data-i18n-en="Desktop Chrome / Edge · Web Serial · HTTPS · No network requests · 1-second background sync"></footer>
+      <footer class="wg-footer" data-i18n-zh="无网络请求 · 需 HTTPS 与桌面 Chrome / Edge" data-i18n-en="No network requests · Requires HTTPS and desktop Chrome / Edge"></footer>
     </div>
   </main>
 
@@ -840,7 +840,7 @@
         else if (state.refreshing || state.polling) label = state.lightPolling ? copy("正在同步设备状态…", "Syncing device state…") : copy("正在读取完整设备配置…", "Reading the full device configuration…");
         else if (state.saving || pendingUiWriteCount()) label = copy("实时写入期间暂停轮询", "Polling pauses during live writes");
         else if (state.pollError) label = copy(`轮询失败：${state.pollError}`, `Polling failed: ${state.pollError}`);
-        else label = state.lightPolling ? copy("每秒同步设备状态；编辑或写入期间自动跳过", "Syncing device state every second; pauses while editing or writing") : copy("每秒从设备读取一次完整配置", "Reading the full device configuration every second");
+        else label = "";
         state.pollStatusLabel = label;
         elements.pollStatus.textContent = localized(label);
       }
@@ -994,7 +994,7 @@
           await refreshAll(false);
           startPolling();
           setConnection("connected", copy("Wingie2 已连接", "Connected"));
-          setAlert(copy("已读取设备快照；页面每秒后台同步，编辑或写入期间自动跳过。", "Device snapshot loaded; the page syncs every second and pauses while editing or writing."), "success");
+          setAlert(copy("已读取设备快照。", "Device snapshot loaded."), "success");
         } catch (error) {
           await disconnect(false);
           elements.connect.disabled = false;
