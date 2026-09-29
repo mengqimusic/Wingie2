@@ -1,0 +1,78 @@
+name: sync-pages
+
+# main 分支的工具页面改动自动同步到 gh-pages：
+#   Tools/wingie_config.html     -> config/index.html
+#   Tools/wingie_prod_test.html  -> prodtest/index.html
+#   Tools/nav.js（若存在）       -> nav.js
+# 仅覆盖上述文件，首页、manual/、vX.Y/ 版本目录、latest/ 等
+# gh-pages 独有内容仍由发版流程手动维护。
+# flasher 页（Tools/wingie_flasher.html）绑定具体固件版本，
+# 归发版流程写入 vX.Y/，不在此自动同步。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Tools/wingie_config.html"
+      - "Tools/wingie_prod_test.html"
+      - "Tools/nav.js"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-pages
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Sync tool pages
+        run: |
+          set -euo pipefail
+          declare -A mapping=(
+            ["Tools/wingie_config.html"]="config/index.html"
+            ["Tools/wingie_prod_test.html"]="prodtest/index.html"
+            ["Tools/nav.js"]="nav.js"
+          )
+          changed=0
+          for src in "${!mapping[@]}"; do
+            dst="gh-pages/${mapping[$src]}"
+            if [[ ! -f "$src" ]]; then
+              echo "skip: $src not on main"
+              continue
+            fi
+            if [[ ! -f "$dst" ]] || ! diff -q "$src" "$dst" >/dev/null; then
+              mkdir -p "$(dirname "$dst")"
+              cp "$src" "$dst"
+              echo "synced: $src -> ${mapping[$src]}"
+              changed=1
+            else
+              echo "unchanged: $src"
+            fi
+          done
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+        id: sync
+
+      - name: Push gh-pages
+        if: steps.sync.outputs.changed == '1'
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "sync: 工具页面自动同步自 main ${GITHUB_SHA::7}"
+          git push
