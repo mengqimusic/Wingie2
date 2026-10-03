@@ -21,10 +21,14 @@ arduino-cli upload --fqbn esp32:esp32:esp32:UploadSpeed=460800 -p /dev/cu.usbser
 ```
 
 If you bypass arduino-cli and drive esptool directly (e.g. writing a release package's
-four images), always pass `--flash_mode dio`. The released bootloader carries a QIO header;
-writing it as-is puts the device in a ROM boot loop (`load:0xa0c263a0` garbage on GD25Q32
-flash), while the web flasher (manifest `"mode": "dio"`) and arduino-cli rewrite the header
-to DIO automatically. Verified on hardware during the v4.10 gate run.
+four images), pass the full trio matching the release manifest, after the `write_flash`
+subcommand: `--flash_mode dio --flash_freq 80m --flash_size 4MB`. The released bootloader
+carries a QIO header with a 512KB/40MHz size/freq byte; patching only the mode byte makes
+the second-stage bootloader crash silently at entry (repeated `rst:0x3` ROM cycles, no IDF
+banner), and writing it as-is (QIO) puts the device in a ROM boot loop
+(`load:0xa0c263a0` garbage). The web flasher applies all three values from the manifest,
+and the v3.1 upload script used the same trio. QIO-as-is verified during the v4.10 gate
+run; mode-only-patch failure verified on hardware during the v4.30 gate run.
 
 After changing `Wingie2.dsp`, run `faust2esp32 -ac101 -lib Wingie2.dsp`, replace the generated sketch outputs together, and review the generated diff.
 
