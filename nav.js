@@ -8,7 +8,7 @@
     { label: "Wingie2", href: "../", match: "$root" },
     { label: "手册 / Manual", href: "../manual/", match: "/manual/" },
     { label: "配置 / Configuration", href: "../config/", match: "/config/" },
-    { label: "固件 / Firmware", href: "../v4/", match: "/firmware" }
+    { label: "固件 / Firmware", href: "../v4.30/", match: "/firmware" }
   ];
 
   var path = location.pathname;
