@@ -8,7 +8,8 @@
     { label: "Wingie2", href: "../", match: "$root" },
     { label: "手册 / Manual", href: "../manual/", match: "/manual/" },
     { label: "配置 / Configuration", href: "../config/", match: "/config/" },
-    { label: "固件 / Firmware", href: "../v4.30/", match: "/firmware" }
+    // 每次发版同步改 href 与 match 为新 vX.Y/ 目录；只有最新目录命中选中态。
+    { label: "最新固件 / Latest Firmware", href: "../v4.30/", match: "/v4.30/" }
   ];
 
   var path = location.pathname;
@@ -17,9 +18,6 @@
     if (item.match === "$root") {
       // 根入口页：路径以 /Wingie2/ 结尾或就是根，且不含 manual/config/v 数字
       return /\/Wingie2\/?$/.test(path) && !/\/(manual|config|v\d)/.test(path);
-    }
-    if (item.match === "/firmware") {
-      return /\/v\d/.test(path);
     }
     return path.indexOf(item.match) !== -1;
   }
@@ -31,6 +29,12 @@
     }
     return '<a href="' + item.href + '">' + item.label + "</a>";
   });
+
+  // 旧版本页（/vX.Y/ 但非最新目录）：末尾追加置灰标记，其余项均不选中。
+  var oldVersionMatch = path.match(/\/(v[\d.]+)\//);
+  if (oldVersionMatch && path.indexOf(items[items.length - 1].match) === -1) {
+    links.push('<span class="wg-nav-old">旧版本 ' + oldVersionMatch[1] + " / Old version</span>");
+  }
 
   var nav = document.createElement("nav");
   nav.id = "wg-nav";
@@ -53,6 +57,7 @@
     "#wg-nav a:hover { color: #FF0000; }",
     "#wg-nav .wg-nav-current { font-weight: 700; color: #000; padding: 2px 0; }",
     "#wg-nav .wg-nav-sep { color: #666; margin: 0 6px; user-select: none; }",
+    "#wg-nav .wg-nav-old { color: #666; font-size: 12px; padding: 2px 0; user-select: none; }",
     "@media (max-width: 600px) {",
     "  #wg-nav { font-size: 12px; padding: 5px 10px; }",
     "  #wg-nav .wg-nav-sep { margin: 0 4px; }",
