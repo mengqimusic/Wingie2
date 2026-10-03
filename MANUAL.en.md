@@ -242,9 +242,11 @@ With MPE on, the conventional Left/Right/Both routes no longer apply, and the Ch
 
 ### Per-Note Pressure Expression (0xD0 + CC 74)
 
-With MPE on, per-note pressure expression increases the decay time: the harder the press, the longer the tail, easing back as the key lifts. Pressure maps **linearly over the full travel** — Osmose-style controllers send Channel Pressure (0xD0, 0–127) up to saturation, then the remaining travel as CC 74 (0–127) on the same channel; together they form one 0–254 travel axis. Half travel (just saturated) gives half the boost, and the physical floor gives the maximum. In Poly / Ratio each note adds up to 2s on top of the Decay fader; boosts from multiple notes on the same side add together, up to 6s extra for the side. String and Bar are single-note modes, where the single note adds up to 6s. The sum can go past the Decay fader's ceiling (for example, with the fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure and CC 74 on a routed channel apply to that side as a whole, also adding up to 6s. Controllers that send only 0xD0 work the same way, minus the post-saturation second stage.
+With MPE on, Member-channel pressure expression increases the decay time: the harder the press, the longer the tail. Channel Pressure (0xD0) and CC 74 each cover half of the travel (+2s per note in total, +6s in single-note modes); the two segments join into one 0–254 travel axis, mapped linearly. This matches Osmose-class controllers.
 
-Member CC 74 maps to the post-saturation second travel stage; other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
+In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s extra per side); String and Bar are single-note modes, where the single note adds up to 6s, easing back as the key lifts. The sum can go past the fader ceiling (with the Decay fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure and CC 74 on a routed channel apply to that side as a whole (up to 6s). A controller that sends only 0xD0 or only CC 74 can use half of the travel.
+
+Other MPE Member CCs are consumed but not mapped. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
 See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 
@@ -400,7 +402,7 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 Changes in **v4.30** compared to v4.20:
 
-- **Pressure expression is now linear over the full travel, and the post-saturation stage is connected**: the pressure-to-decay mapping changes from the previous n=5 curve to linear over the whole travel. Osmose-style controllers send Channel Pressure (0xD0) up to saturation, then the remaining travel as CC 74 on the same channel; the two segments form one 0–254 travel axis. Just saturated is half depth (+1s per note, +3s in single-note modes); the physical floor gives the maximum (+2s per note, +6s single-note). Depth ceilings, the 6s per-side sum cap, and fader stacking are unchanged. Outside MPE mode, CC 74 on a routed channel now feeds the side like Channel Pressure.
+- Pressure expression now has Channel Pressure (0xD0) and CC 74 each covering half of the travel (+2s per note in total, +6s in single-note modes), matching Osmose-class controllers. Outside MPE mode, Channel Pressure and CC 74 on routed channels still apply to the side as a whole. The response curve is now linear instead of exponential.
 
 Changes in **v4.20** compared to v4.10:
 
