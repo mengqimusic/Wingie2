@@ -10,3 +10,4 @@ node_modules/
 .DS_Store
 **/.DS_Store
 /Tools/latest/
+.workbuddy/
