@@ -1,4 +1,4 @@
-# Wingie2 User Manual · v4
+# Wingie2 User Manual · v4.30
 
 > **Caution**
 > - Start at a low volume when powering on, then gradually increase.
