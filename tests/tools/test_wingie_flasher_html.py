@@ -110,7 +110,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "更新内容",
             "操作说明",
-            "MPE 通道压力表情：打开 MPE 后，每个音的通道压力（0xD0）会增加衰减时间",
+            "压力表情改为 Channel Pressure（0xD0）和 CC 74 分别负责一半行程",
             "银色 Wingie2 需要使用 USB A–C 线",
             "连接 Wingie2，并关闭串口监视器、配置页等占用串口的软件",
         ):
@@ -119,7 +119,7 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         for fragment in (
             "Changelog",
             "Instructions",
-            "MPE channel-pressure expression: with MPE on, each note's Channel Pressure (0xD0) lengthens decay",
+            "Pressure expression now has Channel Pressure (0xD0) and CC 74 each covering half of the travel",
             "Silver Wingie2 units require a USB-A-to-USB-C cable",
             "Connect Wingie2, and close serial monitors",
             "choose the Wingie2 USB serial port from the list",
