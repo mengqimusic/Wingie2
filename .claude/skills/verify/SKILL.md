@@ -24,7 +24,12 @@ ESPTOOL=$(find /Users/mengwu/Library/Arduino15/packages/esp32/tools/esptool_py -
 "$ESPTOOL" --chip esp32 --port /dev/cu.usbserial-110 verify_flash 0x10000 /tmp/wingie2-<tag>-build/Wingie2.ino.bin
 ```
 
-esptool 3.3.0-cn uses underscore subcommands (`write_flash`, not `write-flash`). After testing a
+esptool 3.3.0-cn uses underscore subcommands (`write_flash`, not `write-flash`). Full-package
+direct writes need the manifest trio `--flash_mode dio --flash_freq 80m --flash_size 4MB`
+after `write_flash` (mode-only patch boot-loops — see AGENTS.md). esptool `--after no_reset`
+leaves the chip in the silent ROM bootloader (no app prints, no reset cycles); recover with
+pyserial: open the port, hold `dtr = False` (release IO0), pulse `rts` True→False, wait ~8 s
+for the app. After testing a
 diagnostics build, reflash the normal build to leave the device as found.
 
 ## Serial (observation surface)
