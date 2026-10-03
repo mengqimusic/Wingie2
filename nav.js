@@ -57,7 +57,7 @@
     "#wg-nav a:hover { color: #FF0000; }",
     "#wg-nav .wg-nav-current { font-weight: 700; color: #000; padding: 2px 0; }",
     "#wg-nav .wg-nav-sep { color: #666; margin: 0 6px; user-select: none; }",
-    "#wg-nav .wg-nav-old { color: #666; font-size: 12px; padding: 2px 0; user-select: none; }",
+    "#wg-nav .wg-nav-old { color: #666; padding: 2px 0; user-select: none; }",
     "@media (max-width: 600px) {",
     "  #wg-nav { font-size: 12px; padding: 5px 10px; }",
     "  #wg-nav .wg-nav-sep { margin: 0 4px; }",
