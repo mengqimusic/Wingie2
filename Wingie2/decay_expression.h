@@ -3,11 +3,13 @@
 
 #include <stdint.h>
 
-// 把多声部 0xD0 衰减增量折成一侧一根 decay：相加。深度分两档（调用方传入）：
+// 把多声部表情增量折成一侧一根 decay：相加。深度分两档（调用方传入）：
 // poly/ratio 每音 2 秒（一侧三音最多 6 秒）；string/bar 与常规整侧单音 6 秒。
 // 写入 Faust 现有 decay 滑条；推杆本身 0.1–10，压力可越过推杆满位，
 // 总和钳制在 20 秒上限内。不新增热路径参数。
-// 0xD0 用 n=5 前慢后快曲线：round(127·(p/127)⁵)，满压仍取满深度。
+// 全行程线性：Osmose 满压前发 0xD0(0-127)，满压后的剩余行程发同通道 CC74(0-127)，
+// 两段拼成 0–254 的物理行程轴，boost = depth · E/254。
+// 实测依据：自然演奏中 CC74>0 时 0xD0 恒为 127，两段交接无重叠。
 
 namespace wingie_decay {
 
@@ -16,7 +18,7 @@ static const float kFaderMax = 20.0f;
 static const float kPressureDepthPerVoiceSeconds = 2.0f;
 static const float kPressureDepthMonoSeconds = 6.0f;
 static const float kPressureSumMax = 6.0f;
-static const float kPressureMax = 127.0f;
+static const float kTravelMax = 254.0f;
 
 inline float clamp(float value, float lo, float hi) {
   if (value < lo) return lo;
@@ -24,16 +26,9 @@ inline float clamp(float value, float lo, float hi) {
   return value;
 }
 
-// 与整数 round(127·(p/127)⁵) 同式：p⁵ / 127⁴，127⁴ = 260144641。
-inline uint8_t pressure_curve_to5(uint8_t pressure) {
-  const uint64_t p2 = static_cast<uint64_t>(pressure) * pressure;
-  const uint64_t p5 = p2 * p2 * static_cast<uint64_t>(pressure);
-  constexpr uint64_t kDen = 260144641ull;
-  return static_cast<uint8_t>((p5 + kDen / 2) / kDen);
-}
-
-inline float pressure_boost(uint8_t pressure, float depth) {
-  return depth * static_cast<float>(pressure_curve_to5(pressure)) / kPressureMax;
+// E = pressure(0xD0) + timbre(CC74)，各 0-127，全行程线性。
+inline float pressure_boost(uint8_t pressure, uint8_t timbre, float depth) {
+  return depth * (pressure + timbre) / kTravelMax;
 }
 
 inline float side_boost(const float *voices, int count) {

@@ -55,23 +55,27 @@ is accepted on Manager and Member Channels; a Member range received on one chann
 every Member. Pitch Bend state is tracked before Note On so an MPE source can establish a note's
 initial microtonal offset.
 
-## Per-note Expression (0xD0)
+## Per-note Expression (0xD0 + CC74)
 
 Osmose-style MPE controllers send an onset burst (Channel Pressure, CC 74, then Pitch Bend) just
-before Note On; Wingie2 latches the pressure value per channel, so a note sounds with the
+before Note On; Wingie2 latches both values per channel, so a note sounds with the
 expression already established.
 
-- **Channel Pressure (0xD0) adds decay, summed per side**: raw 0xD0 is first mapped with
-  n=5 (`round(127 · (p/127)⁵)`), then boost per voice = depth × curved / 127 with depth
-  2s per voice in Poly/Ratio (three voices add, capped at 6s per side). Light pressure
-  stays shallow; only heavy pressure approaches the ceiling. Each voice tracks its
-  owner channel's pressure, including after Note Off, so the tail follows the key as it
-  lifts. Because the Faust graph has one `decay` slider per side, the three voice boosts
-  are added and written into that slider, clamped to a 20s overall ceiling (the Decay
-  fader itself spans 0.1–10s): with the fader at 10s, pressure can still add its full
-  6s. One key at 127 is +2s; three keys at 127 are +6s.
-  String and Bar have one owner, which occupies a single slot at 6s depth, so that note
-  adds up to 6s.
+- **Pressure adds decay over the full key travel, summed per side**: the Osmose exports its
+  pressure travel as two sequential 7-bit segments — Channel Pressure (0xD0) for 0–127, then
+  member-channel CC 74 rising from 0 once 0xD0 saturates (measured: CC74>0 only while 0xD0
+  is exactly 127; the Osmose has no per-key Y sensor, so CC74 carries no slide gesture).
+  The two segments form one linear axis E = 0xD0 + CC74 ∈ 0–254, and boost per voice =
+  depth × E/254, with depth 2s per voice in Poly/Ratio (three voices add, capped at 6s
+  per side) and 6s for the single String/Bar owner and conventional channels. Full
+  physical floor is full depth: one key floored is +2s (three floored keys +6s, capped);
+  0xD0 saturation alone is half travel, +1s per key. Each voice tracks its owner
+  channel's pressure and timbre, including after Note Off, so the tail follows the key
+  as it lifts. Because the Faust graph has one `decay` slider per side, the three voice
+  boosts are added and written into that slider, clamped to a 20s overall ceiling (the
+  Decay fader itself spans 0.1–10s): with the fader at 10s, pressure can still add its
+  full 6s. CC74 on conventional channels (l/r/both) feeds the same side path; CC74 on
+  the Manager channel is consumed with no decay effect, mirroring 0xD0.
 - **Why not per-voice t60 in the Faust graph**: `decay_boost_*` per-voice sliders watchdog-reset
   at boot (~10.5s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
   the revert: `-Os` still watchdog-resets, `-O2` overflows IRAM0 by 80 bytes. The budget is

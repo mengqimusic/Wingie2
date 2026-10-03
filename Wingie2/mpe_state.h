@@ -27,7 +27,8 @@ struct ChannelState {
   uint8_t rpnLsb;
   int16_t pitchBend;
   PitchBendRange conventionalRange;
-  uint8_t pressure; // 0xD0 channel pressure，per-note decay 增量源
+  uint8_t pressure; // 0xD0 channel pressure，行程第一段 decay 增量源
+  uint8_t timbre;   // 成员通道 CC74，Osmose 满压后的第二段行程 decay 增量源
 };
 
 struct ZoneState {
@@ -212,6 +213,16 @@ struct State {
   uint8_t pressure(uint8_t channel) const {
     if (channel < 1 || channel > kChannelCount) return 0;
     return channels[channel - 1].pressure;
+  }
+
+  void setTimbre(uint8_t channel, uint8_t value) {
+    if (channel < 1 || channel > kChannelCount) return;
+    channels[channel - 1].timbre = value;
+  }
+
+  uint8_t timbre(uint8_t channel) const {
+    if (channel < 1 || channel > kChannelCount) return 0;
+    return channels[channel - 1].timbre;
   }
 
   float channelPitchBendSemitones(uint8_t channel) const {

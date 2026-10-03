@@ -79,6 +79,12 @@ void handleControlChange (byte channel, byte number, byte value) {
     MIDISetParam(1, number, value);
   }
 
+  if (number == 74) {
+    // Osmose 满压后的第二段行程在常规通道同样发 CC74：与 0xD0 同一条整侧 decay 路径。
+    mpe_state.setTimbre(channel, value);
+    refresh_conventional_side_expression(channel);
+  }
+
   if (channel == CC_MIDI_CH_TUNING) {
     MIDISetTuning(number, value);
   }

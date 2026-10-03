@@ -8,22 +8,19 @@ static void assertNear(float actual, float expected) {
 }
 
 int main() {
-  assert(wingie_decay::pressure_curve_to5(0) == 0);
-  assert(wingie_decay::pressure_curve_to5(127) == 127);
-  assert(wingie_decay::pressure_curve_to5(100) == 38);
-  assert(wingie_decay::pressure_curve_to5(115) == 77);
-  assert(wingie_decay::pressure_curve_to5(120) == 96);
-  assert(wingie_decay::pressure_curve_to5(124) == 113);
-
+  // 全行程线性 E = pressure + timbre ∈ 0–254；boost = depth · E/254。
   // poly/ratio 每音深度 2 秒。
-  assertNear(wingie_decay::pressure_boost(0, wingie_decay::kPressureDepthPerVoiceSeconds), 0.0f);
-  assertNear(wingie_decay::pressure_boost(127, wingie_decay::kPressureDepthPerVoiceSeconds), 2.0f);
-  assertNear(wingie_decay::pressure_boost(100, wingie_decay::kPressureDepthPerVoiceSeconds), 2.0f * 38.0f / 127.0f);
+  assertNear(wingie_decay::pressure_boost(0, 0, wingie_decay::kPressureDepthPerVoiceSeconds), 0.0f);
+  assertNear(wingie_decay::pressure_boost(127, 0, wingie_decay::kPressureDepthPerVoiceSeconds), 1.0f);
+  assertNear(wingie_decay::pressure_boost(100, 0, wingie_decay::kPressureDepthPerVoiceSeconds), 2.0f * 100.0f / 254.0f);
+  assertNear(wingie_decay::pressure_boost(127, 127, wingie_decay::kPressureDepthPerVoiceSeconds), 2.0f);
+  assertNear(wingie_decay::pressure_boost(0, 127, wingie_decay::kPressureDepthPerVoiceSeconds), 1.0f);
 
   // string/bar 与常规整侧单音深度 6 秒。
-  assertNear(wingie_decay::pressure_boost(0, wingie_decay::kPressureDepthMonoSeconds), 0.0f);
-  assertNear(wingie_decay::pressure_boost(127, wingie_decay::kPressureDepthMonoSeconds), 6.0f);
-  assertNear(wingie_decay::pressure_boost(100, wingie_decay::kPressureDepthMonoSeconds), 6.0f * 38.0f / 127.0f);
+  assertNear(wingie_decay::pressure_boost(0, 0, wingie_decay::kPressureDepthMonoSeconds), 0.0f);
+  assertNear(wingie_decay::pressure_boost(127, 127, wingie_decay::kPressureDepthMonoSeconds), 6.0f);
+  assertNear(wingie_decay::pressure_boost(96, 0, wingie_decay::kPressureDepthMonoSeconds), 6.0f * 96.0f / 254.0f);
+  assertNear(wingie_decay::pressure_boost(127, 35, wingie_decay::kPressureDepthMonoSeconds), 6.0f * 162.0f / 254.0f);
 
   const float none[3] = {0.0f, 0.0f, 0.0f};
   assertNear(wingie_decay::side_boost(none, 3), 0.0f);

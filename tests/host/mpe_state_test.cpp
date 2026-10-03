@@ -108,6 +108,25 @@ void testChannelExpressionState() {
   assert(state.pressure(2) == 0);
 }
 
+void testTimbreState() {
+  State state;
+  state.reset();
+  assert(state.timbre(2) == 0);
+  state.setTimbre(2, 127);
+  assert(state.timbre(2) == 127);
+  assert(state.timbre(1) == 0);
+  state.setTimbre(0, 99);
+  assert(state.timbre(0) == 0);
+  state.setTimbre(17, 42);
+  assert(state.timbre(17) == 0);
+  // 与 pressure 独立存取：互不清零。
+  state.setPressure(2, 40);
+  assert(state.pressure(2) == 40 && state.timbre(2) == 127);
+  state.reset();
+  assert(state.timbre(2) == 0);
+  assert(state.pressure(2) == 0);
+}
+
 int main() {
   testFullZoneClaimsAllChannels();
   testEmptyZoneClaimsNothing();
@@ -116,5 +135,6 @@ int main() {
   testVoiceOwnershipAndStealing();
   testConventionalAndMpePitchRemainIsolated();
   testChannelExpressionState();
+  testTimbreState();
   return 0;
 }

@@ -7,13 +7,13 @@ float mpe_manager_bend() {
   return mpe_state.managerPitchBendSemitones(wingie_mpe::kLowerZone);
 }
 
-// MPE 0xD0 映射常量：深度分两档（poly/ratio 每音 2 秒；string/bar 与常规整侧
-// 单音 6 秒），n=5 曲线，真机听调定值。
+// MPE 表情映射常量：深度分两档（poly/ratio 每音 2 秒；string/bar 与常规整侧
+// 单音 6 秒），全行程线性（0xD0 第一段 + CC74 第二段，见 decay_expression.h）。
 static float fader_decay[2] = {wingie_decay::kFaderMin, wingie_decay::kFaderMin};
 static float decay_boost_seconds[2][wingie_mpe::kVoiceCount];
 
 float mpe_pressure_decay_delta(byte channel, float depth) {
-  return wingie_decay::pressure_boost(mpe_state.pressure(channel), depth);
+  return wingie_decay::pressure_boost(mpe_state.pressure(channel), mpe_state.timbre(channel), depth);
 }
 
 void set_fader_decay(byte ch, float seconds) {
@@ -396,6 +396,12 @@ bool handle_mpe_control_change(byte channel, byte number, byte value) {
     MIDISetParam(1, number, value);
     return true;
   }
+  if (number == 74) {
+    // 成员通道 CC74 = 满压后第二段行程：锁存后走与 0xD0 相同的表情刷新链
+    // （poly/ratio per-voice，string/bar 整侧）。
+    mpe_state.setTimbre(channel, value);
+    refresh_mpe_member_expression(channel);
+  }
   return true;
 }
 
@@ -421,6 +427,17 @@ void handlePitchBend(byte channel, int bend) {
   }
 }
 
+// 常规通道（l/r/both 路由）的表情增量写回整侧 decay，0xD0 与 CC74 共用。
+void refresh_conventional_side_expression(byte channel) {
+  const float delta = mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds);
+  if (channel == midi_ch_l) set_side_decay_boost(0, delta);
+  if (channel == midi_ch_r) set_side_decay_boost(1, delta);
+  if (channel == midi_ch_both) {
+    set_side_decay_boost(0, delta);
+    set_side_decay_boost(1, delta);
+  }
+}
+
 void handleChannelPressure(byte channel, byte value) {
   mpe_state.setPressure(channel, value);
   if (mpe_state.zoneForChannel(channel) == wingie_mpe::kLowerZone) {
@@ -428,10 +445,5 @@ void handleChannelPressure(byte channel, byte value) {
     refresh_mpe_member_expression(channel);
     return;
   }
-  if (channel == midi_ch_l) set_side_decay_boost(0, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
-  if (channel == midi_ch_r) set_side_decay_boost(1, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
-  if (channel == midi_ch_both) {
-    set_side_decay_boost(0, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
-    set_side_decay_boost(1, mpe_pressure_decay_delta(channel, wingie_decay::kPressureDepthMonoSeconds));
-  }
+  refresh_conventional_side_expression(channel);
 }
