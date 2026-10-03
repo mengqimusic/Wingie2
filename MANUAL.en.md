@@ -398,6 +398,10 @@ Thanks to Roy Parvin for writing the English introduction and proofreading the m
 
 ## 17. Version Notes
 
+Changes in **v4.30** compared to v4.20:
+
+- **Pressure expression is now linear over the full travel, and the post-saturation stage is connected**: the pressure-to-decay mapping changes from the previous n=5 curve to linear over the whole travel. Osmose-style controllers send Channel Pressure (0xD0) up to saturation, then the remaining travel as CC 74 on the same channel; the two segments form one 0–254 travel axis. Just saturated is half depth (+1s per note, +3s in single-note modes); the physical floor gives the maximum (+2s per note, +6s single-note). Depth ceilings, the 6s per-side sum cap, and fader stacking are unchanged. Outside MPE mode, CC 74 on a routed channel now feeds the side like Channel Pressure.
+
 Changes in **v4.20** compared to v4.10:
 
 - **MPE channel-pressure expression**: with MPE on, each note's Channel Pressure (0xD0) lengthens decay: the harder the press, the longer the tail. In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s per side); String and Bar can add up to 6s for the single note, easing back as the key lifts. The sum can go past the fader's ceiling (with the fader at 10s, the sum can reach 16s). Outside MPE, Channel Pressure on a routed channel applies to that side as a whole (up to 6s).
