@@ -240,11 +240,11 @@ One Lower Zone claims every channel: **Manager = Channel 1, Member = Channels 2�
 
 With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).
 
-### Per-Note Pressure Expression (0xD0)
+### Per-Note Pressure Expression (0xD0 + CC 74)
 
-With MPE on, Member Channel Pressure (0xD0) increases the decay time: the harder the press, the longer the tail, easing back as the key lifts. In Poly / Ratio each note adds up to 2s; boosts from multiple notes on the same side add together, up to 6s extra for the side. String and Bar are single-note modes, where the single note adds up to 6s. The sum can go past the Decay fader's ceiling (for example, with the fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure on a routed channel applies to that side as a whole, also adding up to 6s.
+With MPE on, per-note pressure expression increases the decay time: the harder the press, the longer the tail, easing back as the key lifts. Pressure maps **linearly over the full travel** — Osmose-style controllers send Channel Pressure (0xD0, 0–127) up to saturation, then the remaining travel as CC 74 (0–127) on the same channel; together they form one 0–254 travel axis. Half travel (just saturated) gives half the boost, and the physical floor gives the maximum. In Poly / Ratio each note adds up to 2s on top of the Decay fader; boosts from multiple notes on the same side add together, up to 6s extra for the side. String and Bar are single-note modes, where the single note adds up to 6s. The sum can go past the Decay fader's ceiling (for example, with the fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure and CC 74 on a routed channel apply to that side as a whole, also adding up to 6s. Controllers that send only 0xD0 work the same way, minus the post-saturation second stage.
 
-Member CC 74 and other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
+Member CC 74 maps to the post-saturation second travel stage; other member CCs are consumed but not mapped to synthesis parameters. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
 See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 
