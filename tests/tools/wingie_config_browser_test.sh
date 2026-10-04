@@ -625,4 +625,23 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
+# 首连竞态：port.open() 触发 DTR 复位时，第一条 hello 落在固件早期启动里丢失、
+# 无任何应答。断开→近零间隙重连（同时覆盖 connect 对在途 disconnect 的串行守卫），
+# mock 吞掉首条 hello，页面必须走超时重发并恰好重发一次。
+agent-browser --session "$SESSION" eval 'document.querySelector("#wg-disconnect").click(); "disconnected"' >/dev/null
+agent-browser --session "$SESSION" eval 'window.__wingieSerialMock.clearWrites(); window.__wingieSerialMock.swallowNext("hello"); document.querySelector("#wg-connect").click(); "connect clicked"' >/dev/null
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const assert = (condition, message) => { if (!condition) throw new Error(message); };
+  const t0 = performance.now();
+  while (performance.now() - t0 < 12000 && !window.__wingieConfigTest.state().connected) {
+    await sleep(50);
+  }
+  assert(window.__wingieConfigTest.state().connected, "connect did not survive a swallowed first hello");
+  const hellos = window.__wingieSerialMock.writes.filter((request) => request.op === "hello");
+  assert(hellos.length === 2, `swallowed first hello did not retry exactly once (${hellos.length} hellos)`);
+})()
+JS
+
 printf 'Wingie2 schema 4 configuration browser mock tests passed.\n'

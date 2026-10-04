@@ -1007,16 +1007,19 @@
         });
       }
 
-      async function helloWhenReady(timeout = 5000) {
+      async function helloWhenReady(timeout = 8000) {
         const deadline = Date.now() + timeout;
         while (true) {
           try {
             return await request("hello");
           } catch (error) {
             const code = error.payload && error.payload.error && error.payload.error.code;
-            if (code !== "busy" || Date.now() >= deadline) throw error;
+            // 超时重试与 busy 重试同等必要：open() 触发复位时第一条 hello 会落在
+            // 固件早期启动里丢失，无任何应答——超时不是放弃理由，是重发理由。
+            const timedOut = / timeout$/.test(error.message);
+            if ((code !== "busy" && !timedOut) || Date.now() + 200 >= deadline) throw error;
             setConnection("connecting", copy("Wingie2 正在启动…", "Wingie2 is starting…"));
-            await new Promise((resolve) => window.setTimeout(resolve, 100));
+            await new Promise((resolve) => window.setTimeout(resolve, 200));
           }
         }
       }
@@ -1026,6 +1029,12 @@
         elements.connect.disabled = true;
         setConnection("connecting", copy("正在连接…", "Connecting…"));
         try {
+          // 等在途 disconnect() 收尾后再动手：其收尾会置空 state.port，若在此期间
+          // 抢跑开新口，旧收尾会把新连接的 port 一并拆掉（快速断开→连接必踩）。
+          const disconnectDeadline = Date.now() + 3000;
+          while (state.disconnecting && Date.now() < disconnectDeadline) {
+            await new Promise((resolve) => window.setTimeout(resolve, 20));
+          }
           state.disconnecting = false;
           state.port = await navigator.serial.requestPort();
           await state.port.open({baudRate: 115200});

@@ -10,6 +10,7 @@
   let inputBuffer = "";
   let responseDelay = 0;
   let failure = null;
+  let silence = null;
   let saveCount = 0;
   let ratioRevision = 4;
   let ratios = [0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 7];
@@ -209,6 +210,10 @@
         writes.push(clone(request));
         const response = responseFor(request);
         if (responseDelay) await new Promise((resolve) => window.setTimeout(resolve, responseDelay));
+        if (silence && silence.operation === request.op) {
+          silence = null;
+          return;
+        }
         emit(response);
       }
       newline = inputBuffer.indexOf("\n");
@@ -284,6 +289,8 @@
       if (values.cave_active_bank) Object.assign(status.cave_active_bank, values.cave_active_bank);
     },
     failNext(operation, code = "mock_failure") { failure = {operation, code}; },
+    // 模拟固件启动期丢帧：收到该操作后不回任何应答（一次性），页面请求将按真实超时路径走
+    swallowNext(operation) { silence = {operation}; },
     setResponseDelay(milliseconds) { responseDelay = Math.max(0, Number(milliseconds) || 0); },
     setLegacyFirmware(value) { legacyFirmware = Boolean(value); },
     // 覆盖单参数 [min,max,step]（get_settings limits 与 set_param 量化同步生效），用于验证页面动态消费 limits
