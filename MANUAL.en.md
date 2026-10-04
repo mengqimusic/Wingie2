@@ -81,7 +81,7 @@ Wingie2 has **five** modes, cycled by pressing the Mode button. The current mode
 | **Poly** (white) | 3-voice | Buttons cycle through each voice | Affects the next note played. You can switch octaves before playing a note to mix notes of different octaves. | White |
 | **String** (yellow) | monophonic | Press multiple note buttons simultaneously to set a sequence; the sequence advances each time the input volume exceeds the threshold | Immediate | Yellow |
 | **Bar** (red) | monophonic | Same as above | Immediate | Red |
-| **Cave** (purple) | 9 resonators (three octave banks) | See [Chapter 5](#5-custom-caves) | Switches between three caves | Purple |
+| **Cave** (purple) | 9 resonators (Low/Mid/High bank switch) | See [Chapter 5](#5-custom-caves) | Switches between three caves | Purple |
 | **Ratio** (white/yellow alternating) | 3-voice | Buttons cycle through each voice; resonator frequency = fundamental × ratio | Affects the next note played | white/yellow alternating |
 
 Global tuning affects all five modes: Poly, String, Bar, Cave, and Ratio. (Factory default A3 (69) = 440 Hz.) For global tuning, see [Chapter 13](#13-global-settings-midi-cc-table).
@@ -90,7 +90,7 @@ Global tuning affects all five modes: Poly, String, Bar, Cave, and Ratio. (Facto
 
 Ratio Mode is the fifth mode, new in v4. Unlike Poly/String/Bar, which stack by octaves, Ratio Mode sets each resonator's frequency to **fundamental × ratio**, enabling non-octave resonant relationships.
 
-- **3-voice polyphony**: The 9 resonators are divided into 3 slots (voice 1 uses resonators 1/2/3, voice 2 uses 4/5/6, voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.
+- **3-voice polyphony**: The 9 resonators are divided into three Voices (Voice 1 uses resonators 1/2/3, Voice 2 uses 4/5/6, Voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.
 - **Shared ratio profile**: Both channels share the same 9 ratios; only the fundamental (octave) differs. Factory ratios are 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9.
 - **Ratio range**: 0.125 to 32.0, step 0.001. Frequencies are clamped to 16.00–16000.00 Hz. Ratios are adjusted via [USB Web Configuration](#9-usb-web-configuration) or MIDI.
 
@@ -102,7 +102,7 @@ There are three ways to enter Ratio Mode:
 
 ## 5. Custom Caves
 
-In Cave Mode, each channel has 9 resonators divided into three octave banks. You can adjust each resonator's frequency and mute state individually.
+In Cave Mode, each channel has 9 resonators divided into three banks (Low/Mid/High). You can adjust each resonator's frequency and mute state individually.
 
 - Toggle mute / unmute
 - Increase the resonator's frequency
@@ -204,7 +204,7 @@ On connection, the page reads one complete device snapshot. You can modify the f
 
 - **Left/right channels**: Mode (Poly / String / Bar / Cave / Ratio), Input Threshold
 - **Shared settings**: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch, line-input stereo/mono
-- **Ratio Mode profile**: 9 resonator ratios (grouped into 3 slots), with "Copy Slot 1 to Slots 2 & 3" and factory-reset buttons
+- **Ratio Mode profile**: 9 resonator ratios (grouped into three Voices), with "Copy Voice 1 to Voices 2 & 3" and factory-reset buttons
 - **Caves**: 3 banks per channel, each with 9 resonator frequencies and mute states
 
 > The page does **not** show Mix, Decay, or Volume—these are physical faders on the panel and are not written to flash.
@@ -370,7 +370,7 @@ The right channel uses the odd-numbered scale tones, also covering one and one-t
 
 `C#, D#, F, G, A, B, C#', D#', F'`
 
-The three octave banks are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave bank, so all scale pitches are covered across both sides.
+The three banks (Low/Mid/High) are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same bank, so all scale pitches are covered across both sides.
 
 Dave Seidel wrote Wingie2's alternate tuning feature.
 
