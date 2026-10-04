@@ -209,7 +209,7 @@
 </tr>
 <tr>
 <td><strong>山洞</strong>（紫色）</td>
-<td>九共鸣器（三个八度档切换）</td>
+<td>九共鸣器（低 / 中 / 高档 bank 切换）</td>
 <td>见<a href="#5-%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%B1%E6%B4%9E">第 5 章</a></td>
 <td>切换山洞（一共三个）</td>
 <td>紫</td>
@@ -227,7 +227,7 @@
 <h3 id="比例模式ratio-mode">比例模式（Ratio Mode）</h3>
 <p>比例模式是 v4 新增的第五种模式。与按八度堆叠的复音/琴弦/音块不同，比例模式让每个共鸣器的频率等于 <strong>基频 × 比例</strong>，因此可以产生非八度音程的共鸣关系。</p>
 <ul>
-<li><strong>三声部复音</strong>：9 个共鸣器分为 3 个槽（声部 1 用共鸣器 1/2/3，声部 2 用 4/5/6，声部 3 用 7/8/9）。按一个音符占用一个声部，3 个声部全占时替换最老的一个。</li>
+<li><strong>三复音</strong>：9 个共鸣器分为 3 组 Voice（Voice 1 用共鸣器 1/2/3，Voice 2 用 4/5/6，Voice 3 用 7/8/9）。按一个音符占用一个 Voice，3 组 Voice 全占时替换最老的一个。</li>
 <li><strong>左右共用同一份比例</strong>：左右声道使用同一组 9 个比例，只是基频（八度）不同。出厂比例为 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9。</li>
 <li><strong>比例范围</strong>：0.125 至 32.0，步进 0.001。频率被限制在 16.00–16000.00 Hz。比例通过 <a href="#9-usb-%E7%BD%91%E9%A1%B5%E9%85%8D%E7%BD%AE">USB 网页配置</a> 或 MIDI 调整。</li>
 </ul>
@@ -238,7 +238,7 @@
 <li><strong>USB 网页配置</strong>：在配置页的左右模式下拉中选择&quot;比例&quot;。</li>
 </ol>
 <h2 id="5-自定义山洞">5. 自定义山洞</h2>
-<p>山洞模式下，每个声道有 9 个共鸣器，分为三个八度档（bank）。可以逐个调整每个共鸣器的频率和静音状态。</p>
+<p>山洞模式下，每个声道有 9 个共鸣器，分为三个 bank（低 / 中 / 高档）。可以逐个调整每个共鸣器的频率和静音状态。</p>
 <ul>
 <li>切换静音 / 非静音状态</li>
 <li>增加对应共鸣器的频率</li>
@@ -370,7 +370,7 @@
 <ul>
 <li><strong>左右声道</strong>：模式（复音 / 琴弦 / 音块 / 山洞 / 比例）、输入阈值</li>
 <li><strong>共享设置</strong>：A3 频率（358.08–521.91 Hz）、调律（标准 + 8 种替代律制）、前级 / 后级增益、三个 MIDI 通道路由、MPE 开关、线路输入立体声 / 单声道</li>
-<li><strong>比例模式设定</strong>：9 个共鸣器比例（分 3 槽），可&quot;复制槽 1 到槽 2、3&quot;，可恢复出厂比例</li>
+<li><strong>Ratio 模式设定</strong>：9 个共鸣器比例（分 3 组 Voice），可&quot;复制 Voice 1 到 Voice 2、3&quot;，可恢复出厂比例</li>
 <li><strong>山洞</strong>：左右各 3 个 bank，每个 bank 9 个共鸣器的频率和静音</li>
 </ul>
 <blockquote>
@@ -670,7 +670,7 @@
 <p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
 <p>右声道对应奇数音，同样覆盖一个又三分之一的八度音程：</p>
 <p><code>C#, D#, F, G, A, B, C#', D#', F'</code></p>
-<p>三个八度档用八度按键切换，类似于复音、琴弦和音块模式。然而，左右山洞始终处于同一个八度档，因此所有音阶音高都覆盖在两侧。</p>
+<p>三个 bank（低 / 中 / 高档）用八度按键切换，类似于复音、琴弦和音块模式。然而，左右山洞始终处于同一个 bank，因此所有音阶音高都覆盖在两侧。</p>
 <p>Dave Seidel 为小羽写了替代律制功能。</p>
 <h2 id="16-使用窍门">16. 使用窍门</h2>
 <ol>
@@ -845,7 +845,7 @@
 </tr>
 <tr>
 <td><strong>Cave</strong> (purple)</td>
-<td>9 resonators (three octave banks)</td>
+<td>9 resonators (Low/Mid/High bank switch)</td>
 <td>See <a href="#5-custom-caves">Chapter 5</a></td>
 <td>Switches between three caves</td>
 <td>Purple</td>
@@ -863,7 +863,7 @@
 <h3 id="ratio-mode">Ratio Mode</h3>
 <p>Ratio Mode is the fifth mode, new in v4. Unlike Poly/String/Bar, which stack by octaves, Ratio Mode sets each resonator's frequency to <strong>fundamental × ratio</strong>, enabling non-octave resonant relationships.</p>
 <ul>
-<li><strong>3-voice polyphony</strong>: The 9 resonators are divided into 3 slots (voice 1 uses resonators 1/2/3, voice 2 uses 4/5/6, voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.</li>
+<li><strong>3-voice polyphony</strong>: The 9 resonators are divided into three Voices (Voice 1 uses resonators 1/2/3, Voice 2 uses 4/5/6, Voice 3 uses 7/8/9). Each note press occupies one voice; when all three are active, the oldest is replaced.</li>
 <li><strong>Shared ratio profile</strong>: Both channels share the same 9 ratios; only the fundamental (octave) differs. Factory ratios are 1 / 2 / 3 / 4 / 5 / 6 / 7 / 8 / 9.</li>
 <li><strong>Ratio range</strong>: 0.125 to 32.0, step 0.001. Frequencies are clamped to 16.00–16000.00 Hz. Ratios are adjusted via <a href="#9-usb-web-configuration">USB Web Configuration</a> or MIDI.</li>
 </ul>
@@ -874,7 +874,7 @@
 <li><strong>USB Web Configuration</strong>: Select &quot;Ratio&quot; in the left/right Mode dropdown.</li>
 </ol>
 <h2 id="5-custom-caves">5. Custom Caves</h2>
-<p>In Cave Mode, each channel has 9 resonators divided into three octave banks. You can adjust each resonator's frequency and mute state individually.</p>
+<p>In Cave Mode, each channel has 9 resonators divided into three banks (Low/Mid/High). You can adjust each resonator's frequency and mute state individually.</p>
 <ul>
 <li>Toggle mute / unmute</li>
 <li>Increase the resonator's frequency</li>
@@ -1006,7 +1006,7 @@
 <ul>
 <li><strong>Left/right channels</strong>: Mode (Poly / String / Bar / Cave / Ratio), Input Threshold</li>
 <li><strong>Shared settings</strong>: A3 frequency (358.08–521.91 Hz), Tuning (Standard + 8 alternate tunings), Pre/Post Clip Gain, three MIDI channel routes, MPE switch, line-input stereo/mono</li>
-<li><strong>Ratio Mode profile</strong>: 9 resonator ratios (grouped into 3 slots), with &quot;Copy Slot 1 to Slots 2 &amp; 3&quot; and factory-reset buttons</li>
+<li><strong>Ratio Mode profile</strong>: 9 resonator ratios (grouped into three Voices), with &quot;Copy Voice 1 to Voices 2 &amp; 3&quot; and factory-reset buttons</li>
 <li><strong>Caves</strong>: 3 banks per channel, each with 9 resonator frequencies and mute states</li>
 </ul>
 <blockquote>
@@ -1306,7 +1306,7 @@
 <p><code>C, D, E, F#, G#, A#, C', D', E'</code></p>
 <p>The right channel uses the odd-numbered scale tones, also covering one and one-third octaves:</p>
 <p><code>C#, D#, F, G, A, B, C#', D#', F'</code></p>
-<p>The three octave banks are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same octave bank, so all scale pitches are covered across both sides.</p>
+<p>The three banks (Low/Mid/High) are switched with the octave buttons, similar to Poly, String, and Bar modes. However, the left and right caves are always in the same bank, so all scale pitches are covered across both sides.</p>
 <p>Dave Seidel wrote Wingie2's alternate tuning feature.</p>
 <h2 id="16-tips">16. Tips</h2>
 <ol>
