@@ -2,16 +2,17 @@
 
 Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
-the owning side by summing per-note boosts (Poly/Ratio 2s each, up to 6s per side;
-String/Bar 6s for the single owner); member CC 74 is consumed but not mapped.
+left/right alternating engine assignment. Member Channel Pressure (0xD0) and member CC 74
+form one linear 0–254 pressure travel that lengthens decay on the owning side by summing
+per-note boosts (Poly/Ratio 2s each, up to 6s per side; String/Bar 6s for the single
+owner); other member CCs are not mapped.
 
 ## The MPE Switch
 
 MPE is governed by a single switch, exposed as `mpe_enabled` in the USB configuration page
 (config schema 6) and stored in flash. Factory default: **off**. The switch is the only zone
-authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
-but ignored while the switch is off. A restart restores the switched layout.
+authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on and is ignored
+while the switch is off. A restart restores the switched layout.
 
 ### Switch off — conventional routing
 
@@ -23,10 +24,10 @@ global-settings CC are all reachable.
 ### Switch on — standard Lower Zone
 
 One Lower Zone claims every channel: Manager Channel 1, Member Channels 2–16. All notes and
-Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Per-channel CC
-beyond the manager is not mapped, which means the conventional control channels are not reachable
-while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all consumed
-by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
+Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Member CC other
+than CC 74 is not mapped, which means the conventional control channels are not reachable
+while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all taken
+over by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
 global settings.
 
 Because the zone covers all 16 channels, notes from dual-zone controllers also sound — both
