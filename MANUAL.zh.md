@@ -190,7 +190,7 @@
 
 ## 9. USB 网页配置
 
-[https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) 打开后选择"配置"，即可用浏览器通过 USB 直接连接小羽，修改和保存所有设置。它不需要 Wi-Fi、SoftAP、CDN、Node 或 Python，只需要一个支持 Web Serial 的浏览器。
+[https://wingie.wingpinger.com](https://wingie.wingpinger.com) 打开后选择"配置"，即可用浏览器通过 USB 直接连接小羽，修改和保存所有设置。它不需要 Wi-Fi、SoftAP、CDN、Node 或 Python，只需要一个支持 Web Serial 的浏览器。
 
 ### 连接方式
 
@@ -252,7 +252,7 @@ MPE Member 的其余 CC 不映射任何参数。双 Zone 控制器的两个 Zone
 
 ## 11. USB 网页刷机
 
-[https://mengqimusic.github.io/Wingie2](https://mengqimusic.github.io/Wingie2) 打开后选择"固件安装"，即可安装或升级小羽固件。刷机页直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
+[https://wingie.wingpinger.com](https://wingie.wingpinger.com) 打开后选择"固件安装"，即可安装或升级小羽固件。刷机页直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。
 
 ### 操作步骤
 
