@@ -625,9 +625,10 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
 })()
 JS
 
-# 首连竞态：port.open() 触发 DTR 复位时，第一条 hello 落在固件早期启动里丢失、
-# 无任何应答。断开→近零间隙重连（同时覆盖 connect 对在途 disconnect 的串行守卫），
-# mock 吞掉首条 hello，页面必须走超时重发并恰好重发一次。
+# 首连竞态：上电/复位后的启动期（实测约 2.7s，AC101 初始化占约 1.2s）内发出的
+# 第一条 hello 落在串口驱动就绪之前而丢失、无任何应答。断开→近零间隙重连（同时
+# 覆盖 connect 对在途 disconnect 的串行守卫），mock 吞掉首条 hello，
+# 页面必须走超时重发并恰好重发一次。
 agent-browser --session "$SESSION" eval 'document.querySelector("#wg-disconnect").click(); "disconnected"' >/dev/null
 agent-browser --session "$SESSION" eval 'window.__wingieSerialMock.clearWrites(); window.__wingieSerialMock.swallowNext("hello"); document.querySelector("#wg-connect").click(); "connect clicked"' >/dev/null
 agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
