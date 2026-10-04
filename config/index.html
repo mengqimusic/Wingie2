@@ -1014,8 +1014,10 @@
             return await request("hello");
           } catch (error) {
             const code = error.payload && error.payload.error && error.payload.error.code;
-            // 超时重试与 busy 重试同等必要：open() 触发复位时第一条 hello 会落在
-            // 固件早期启动里丢失，无任何应答——超时不是放弃理由，是重发理由。
+            // 超时重试与 busy 重试同等必要：上电/复位后的启动期（实测约 2.7s，
+            // 其中 AC101 codec 初始化占约 1.2s）内发出的第一条 hello 落在串口
+            // 驱动就绪之前而丢失，无任何应答——超时不是放弃理由，是重发理由。
+            // 首次重发约在 3.7s，晚于固件就绪约 1s。
             const timedOut = / timeout$/.test(error.message);
             if ((code !== "busy" && !timedOut) || Date.now() + 200 >= deadline) throw error;
             setConnection("connecting", copy("Wingie2 正在启动…", "Wingie2 is starting…"));
