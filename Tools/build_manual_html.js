@@ -3,11 +3,13 @@
 // 风格对齐 gh-pages 的 Web 1.0 instrument-manual 页面。
 //
 // 用法（在仓库根目录运行）：
-//   npx --yes markdown-it-named-headings markdown-it   # 一次性确认依赖可用
-//   node Tools/build_manual_html.js                    # 生成到 /tmp/wingie2-manual/
+//   node Tools/build_manual_html.js    # 生成到 /tmp/wingie2-manual/
 //
-// 需要的 npm 包：markdown-it, markdown-it-named-headings, markdown-it-linkify
-// 通过 npx 或本地 node_modules 提供。脚本本身不安装依赖。
+// 唯一的 npm 依赖是 markdown-it（linkify 是其内置选项，标题 slug 由本脚本自实现，
+// 不需要 named-headings / linkify 插件）。仓库没有 package.json，且 node_modules
+// 未被 gitignore——不要装进仓库，装到临时目录用 NODE_PATH 引用：
+//   npm install --prefix /tmp/wingie2-manual-deps markdown-it
+//   NODE_PATH=/tmp/wingie2-manual-deps/node_modules node Tools/build_manual_html.js
 
 "use strict";
 
