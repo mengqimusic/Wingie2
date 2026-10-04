@@ -200,6 +200,54 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
     if (!condition) throw new Error(message);
   };
   const element = (selector) => document.querySelector(selector);
+  const mock = window.__wingieSerialMock;
+
+  // 比例推杆：每行 0.25–10 线性推杆与文本框并排；拖动走既有 150ms 防抖整组写入；范围外设备值只钳位推杆，文本框显示真实值
+  const sliders = document.querySelectorAll(".wg-ratio-slider");
+  assert(sliders.length === 9, "Ratio sliders were not created per resonator");
+  const slider = sliders[0];
+  assert(slider.min === "0.25" && slider.max === "10", "Ratio slider range is not 0.25-10");
+  assert(slider.step === "0.001", "Ratio slider step did not follow device limits");
+  assert(!slider.disabled, "Ratio slider stayed disabled after connection");
+  assert(getComputedStyle(slider).display !== "none" && slider.clientWidth >= 120, "Ratio slider is not visible beside the text input");
+  const ratioText = element('[data-value-key="ratio:0"]');
+  assert(ratioText.clientWidth <= 100 && ratioText.clientWidth < slider.clientWidth, "text input was not narrowed next to the slider");
+
+  mock.clearWrites();
+  slider.focus();
+  slider.value = "2.5";
+  slider.dispatchEvent(new Event("input", {bubbles: true}));
+  assert(ratioText.value === "2.500", "slider drag did not update the text field live");
+  await waitFor(() => mock.writes.some((request) => request.op === "set" && request.ratios[0] === 2.5), "slider edit was not coalesced into a full Ratio write");
+  slider.blur();
+
+  mock.setRatios([0.125, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  await window.__wingieConfigTest.poll();
+  assert(ratioText.value === "0.125" && slider.value === "0.25", "below-range device value did not clamp the slider only");
+  mock.setRatios([16, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  await window.__wingieConfigTest.poll();
+  assert(ratioText.value === "16.000" && slider.value === "10", "above-range device value did not clamp the slider only");
+
+  mock.setRatios([0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 7]);
+  await window.__wingieConfigTest.poll();
+  assert(slider.value === "0.75", "slider did not follow an in-range device value");
+})()
+JS
+
+agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
+(async () => {
+  const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+  const waitFor = async (predicate, label, timeout = 6000) => {
+    const started = performance.now();
+    while (!predicate()) {
+      if (performance.now() - started > timeout) throw new Error("Timeout: " + label);
+      await sleep(20);
+    }
+  };
+  const assert = (condition, message) => {
+    if (!condition) throw new Error(message);
+  };
+  const element = (selector) => document.querySelector(selector);
   const edit = (control, value) => {
     control.focus();
     control.value = value;

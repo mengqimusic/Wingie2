@@ -267,6 +267,53 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("elements.copySlot1.disabled = !ready || busy || state.pendingWrites > 0;", self.source)
         self.assertIn('elements.copySlot1.addEventListener("click", copySlot1ToSlots);', self.source)
 
+    def test_ratio_slider_beside_narrow_text_input(self):
+        # 推杆范围是设计定值 0.25–10（设备全范围 0.125–32 仍可经文本框输入），native range 即线性映射
+        self.assertIn("const ratioSliderMin = 0.25;", self.source)
+        self.assertIn("const ratioSliderMax = 10;", self.source)
+        row_markup = re.search(r'ratioRow\.innerHTML = `(<td>.*?</td>)`;', self.source, re.DOTALL)
+        self.assertIsNotNone(row_markup)
+        row = row_markup.group(1)
+        for phrase in (
+            'class="wg-ratio-edit"',
+            'class="wg-ratio-input"',
+            'class="wg-ratio-slider"',
+            'type="range"',
+            'min="${ratioSliderMin}"',
+            'max="${ratioSliderMax}"',
+        ):
+            self.assertIn(phrase, row)
+        ratio_input = re.search(r"function ratioInput\(event\) \{(.*?)\n      \}", self.source, re.DOTALL)
+        self.assertIsNotNone(ratio_input)
+        block = ratio_input.group(1)
+        self.assertIn('event.target.closest(".wg-ratio-slider")', block)
+        # 推杆值直接 canonicalize 写入：不加对数/幂映射，位置与数值线性对应
+        self.assertIn("canonicalize(slider.value, state.ratio.limits)", block)
+        self.assertIn('scheduleResource("ratio", commitRatio, false)', block)
+        self.assertNotRegex(block, r"Math\.(pow|log)")
+        render_ratio = re.search(r"function renderRatio\(\) \{(.*?)\n      \}\n\n      function renderCave", self.source, re.DOTALL)
+        self.assertIsNotNone(render_ratio)
+        render = render_ratio.group(1)
+        # 设备值超出推杆段时只钳位推杆，文本框仍显示真实值；step 跟随设备 limits
+        self.assertIn('querySelectorAll(".wg-ratio-slider")', render)
+        self.assertIn("slider.step = ratio.limits.step;", render)
+        self.assertIn("Math.min(ratioSliderMax, Math.max(ratioSliderMin, value))", render)
+        for phrase in (
+            "#wingie-config .wg-ratio-edit {",
+            "#wingie-config .wg-ratio-edit .wg-ratio-input {",
+            "width: 84px",
+            "#wingie-config .wg-ratio-edit input[type=\"range\"] {",
+            "min-width: 120px",
+        ):
+            self.assertIn(phrase, self.source)
+        # 音程列与文本框同宽（84px），表宽余量全部流入比例列被推杆吸收
+        self.assertIn("#wingie-config .wg-ratio-table th:last-child,", self.source)
+        self.assertIn("#wingie-config .wg-ratio-table td[data-cents] {", self.source)
+        # 推杆沿用整页 Win95 浮风：无圆角、无阴影，thumb 用 outset/inset 立体感
+        self.assertIn("#wingie-config input[type=\"range\"]::-webkit-slider-thumb", self.source)
+        self.assertIn("border: 2px outset #cccccc;", self.source)
+        self.assertIn("border-radius: 0;", self.source)
+
     def test_minimal_responsive_visual_contract(self):
         self.assertIn("background: #fff", self.source)
         self.assertIn("width: min(1120px, 100%)", self.source)

@@ -200,8 +200,37 @@
       font-size: 14px;
     }
 
+    /* ---- 90s bevel sliders ---- */
     #wingie-config input[type="range"] {
+      appearance: none;
       width: 100%;
+      height: 18px;
+      background: transparent;
+    }
+
+    #wingie-config input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      border: 1px inset #ddd;
+      background: #fff;
+    }
+
+    #wingie-config input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 11px;
+      height: 18px;
+      margin-top: -8px;
+      border: 2px outset #cccccc;
+      border-radius: 0;
+      background: #cccccc;
+    }
+
+    #wingie-config input[type="range"]:active::-webkit-slider-thumb {
+      border-style: inset;
+    }
+
+    #wingie-config input[type="range"]:disabled::-webkit-slider-thumb {
+      border-color: #b8b8b8;
+      background: #b8b8b8;
     }
 
     #wingie-config input:focus-visible,
@@ -436,6 +465,28 @@
 
     #wingie-config .wg-ratio-table {
       min-width: 420px;
+    }
+
+    /* 音程列与文本框同宽，余宽全部让给比例列的推杆 */
+    #wingie-config .wg-ratio-table th:last-child,
+    #wingie-config .wg-ratio-table td[data-cents] {
+      width: 84px;
+    }
+
+    #wingie-config .wg-ratio-edit {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #wingie-config .wg-ratio-edit .wg-ratio-input {
+      width: 84px;
+      flex: none;
+    }
+
+    #wingie-config .wg-ratio-edit input[type="range"] {
+      flex: 1;
+      min-width: 120px;
     }
 
     #wingie-config th,
@@ -709,6 +760,8 @@
       const bankCount = 3;
       const resonatorCount = 9;
       const ratioSlotSize = 3;
+      const ratioSliderMin = 0.25;
+      const ratioSliderMax = 10;
       const encoder = new TextEncoder();
       const decoder = new TextDecoder();
 
@@ -1633,7 +1686,7 @@
       function copySlot1ToSlots() {
         if (!state.ratio) return;
         const active = document.activeElement;
-        if (active && active.classList && active.classList.contains("wg-ratio-input")) active.blur();
+        if (active && active.classList && (active.classList.contains("wg-ratio-input") || active.classList.contains("wg-ratio-slider"))) active.blur();
         for (let index = ratioSlotSize; index < resonatorCount; index += 1) {
           state.ratio.draft[index] = state.ratio.draft[index % ratioSlotSize];
           state.ratio.raw[index] = formatNumber(state.ratio.draft[index], state.ratio.limits.step);
@@ -1653,7 +1706,7 @@
             elements.ratioRows.appendChild(slotRow);
           }
           const ratioRow = document.createElement("tr");
-          ratioRow.innerHTML = `<td>${index + 1}</td><td><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`)}" disabled></td><td data-cents="${index}">—</td>`;
+          ratioRow.innerHTML = `<td>${index + 1}</td><td><div class="wg-ratio-edit"><input class="wg-ratio-input" data-value-key="ratio:${index}" data-ratio-index="${index}" type="text" inputmode="decimal" aria-label="${languageText(`共鸣器 ${index + 1} 比例`, `Resonator ${index + 1} ratio`)}" disabled><input class="wg-ratio-slider" data-ratio-index="${index}" data-ratio-slider="${index}" type="range" min="${ratioSliderMin}" max="${ratioSliderMax}" step="0.001" aria-label="${languageText(`共鸣器 ${index + 1} 比例推杆`, `Resonator ${index + 1} ratio slider`)}" disabled></div></td><td data-cents="${index}">—</td>`;
           elements.ratioRows.appendChild(ratioRow);
           for (const side of sides) {
             const row = document.createElement("tr");
@@ -1674,6 +1727,16 @@
           input.disabled = !state.connected || !ratio || state.saving || state.refreshing;
           if (!ratio) input.value = "";
           else if (document.activeElement !== input) input.value = ratio.raw[index];
+        });
+        elements.ratioRows.querySelectorAll(".wg-ratio-slider").forEach((slider, index) => {
+          slider.setAttribute("aria-label", languageText(`共鸣器 ${index + 1} 比例推杆`, `Resonator ${index + 1} ratio slider`));
+          slider.disabled = !state.connected || !ratio || state.saving || state.refreshing;
+          if (!ratio) return;
+          slider.step = ratio.limits.step;
+          if (document.activeElement !== slider) {
+            const value = Number(ratio.draft[index]);
+            slider.value = Math.min(ratioSliderMax, Math.max(ratioSliderMin, value));
+          }
         });
         for (let index = 0; index < resonatorCount; index += 1) {
           const value = ratio ? Number(ratio.draft[index]) : NaN;
@@ -1749,14 +1812,26 @@
 
       function ratioInput(event) {
         const input = event.target.closest(".wg-ratio-input");
-        if (!input || !state.ratio) return;
-        const index = Number(input.dataset.ratioIndex);
-        state.ratio.raw[index] = input.value;
-        state.ratio.focused[index] = document.activeElement === input;
-        const value = canonicalize(input.value, state.ratio.limits);
-        if (value !== null) {
-          state.ratio.draft[index] = value;
-          scheduleResource("ratio", commitRatio, false);
+        const slider = event.target.closest(".wg-ratio-slider");
+        if ((!input && !slider) || !state.ratio) return;
+        const index = Number((input || slider).dataset.ratioIndex);
+        if (input) {
+          state.ratio.raw[index] = input.value;
+          state.ratio.focused[index] = document.activeElement === input;
+          const value = canonicalize(input.value, state.ratio.limits);
+          if (value !== null) {
+            state.ratio.draft[index] = value;
+            scheduleResource("ratio", commitRatio, false);
+          }
+        } else {
+          // 推杆位置与数值线性对应，范围收窄为常用段 0.25–10；全范围仍可经文本框输入
+          const value = canonicalize(slider.value, state.ratio.limits);
+          if (value !== null) {
+            state.ratio.focused[index] = false;
+            state.ratio.raw[index] = formatNumber(value, state.ratio.limits.step);
+            state.ratio.draft[index] = value;
+            scheduleResource("ratio", commitRatio, false);
+          }
         }
         renderRatio();
         updateControls();
