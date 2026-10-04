@@ -227,7 +227,7 @@ class WingieConfigHtmlTest(unittest.TestCase):
             "applyLanguage()",
             "data-i18n-zh=\"连接 Wingie2\"",
             "data-i18n-en=\"Connect Wingie2\"",
-            "data-i18n-zh=\"自定义比例模式设定\"",
+            "data-i18n-zh=\"Ratio 模式设定\"",
             "data-i18n-en=\"Ratio Mode Profile\"",
             "data-i18n-zh=\"保存到闪存\"",
             "data-i18n-en=\"Save to Flash\"",
@@ -243,15 +243,15 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("#wingie-config .wg-ratio-slot td", self.source)
         self.assertIn('slotRow.className = "wg-ratio-slot";', self.source)
         self.assertIn("index % ratioSlotSize === 0", self.source)
-        self.assertIn('data-i18n-zh="槽 ${slot}"', self.source)
-        self.assertIn('data-i18n-en="Slot ${slot}"', self.source)
+        self.assertIn('data-i18n-zh="Voice ${slot}"', self.source)
+        self.assertIn('data-i18n-en="Voice ${slot}"', self.source)
         for phrase in (
-            'data-i18n-zh="Ratio 复音模式下，声部 1/2/3 分别使用槽 1/2/3 的比例。"',
-            'data-i18n-en="In Ratio poly mode, voices 1/2/3 use the ratios of Slots 1/2/3 respectively."',
+            'data-i18n-zh="三复音，每复音对应三个共鸣器"',
+            'data-i18n-en="Three-voice polyphony, three resonators per voice"',
             'id="wg-copy-slot1"',
             'class="wg-button"',
-            'data-i18n-zh="复制槽 1 到槽 2、3"',
-            'data-i18n-en="Copy Slot 1 to Slots 2&amp;3"',
+            'data-i18n-zh="复制 Voice 1 到 Voice 2、3"',
+            'data-i18n-en="Copy Voice 1 to Voices 2&amp;3"',
         ):
             self.assertIn(phrase, self.source)
         ratio_section = self.source.split('id="wg-ratio-title"', 1)[1].split("</section>", 1)[0]

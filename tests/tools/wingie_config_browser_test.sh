@@ -58,8 +58,8 @@ agent-browser --session "$SESSION" eval --stdin <<'JS' >/dev/null
   element("#wg-language").click();
   assert(element("#wg-language").textContent === "EN / 中文" && element("#wg-left-title").textContent === "Left Channel", "English language toggle failed");
   assert(element("#wg-poll-status").textContent === "", "English polling status should be silent in the normal state");
-  assert(document.querySelector("#wg-ratio-title").parentElement.querySelector(".wg-help").textContent === "Both sides share 9 ratios; valid numeric edits reach the running state after 150 ms.", "English Ratio help remained mixed");
-  assert(document.querySelector("#wg-shared-title").parentElement.querySelector(".wg-help").textContent === "Global tuning, gain and MIDI routing.", "English Shared Settings help remained mixed");
+  assert(document.querySelector("#wg-ratio-title").parentElement.querySelector(".wg-help").textContent === "Three-voice polyphony, three resonators per voice", "English Ratio help remained mixed");
+  assert(!document.querySelector("#wg-shared-title").parentElement.querySelector(".wg-help"), "Shared Settings kept a redundant subtitle");
   assert(document.querySelector(".wg-footer").textContent === "No network requests · Requires HTTPS and desktop Chrome / Edge", "English footer was mixed or truncated");
   element("#wg-language").click();
 
