@@ -398,7 +398,7 @@
 <h3 id="逐音压力表情0xd0--cc-74">逐音压力表情（0xD0 + CC 74）</h3>
 <p>打开 MPE 后，Member 通道的压力表情增加衰减时间：按得越重，尾音越长。Channel Pressure（0xD0）和 CC 74 分别负责一半行程（共每音 +2 秒，单音模式 +6 秒），两段拼成 0–254 的完整行程，线性映射。适配 Osmose 类控制器。</p>
 <p>复音、比例模式中，每个音最多在 Decay 推杆基础上叠加 2 秒（一侧最多加 6 秒），琴弦、音块模式中，单音叠加可达 6 秒，抬键随压力回落；叠加可超过推杆上限（Decay 推杆打满 10 秒时叠加可达 16 秒）。非 MPE 模式下，路由通道的 Channel Pressure 与 CC 74 作用于整侧（可达 6 秒）。只发 0xD0 或 CC 74 的控制器可利用一半行程。</p>
-<p>MPE Member 的其余 CC 被消费但不映射。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
+<p>MPE Member 的其余 CC 不映射任何参数。双 Zone 控制器的两个 Zone 都会并入小羽的单 Zone。</p>
 <p>详见 <a href="MPE.html"><code>MPE.md</code></a> 与 <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a>。</p>
 <h2 id="11-usb-网页刷机">11. USB 网页刷机</h2>
 <p><a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> 打开后选择&quot;固件安装&quot;，即可安装或升级小羽固件。刷机页直接连接 ESP32 ROM bootloader，因此适用于空白 Flash、旧版本升级，以及应用固件损坏但 bootloader 正常的设备。</p>
@@ -712,7 +712,7 @@
 <ul>
 <li><strong>配置页未保存警示</strong>：有改动未写入闪存时，页面底部状态行与&quot;保存到闪存&quot;按钮以红色标示，保存成功后恢复。</li>
 <li><strong>按键保存失败提示</strong>：双键保存失败时 LED 红色闪烁（成功为白色闪烁），串口同时打印失败详情。</li>
-<li>此前一版曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被消费，但不改变衰减。</li>
+<li>此前一版曾把 MPE 逐音压力表情放进 DSP 热路径，开机约 10 秒看门狗复位。本版音频核与 v4.02 相同，不含该路径；0xD0 仍被接收，但不改变衰减。</li>
 </ul>
 <p><strong>v4.01</strong> 相对 v4 的变化：</p>
 <ul>
@@ -1030,11 +1030,11 @@
 <li><strong>Bend range</strong>: Member defaults to ±48 semitones, Manager to ±2 semitones. Adjustable via RPN 0 (CC 6 sets semitones, CC 38 sets cents); a range received on any Member channel applies to all Members.</li>
 <li><strong>External alternate tuning</strong>: An MPE source can send Pitch Bend before each note's Note On to establish an initial microtonal offset. In this case, set Wingie2's internal tuning to &quot;Standard&quot; so the MPE source is the sole tuning authority; if an internal alternate tuning remains enabled, the internal intervals and the MPE offset are both applied.</li>
 </ul>
-<p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
+<p>With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are taken over by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).</p>
 <h3 id="per-note-pressure-expression-0xd0--cc-74">Per-Note Pressure Expression (0xD0 + CC 74)</h3>
 <p>With MPE on, Member-channel pressure expression increases the decay time: the harder the press, the longer the tail. Channel Pressure (0xD0) and CC 74 each cover half of the travel (+2s per note in total, +6s in single-note modes); the two segments join into one 0–254 travel axis, mapped linearly. This matches Osmose-class controllers.</p>
 <p>In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s extra per side); String and Bar are single-note modes, where the single note adds up to 6s, easing back as the key lifts. The sum can go past the fader ceiling (with the Decay fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure and CC 74 on a routed channel apply to that side as a whole (up to 6s). A controller that sends only 0xD0 or only CC 74 can use half of the travel.</p>
-<p>Other MPE Member CCs are consumed but not mapped. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
+<p>Other MPE Member CCs are not mapped to any parameter. Both zones of a dual-zone controller merge into Wingie2's single zone.</p>
 <p>See <a href="MPE.html"><code>MPE.md</code></a> and <a href="ALT_TUNING.html"><code>ALT_TUNING.md</code></a> for details.</p>
 <h2 id="11-usb-web-flasher">11. USB Web Flasher</h2>
 <p>Open <a href="https://mengqimusic.github.io/Wingie2" target="_blank" rel="noopener">https://mengqimusic.github.io/Wingie2</a> and choose &quot;Firmware Installer&quot; to install or upgrade Wingie2 firmware. The flasher connects directly to the ESP32 ROM bootloader, so it works with blank flash, upgrades from older versions, and devices with corrupted app firmware but a healthy bootloader.</p>
@@ -1347,7 +1347,7 @@
 <ul>
 <li><strong>Unsaved-change warning on the configuration page</strong>: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.</li>
 <li><strong>Save-failure LED</strong>: the two-button save flashes the LED red on failure (white on success), with failure details on serial.</li>
-<li>An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.</li>
+<li>An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still received, but it does not change decay.</li>
 </ul>
 <p>Changes in <strong>v4.01</strong> compared to v4:</p>
 <ul>

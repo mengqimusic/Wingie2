@@ -88,14 +88,15 @@
 <h1 id="wingie2-mpe">Wingie2 MPE</h1>
 <p>Wingie2 implements the MIDI Polyphonic Expression 1.1 member-channel note, note-ownership, and
 Pitch Bend path over its existing MIDI 1.0 input, as an optional single Lower Zone with per-note
-left/right alternating engine assignment. Member Channel Pressure (0xD0) lengthens decay on
-the owning side by summing per-note boosts (Poly/Ratio 2s each, up to 6s per side;
-String/Bar 6s for the single owner); member CC 74 is consumed but not mapped.</p>
+left/right alternating engine assignment. Member Channel Pressure (0xD0) and member CC 74
+form one linear 0–254 pressure travel that lengthens decay on the owning side by summing
+per-note boosts (Poly/Ratio 2s each, up to 6s per side; String/Bar 6s for the single
+owner); other member CCs are not mapped.</p>
 <h2 id="the-mpe-switch">The MPE Switch</h2>
 <p>MPE is governed by a single switch, exposed as <code>mpe_enabled</code> in the USB configuration page
 (config schema 6) and stored in flash. Factory default: <strong>off</strong>. The switch is the only zone
-authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on, and is consumed
-but ignored while the switch is off. A restart restores the switched layout.</p>
+authority: MCM (RPN 6 on Channel 1) may resize the zone while the switch is on and is ignored
+while the switch is off. A restart restores the switched layout.</p>
 <h3 id="switch-off-—-conventional-routing">Switch off — conventional routing</h3>
 <p>No zone exists. Channels 1–16 are all conventional and follow the configurable Left/Right/Both
 routing (factory defaults: Left 1, Right 2, Both 3). Notes on channels not assigned to a route
@@ -103,10 +104,10 @@ do not sound. Channel 13 tuning CC, Channel 14/15 Cave-frequency CC, and Channel
 global-settings CC are all reachable.</p>
 <h3 id="switch-on-—-standard-lower-zone">Switch on — standard Lower Zone</h3>
 <p>One Lower Zone claims every channel: Manager Channel 1, Member Channels 2–16. All notes and
-Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Per-channel CC
-beyond the manager is not mapped, which means the conventional control channels are not reachable
-while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all consumed
-by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
+Pitch Bend follow the MPE path below; the Left/Right/Both routes do not apply. Member CC other
+than CC 74 is not mapped, which means the conventional control channels are not reachable
+while MPE is on: tuning (13), Cave frequency (14/15), and global settings (16) are all taken
+over by the zone. Use per-note Pitch Bend for tuning, and the USB configuration page for Cave and
 global settings.</p>
 <p>Because the zone covers all 16 channels, notes from dual-zone controllers also sound — both
 zones' notes are merged into Wingie2's single zone (per-zone separation is lost, nothing is
@@ -121,7 +122,8 @@ ignored.</li>
 voice is used first; when all three are active, the oldest voice is replaced.</li>
 <li>Member Pitch Bend changes every active voice owned by that Member Channel, on either side.</li>
 <li>Manager Pitch Bend (Channel 1) is global: it changes every active MPE voice on both sides.</li>
-<li>Manager CC (Channel 1) is applied to both sides; Member CC is not mapped.</li>
+<li>Manager CC (Channel 1) is applied to both sides; Member CC 74 drives the second half of
+the pressure travel (below), other Member CCs are not mapped.</li>
 <li>String and Bar use the latest Note On as a monophonic owner on the assigned side. Member
 control stops after its matching Note Off, while the last pitch remains latched and Manager
 Pitch Bend remains active.</li>
@@ -151,13 +153,13 @@ as it lifts. Because the Faust graph has one <code>decay</code> slider per side,
 boosts are added and written into that slider, clamped to a 20s overall ceiling (the
 Decay fader itself spans 0.1–10s): with the fader at 10s, pressure can still add its
 full 6s. CC74 on conventional channels (l/r/both) feeds the same side path; CC74 on
-the Manager channel is consumed with no decay effect, mirroring 0xD0.</li>
+the Manager channel has no decay effect, mirroring 0xD0.</li>
 <li><strong>Why not per-voice t60 in the Faust graph</strong>: <code>decay_boost_*</code> per-voice sliders watchdog-reset
 at boot (~10.5s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
 the revert: <code>-Os</code> still watchdog-resets, <code>-O2</code> overflows IRAM0 by 80 bytes. The budget is
 at the edge, so pressure widens the existing per-side <code>decay</code> slider instead; the DSP graph
 stays unchanged.</li>
-<li>Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.</li>
+<li>Other Member CCs (besides CC 74) are not mapped to synthesis parameters.</li>
 <li>Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole
 (single slot, 6s depth like String/Bar).</li>
 </ul>
