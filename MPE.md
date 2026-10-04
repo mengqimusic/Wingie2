@@ -43,7 +43,8 @@ dropped).
   voice is used first; when all three are active, the oldest voice is replaced.
 - Member Pitch Bend changes every active voice owned by that Member Channel, on either side.
 - Manager Pitch Bend (Channel 1) is global: it changes every active MPE voice on both sides.
-- Manager CC (Channel 1) is applied to both sides; Member CC is not mapped.
+- Manager CC (Channel 1) is applied to both sides; Member CC 74 drives the second half of
+  the pressure travel (below), other Member CCs are not mapped.
 - String and Bar use the latest Note On as a monophonic owner on the assigned side. Member
   control stops after its matching Note Off, while the last pitch remains latched and Manager
   Pitch Bend remains active.
@@ -75,13 +76,13 @@ expression already established.
   boosts are added and written into that slider, clamped to a 20s overall ceiling (the
   Decay fader itself spans 0.1–10s): with the fader at 10s, pressure can still add its
   full 6s. CC74 on conventional channels (l/r/both) feeds the same side path; CC74 on
-  the Manager channel is consumed with no decay effect, mirroring 0xD0.
+  the Manager channel has no decay effect, mirroring 0xD0.
 - **Why not per-voice t60 in the Faust graph**: `decay_boost_*` per-voice sliders watchdog-reset
   at boot (~10.5s, CPU0 Faust DSP Task starves IDLE). Retried on the current baseline after
   the revert: `-Os` still watchdog-resets, `-O2` overflows IRAM0 by 80 bytes. The budget is
   at the edge, so pressure widens the existing per-side `decay` slider instead; the DSP graph
   stays unchanged.
-- Member CC 74 (and other member CCs) are consumed but not mapped to synthesis parameters.
+- Other Member CCs (besides CC 74) are not mapped to synthesis parameters.
 - Conventional (non-MPE) Channel Pressure on a routed channel applies to that side as a whole
   (single slot, 6s depth like String/Bar).
 

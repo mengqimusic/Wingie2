@@ -238,7 +238,7 @@ One Lower Zone claims every channel: **Manager = Channel 1, Member = Channels 2�
 - **Bend range**: Member defaults to ±48 semitones, Manager to ±2 semitones. Adjustable via RPN 0 (CC 6 sets semitones, CC 38 sets cents); a range received on any Member channel applies to all Members.
 - **External alternate tuning**: An MPE source can send Pitch Bend before each note's Note On to establish an initial microtonal offset. In this case, set Wingie2's internal tuning to "Standard" so the MPE source is the sole tuning authority; if an internal alternate tuning remains enabled, the internal intervals and the MPE offset are both applied.
 
-With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are consumed by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).
+With MPE on, the conventional Left/Right/Both routes no longer apply, and the Channel 13–16 control CCs are taken over by the zone (use per-note Pitch Bend for tuning, and USB Web Configuration for Caves and global settings).
 
 ### Per-Note Pressure Expression (0xD0 + CC 74)
 
@@ -246,7 +246,7 @@ With MPE on, Member-channel pressure expression increases the decay time: the ha
 
 In Poly / Ratio each note adds up to 2s on top of the Decay fader (up to 6s extra per side); String and Bar are single-note modes, where the single note adds up to 6s, easing back as the key lifts. The sum can go past the fader ceiling (with the Decay fader at its 10s maximum, the sum can reach 16s). Outside MPE mode, Channel Pressure and CC 74 on a routed channel apply to that side as a whole (up to 6s). A controller that sends only 0xD0 or only CC 74 can use half of the travel.
 
-Other MPE Member CCs are consumed but not mapped. Both zones of a dual-zone controller merge into Wingie2's single zone.
+Other MPE Member CCs are not mapped to any parameter. Both zones of a dual-zone controller merge into Wingie2's single zone.
 
 See [`MPE.md`](MPE.md) and [`ALT_TUNING.md`](ALT_TUNING.md) for details.
 
@@ -416,7 +416,7 @@ Changes in **v4.03** compared to v4.02:
 
 - **Unsaved-change warning on the configuration page**: the status line and Save button turn red while changes have not been written to flash, restoring after a confirmed save.
 - **Save-failure LED**: the two-button save flashes the LED red on failure (white on success), with failure details on serial.
-- An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still consumed, but it does not change decay.
+- An earlier build put MPE per-note pressure on the DSP hot path, watchdog-reset about 10 seconds after boot, and was withdrawn. This build uses the same audio core as v4.02 and does not include that path; 0xD0 is still received, but it does not change decay.
 
 Changes in **v4.01** compared to v4:
 

@@ -375,8 +375,8 @@ bool handle_mpe_rpn(byte channel, byte number, byte value) {
   }
   if (number != 6 && number != 38) return false;
   if (mpe_state.selectedRpnIs(channel, 0, 6)) {
-    // 单 Zone 策略：仅 Ch1 的 MCM 生效；Ch16 Upper MCM 被消费但忽略（见 MPE.md）。
-    // MPE 开关关闭时 MCM 同样消费但忽略——开关是 Zone 的唯一权威。
+    // 单 Zone 策略：仅 Ch1 的 MCM 生效；Ch16 Upper MCM 被忽略（见 MPE.md）。
+    // MPE 开关关闭时 MCM 同样被忽略——开关是 Zone 的唯一权威。
     if (number == 6 && channel == 1 && mpe_enabled) configure_mpe_zone(value);
     return true;
   }

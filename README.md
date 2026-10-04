@@ -99,14 +99,15 @@ Left/Right/Both routing (factory defaults 1/2/3); Channel 13 tuning, 14/15 Cave-
 16 global-settings CCs remain reachable. On: a standard Lower Zone (Manager Channel 1, Member
 Channels 2–16) — each Note On is assigned to the left/right engines in alternating arrival
 order (Cave-mode sides are skipped); Manager Pitch Bend/CC is global (both sides), Member Pitch
-Bend is per-note; the conventional routes and the Channel 13–16 control CCs are consumed by the
+Bend is per-note; the conventional routes and the Channel 13–16 control CCs are taken over by the
 zone (use per-note Pitch Bend for tuning and the configuration page for Cave/global settings).
 The switch is the only zone authority: MCM (RPN 6) may resize the zone only while on and is
 ignored while off. RPN 0 sets Manager/Member bend ranges (±2/±48 default). An MPE source can
 provide alternate tuning via per-note Pitch Bend before Note On — see [`MPE.md`](MPE.md) and
-[`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure (0xD0) lengthens decay (Poly/Ratio up to
-2s per note, 6s per side; String/Bar and conventional whole-side pressure add 6s for the
-single owner); CC 74 is not mapped.
+[`ALT_TUNING.md`](ALT_TUNING.md). Channel Pressure (0xD0) and CC 74 each cover half of a
+linear 0–254 pressure travel, lengthening decay (Poly/Ratio up to 2s per note, 6s per side;
+String/Bar and conventional whole-side expression add 6s for the single owner); other CCs
+are not mapped.
 
 ## 网页刷机 / Web Flasher
 
