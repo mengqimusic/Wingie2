@@ -478,8 +478,11 @@ class WingieConfigHtmlTest(unittest.TestCase):
     def test_connect_failure_explains_outdated_firmware(self):
         # hello 超时（v3.x 无配置协议）与 schema 不符（v4–v4.03）都要提示升级并先关闭本页
         self.assertIn("function connectFailureMessage(error)", self.source)
-        self.assertIn("设备固件可能低于 v4.10（不支持网页配置）", self.source)
-        self.assertIn("本页需要 v4.10 及以上固件（config schema 6）", self.source)
+        self.assertIn("设备可能运行 v3.x 或更早的固件（不支持网页配置）", self.source)
+        self.assertIn("本页需要 config schema 6 的固件（v4.10、v4.20、v4.30 及之后的版本）", self.source)
+        # 不按版本号比较：v4.11 是 v4.03 的旧编号（schema 5），数字大于 v4.10 却不支持本页
+        self.assertNotIn("本页需要 v4.10 及以上固件", self.source)
+        self.assertIn("设备固件比本页新", self.source)
         self.assertIn("请先关闭本页，再打开顶部导航中的“最新固件”页面升级。", self.source)
         self.assertIn("setAlert(withReleaseNotice(connectFailureMessage(error), released), \"error\");", self.source)
 
