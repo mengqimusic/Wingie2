@@ -173,6 +173,16 @@ class WingieFlasherHtmlTest(unittest.TestCase):
         self.assertIn("elements.connect.disabled = !state.packageReady", self.source)
         self.assertIn("state.versionLabel = copy(`固件 ${manifest.version}`, `Firmware ${manifest.version}`)", self.source)
 
+    def test_release_downloads_have_timeout_instead_of_hanging(self):
+        # 无超时的 fetch 在网络卡住时会让页面永远停在“正在检查固件…”
+        self.assertIn("const FETCH_TIMEOUT_MS = 30000;", self.source)
+        self.assertIn("controller.abort()", self.source)
+        self.assertIn("options.signal = controller.signal", self.source)
+        self.assertIn('fetchWithTimeout(MANIFEST_URL, "manifest.json"', self.source)
+        self.assertIn("fetchWithTimeout(imageUrl.href, part.path", self.source)
+        self.assertNotIn('await fetch(MANIFEST_URL, {cache: "no-store"})', self.source)
+        self.assertIn("超时（${FETCH_TIMEOUT_MS / 1000} 秒）", self.source)
+
     def test_generated_standalone_uses_embedded_images_and_runtime(self):
         for fragment in (
             "window.__WINGIE_EMBEDDED_RELEASE__",
