@@ -462,8 +462,26 @@ class WingieConfigHtmlTest(unittest.TestCase):
         self.assertIn("await state.readLoop;", self.source)
         self.assertIn("state.disconnecting = false;", self.source)
         disconnect_block = self.source.split("async function disconnect(", 1)[1]
-        self.assertLess(disconnect_block.index("await state.readLoop"), disconnect_block.index("state.port.close"))
+        self.assertLess(disconnect_block.index("await state.readLoop"), disconnect_block.index("closePortQuietly(state.port)"))
         self.assertIn("readable.locked", self.mock_source)
+
+    def test_failed_port_close_is_not_silently_dropped(self):
+        # close() 失败后不能照常置空 state.port 让页面显示“未连接”而串口仍被占用（刷机页随之连不上）
+        disconnect_block = self.source.split("async function disconnect(", 1)[1].split("function transportLost", 1)[0]
+        self.assertNotIn("if (state.port) await state.port.close();", disconnect_block)
+        self.assertIn("if (!released) state.leakedPort = state.port;", disconnect_block)
+        self.assertIn("return released;", disconnect_block)
+        self.assertIn("if (!port.readable && !port.writable) return true;", self.source)
+        self.assertIn("if (await closePortQuietly(state.leakedPort)) state.leakedPort = null;", self.source)
+        self.assertIn("串口未能释放，本页可能仍占用 Wingie2", self.source)
+
+    def test_connect_failure_explains_outdated_firmware(self):
+        # hello 超时（v3.x 无配置协议）与 schema 不符（v4–v4.03）都要提示升级并先关闭本页
+        self.assertIn("function connectFailureMessage(error)", self.source)
+        self.assertIn("设备固件可能低于 v4.10（不支持网页配置）", self.source)
+        self.assertIn("本页需要 v4.10 及以上固件（config schema 6）", self.source)
+        self.assertIn("请先关闭本页，再打开顶部导航中的“最新固件”页面升级。", self.source)
+        self.assertIn("setAlert(withReleaseNotice(connectFailureMessage(error), released), \"error\");", self.source)
 
     def test_registers_usb_disconnect_listener(self):
         # 物理拔 USB 必须触发页面回到断开状态，不能静默失联（flasher 已有此范式）
