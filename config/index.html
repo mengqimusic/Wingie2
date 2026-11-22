@@ -1068,24 +1068,33 @@
 
       // 连接失败文案：hello 超时与协议版本不符是“设备固件过旧”的两种表现，
       // 直接告诉用户去升级，并提醒先关闭本页（本页占用串口时刷机页连不上）。
+      // 只按 config schema 判断，不比较版本号：v4.11 是 v4.03 的旧编号（schema 5），
+      // 数字比 v4.10 大却不支持本页；v4 起的固件都会应答 hello，超时意味着 v3.x 或更早。
       function connectFailureMessage(error) {
         const upgradeZh = "请先关闭本页，再打开顶部导航中的“最新固件”页面升级。";
         const upgradeEn = "Close this page first, then open “Latest Firmware” from the top navigation to upgrade.";
         if (error && / timeout$/.test(error.message) && /^hello /.test(error.message)) {
           return copy(
-            `连接失败：Wingie2 没有响应配置请求（hello timeout）。设备固件可能低于 v4.10（不支持网页配置），也可能选错了串口或设备未开机。${upgradeZh}`,
-            `Connection failed: Wingie2 did not answer the configuration request (hello timeout). The firmware may be older than v4.10 (no web configuration support), the wrong serial port may be selected, or the device may be off. ${upgradeEn}`
+            `连接失败：Wingie2 没有响应配置请求（hello timeout）。设备可能运行 v3.x 或更早的固件（不支持网页配置），也可能选错了串口或设备未开机。${upgradeZh}`,
+            `Connection failed: Wingie2 did not answer the configuration request (hello timeout). The device may be running v3.x or earlier firmware (no web configuration support), the wrong serial port may be selected, or the device may be off. ${upgradeEn}`
           );
         }
         if (error && error.message === "schema_mismatch") {
           const hello = error.hello || {};
+          const schema = Number(hello.config_schema);
           const detail = [hello.firmware ? `firmware ${hello.firmware}` : "", `config schema ${hello.config_schema != null ? hello.config_schema : "?"}`].filter(Boolean).join(", ");
           if (hello.device !== "Wingie2") {
             return copy(`连接失败：所选串口不是 Wingie2（${detail}）。请重新选择串口。`, `Connection failed: the selected port is not a Wingie2 (${detail}). Choose another port.`);
           }
+          if (schema > 6) {
+            return copy(
+              `连接失败：设备固件比本页新（${detail}）。请刷新本页（必要时清除缓存）后重试。`,
+              `Connection failed: the firmware is newer than this page (${detail}). Reload this page (clear the cache if needed) and try again.`
+            );
+          }
           return copy(
-            `连接失败：设备固件版本过旧（${detail}），本页需要 v4.10 及以上固件（config schema 6）。${upgradeZh}`,
-            `Connection failed: the firmware is too old (${detail}). This page requires v4.10 or later (config schema 6). ${upgradeEn}`
+            `连接失败：设备固件的配置协议过旧（${detail}），本页需要 config schema 6 的固件（v4.10、v4.20、v4.30 及之后的版本）。${upgradeZh}`,
+            `Connection failed: the firmware's configuration protocol is too old (${detail}). This page requires config schema 6 firmware (v4.10, v4.20, v4.30, or later). ${upgradeEn}`
           );
         }
         return copy(`连接失败：${formatError(error)}`, `Connection failed: ${formatError(error)}`);
