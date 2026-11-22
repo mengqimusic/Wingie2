@@ -322,6 +322,9 @@
       const BAUDRATE = 460800;
       const ROM_HANDSHAKE_TIMEOUT_MS = 20000;
       const FLASH_WRITE_TIMEOUT_MS = 180000;
+      // 发布包下载（manifest 与每段镜像，含读取响应体）的单次上限。无上限时网络卡住
+      // 会让页面永远停在“正在检查固件…”，用户看不到任何报错与重试入口。
+      const FETCH_TIMEOUT_MS = 30000;
       const embeddedRelease = window.__WINGIE_EMBEDDED_RELEASE__ || null;
       const EXPECTED_PARTS = [
         {name: "bootloader", offset: 0x1000, label: "Bootloader"},
@@ -628,11 +631,34 @@
         return verified;
       }
 
+      // 超时覆盖整个请求，包括读取响应体：consume 在同一个 AbortSignal 下执行。
+      async function fetchWithTimeout(url, label, consume) {
+        const controller = typeof AbortController === "function" ? new AbortController() : null;
+        let timedOut = false;
+        const timer = window.setTimeout(() => {
+          timedOut = true;
+          if (controller) controller.abort();
+        }, FETCH_TIMEOUT_MS);
+        try {
+          const request = (async () => {
+            const options = {cache: "no-store"};
+            if (controller) options.signal = controller.signal;
+            const response = await fetch(url, options);
+            if (!response.ok) throw new Error(`读取 ${label} 失败（HTTP ${response.status}）`);
+            return consume(response);
+          })();
+          return await withTimeout(request, FETCH_TIMEOUT_MS + 1000, `读取 ${label} 超时（${FETCH_TIMEOUT_MS / 1000} 秒）`);
+        } catch (error) {
+          if (timedOut) throw new Error(`读取 ${label} 超时（${FETCH_TIMEOUT_MS / 1000} 秒）`);
+          throw error;
+        } finally {
+          window.clearTimeout(timer);
+        }
+      }
+
       async function downloadImage(part, manifestResponseUrl) {
         const imageUrl = new URL(part.path, manifestResponseUrl);
-        const response = await fetch(imageUrl.href, {cache: "no-store"});
-        if (!response.ok) throw new Error(`下载 ${part.path} 失败（HTTP ${response.status}）`);
-        const data = new Uint8Array(await response.arrayBuffer());
+        const data = await fetchWithTimeout(imageUrl.href, part.path, async (response) => new Uint8Array(await response.arrayBuffer()));
         return verifyImage(part, data);
       }
 
@@ -659,10 +685,12 @@
           if (embeddedRelease) {
             manifest = validateManifest(embeddedRelease.manifest);
           } else {
-            const response = await fetch(MANIFEST_URL, {cache: "no-store"});
-            if (!response.ok) throw new Error(`读取 manifest.json 失败（HTTP ${response.status}）`);
-            manifest = validateManifest(await response.json());
-            manifestResponseUrl = response.url || new URL(MANIFEST_URL, location.href).href;
+            const loaded = await fetchWithTimeout(MANIFEST_URL, "manifest.json", async (response) => ({
+              body: await response.json(),
+              url: response.url
+            }));
+            manifest = validateManifest(loaded.body);
+            manifestResponseUrl = loaded.url || new URL(MANIFEST_URL, location.href).href;
           }
           state.manifest = manifest;
           state.versionLabel = copy(`固件 ${manifest.version}`, `Firmware ${manifest.version}`);
@@ -691,7 +719,7 @@
           state.packageDetailLabel = copy("发布包不可用", "Release package unavailable");
           const recovery = embeddedRelease
             ? copy("请重新下载官方安装页面。", "Download the official installer page again.")
-            : copy("请改用发布包中的 standalone HTML。", "Use the standalone HTML from the release package.");
+            : copy("请检查网络（或切换网络/代理）后点击“重新加载”；仍失败时请改用发布包中的 standalone HTML。", "Check your network (or switch network/proxy), then select Reload. If it still fails, use the standalone HTML from the release package.");
           state.installDetailLabel = copy("固件无法加载。", "Firmware could not be loaded.");
           applyLanguage();
           elements.reload.hidden = false;
