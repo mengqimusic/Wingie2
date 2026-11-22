@@ -798,6 +798,7 @@
         connected: false,
         disconnecting: false,
         port: null,
+        leakedPort: null,
         reader: null,
         writer: null,
         readLoop: null,
@@ -1038,22 +1039,81 @@
             await new Promise((resolve) => window.setTimeout(resolve, 20));
           }
           state.disconnecting = false;
+          // 上次断开时未能关闭的串口（见 releasePort）：先再试一次，避免本页继续占用。
+          if (state.leakedPort) {
+            if (await closePortQuietly(state.leakedPort)) state.leakedPort = null;
+          }
           state.port = await navigator.serial.requestPort();
           await state.port.open({baudRate: 115200});
           state.writer = state.port.writable.getWriter();
           state.readLoop = readSerialLoop();
           const hello = await helloWhenReady();
-          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 6) throw new Error(languageText("需要 Wingie2 配置 schema 6 固件。", "Wingie2 config schema 6 firmware is required."));
+          if (hello.device !== "Wingie2" || Number(hello.config_schema) !== 6) {
+            const error = new Error("schema_mismatch");
+            error.hello = hello;
+            throw error;
+          }
           state.connected = true;
           await refreshAll(false);
           startPolling();
           setConnection("connected", copy("Wingie2 已连接", "Connected"));
           setAlert(copy("已读取设备快照。", "Device snapshot loaded."), "success");
         } catch (error) {
-          await disconnect(false);
+          const released = await disconnect(false);
           elements.connect.disabled = false;
           setConnection("disconnected", copy("未连接", "Disconnected"));
-          setAlert(copy(`连接失败：${formatError(error)}`, `Connection failed: ${formatError(error)}`), "error");
+          setAlert(withReleaseNotice(connectFailureMessage(error), released), "error");
+        }
+      }
+
+      // 连接失败文案：hello 超时与协议版本不符是“设备固件过旧”的两种表现，
+      // 直接告诉用户去升级，并提醒先关闭本页（本页占用串口时刷机页连不上）。
+      function connectFailureMessage(error) {
+        const upgradeZh = "请先关闭本页，再打开顶部导航中的“最新固件”页面升级。";
+        const upgradeEn = "Close this page first, then open “Latest Firmware” from the top navigation to upgrade.";
+        if (error && / timeout$/.test(error.message) && /^hello /.test(error.message)) {
+          return copy(
+            `连接失败：Wingie2 没有响应配置请求（hello timeout）。设备固件可能低于 v4.10（不支持网页配置），也可能选错了串口或设备未开机。${upgradeZh}`,
+            `Connection failed: Wingie2 did not answer the configuration request (hello timeout). The firmware may be older than v4.10 (no web configuration support), the wrong serial port may be selected, or the device may be off. ${upgradeEn}`
+          );
+        }
+        if (error && error.message === "schema_mismatch") {
+          const hello = error.hello || {};
+          const detail = [hello.firmware ? `firmware ${hello.firmware}` : "", `config schema ${hello.config_schema != null ? hello.config_schema : "?"}`].filter(Boolean).join(", ");
+          if (hello.device !== "Wingie2") {
+            return copy(`连接失败：所选串口不是 Wingie2（${detail}）。请重新选择串口。`, `Connection failed: the selected port is not a Wingie2 (${detail}). Choose another port.`);
+          }
+          return copy(
+            `连接失败：设备固件版本过旧（${detail}），本页需要 v4.10 及以上固件（config schema 6）。${upgradeZh}`,
+            `Connection failed: the firmware is too old (${detail}). This page requires v4.10 or later (config schema 6). ${upgradeEn}`
+          );
+        }
+        return copy(`连接失败：${formatError(error)}`, `Connection failed: ${formatError(error)}`);
+      }
+
+      function withReleaseNotice(message, released) {
+        if (released) return message;
+        return copy(
+          `${message.zh}另外，串口未能释放，本页可能仍占用 Wingie2；请关闭或刷新本页后再使用刷机页或其他串口工具。`,
+          `${message.en} Also, the serial port could not be released and this page may still hold Wingie2; close or reload this page before using the installer or other serial tools.`
+        );
+      }
+
+      // 关闭串口；失败时以 readable/writable 是否仍存在判断端口是否真的还开着
+      // （Web Serial 关闭后两者均为 null）。返回 true 表示端口已不再被本页占用。
+      async function closePortQuietly(port) {
+        try {
+          await port.close();
+          return true;
+        } catch {
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+        if (!port.readable && !port.writable) return true;
+        try {
+          await port.close();
+          return true;
+        } catch {
+          return !port.readable && !port.writable;
         }
       }
 
@@ -1091,12 +1151,16 @@
         } catch {
         }
         try {
-          if (state.writer) {
-            state.writer.releaseLock();
-            state.writer = null;
-          }
-          if (state.port) await state.port.close();
+          if (state.writer) state.writer.releaseLock();
         } catch {
+        }
+        state.writer = null;
+        // 不能吞掉 close() 失败后照常置空 state.port：那会让页面显示“未连接”，
+        // 而串口实际仍被本页占用（刷机页随之连不上）。失败时留住引用并告知用户。
+        let released = true;
+        if (state.port) {
+          released = await closePortQuietly(state.port);
+          if (!released) state.leakedPort = state.port;
         }
         state.port = null;
         state.disconnecting = false;
@@ -1105,11 +1169,15 @@
         elements.connect.disabled = false;
         setConnection("disconnected", copy("未连接", "Disconnected"));
         renderAll();
-        if (announce) setAlert(copy("已断开。", "Disconnected."), "info");
+        if (announce) setAlert(withReleaseNotice(copy("已断开。", "Disconnected."), released), released ? "info" : "warning");
+        return released;
       }
 
       function transportLost(error) {
-        disconnect(false).finally(() => setAlert(copy(`连接已断开：${formatError(error)}`, `Connection lost: ${formatError(error)}`), "error"));
+        disconnect(false).then(
+          (released) => setAlert(withReleaseNotice(copy(`连接已断开：${formatError(error)}`, `Connection lost: ${formatError(error)}`), released), "error"),
+          () => setAlert(copy(`连接已断开：${formatError(error)}`, `Connection lost: ${formatError(error)}`), "error")
+        );
       }
 
       function stopPolling() {
